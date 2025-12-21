@@ -52,7 +52,7 @@ const Dashboard = () => {
                     {/* Left: Score Card (Hero) */}
                     <div className="lg:col-span-4 flex flex-col h-full">
                          <ScoreCard 
-                            title="NameScore™ Index" 
+                            title="Rightname™ Index" 
                             score={brand.namescore} 
                             verdict={brand.verdict}
                             subtitle="Composite Consulting Grade"

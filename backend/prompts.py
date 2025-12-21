@@ -26,7 +26,7 @@ scoring_rules:
     Trademark_Risk: 20
     Consumer_Perception: 10
 
-namescore_index:
+rightname_index:
   interpretation:
     85-100: Category-defining (Strong GO)
     70-84: Globally viable (GO)
