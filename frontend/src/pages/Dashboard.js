@@ -117,7 +117,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Middle Column: Radar */}
-                        <div className="bg-white p-6 rounded-lg border shadow-sm flex items-center justify-center">
+                        <div className="bg-white p-6 rounded-lg border shadow-sm">
                             <BrandRadarChart data={brand.dimensions} />
                         </div>
 
