@@ -73,6 +73,8 @@ class BrandScore(BaseModel):
     dimensions: List[DimensionScore]
     trademark_risk: dict 
     trademark_matrix: TrademarkRiskMatrix
+    # NEW FIELD: Recommended Trademark Classes
+    trademark_classes: List[str] = Field(default=[], description="List of Nice Classes, e.g. ['Class 25 (Clothing)', 'Class 35 (Retail)']")
     domain_analysis: DomainAnalysis
     visibility_analysis: Optional[VisibilityAnalysis] = None
     cultural_analysis: List[CountryAnalysis]
