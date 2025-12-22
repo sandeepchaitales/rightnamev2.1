@@ -27,3 +27,6 @@ typer>=0.9.0
 
 emergentintegrations
 python-whois
+googlesearch-python
+app-store-scraper
+google-play-scraper
