@@ -168,6 +168,12 @@ const Dashboard = () => {
                             <Card className="playful-card border-l-4 border-l-cyan-400 flex-grow">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-xs font-bold uppercase text-cyan-500 tracking-widest">Positioning Fit</CardTitle>
+                        {/* Visibility Analysis (Left - 4 cols) */}
+                        <div className="lg:col-span-4 flex flex-col">
+                            {brand.visibility_analysis && (
+                                <VisibilityAnalysisCard analysis={brand.visibility_analysis} />
+                            )}
+                        </div>
                                 </CardHeader>
                                 <CardContent className="pt-4">
                                     <p className="text-base font-medium text-slate-700 leading-relaxed">{brand.positioning_fit}</p>
