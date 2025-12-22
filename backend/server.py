@@ -17,7 +17,7 @@ import random
 # Import custom modules
 from schemas import BrandEvaluationRequest, BrandEvaluationResponse, StatusCheck, StatusCheckCreate
 from prompts import SYSTEM_PROMPT
-from visibility import check_visibility # Import Visibility Checker
+from visibility import check_visibility
 
 # Import Emergent Integration
 try:
@@ -46,9 +46,6 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 def check_domain_availability(brand_name: str) -> str:
-    """
-    Checks if {brand_name}.com is available using whois.
-    """
     domain = f"{brand_name.lower().replace(' ', '')}.com"
     try:
         w = whois.whois(domain)
@@ -69,14 +66,13 @@ async def root():
 
 @api_router.post("/evaluate", response_model=BrandEvaluationResponse)
 async def evaluate_brands(request: BrandEvaluationRequest):
-    # Initialize LLM with High-Quality Model (GPT-4o) on every request to ensure fresh session
     if LlmChat and EMERGENT_KEY:
-        # Reverting to GPT-4o for maximum quality as requested ("Power Tool")
+        # Increase max_tokens to prevent JSON truncation
         llm_chat = LlmChat(
             api_key=EMERGENT_KEY,
-            session_id=f"rightname_{uuid.uuid4()}", # Unique session per request
+            session_id=f"rightname_{uuid.uuid4()}",
             system_message=SYSTEM_PROMPT
-        ).with_model("openai", "gpt-4o")
+        ).with_model("openai", "gpt-4o", max_tokens=16000)
     else:
         raise HTTPException(status_code=500, detail="LLM Integration not initialized (Check EMERGENT_LLM_KEY)")
     
@@ -87,7 +83,7 @@ async def evaluate_brands(request: BrandEvaluationRequest):
         domain_statuses.append(f"- {brand}: {status}")
     domain_context = "\n".join(domain_statuses)
 
-    # 2. Check Visibility (Search & App Store)
+    # 2. Check Visibility
     visibility_data = []
     for brand in request.brand_names:
         vis = check_visibility(brand)
@@ -102,7 +98,7 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     
     visibility_context = "\n".join(visibility_data)
     
-    # Construct User Message with REAL Data
+    # Construct User Message
     user_prompt = f"""
     Evaluate the following brands:
     Brands: {request.brand_names}
@@ -122,7 +118,6 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     - List the top found brands/apps in the JSON fields.
     """
     
-    # Retry Logic for 502 Errors
     max_retries = 3
     last_error = None
     
@@ -131,7 +126,6 @@ async def evaluate_brands(request: BrandEvaluationRequest):
             user_message = UserMessage(text=user_prompt)
             response = await llm_chat.send_message(user_message)
             
-            # Parse JSON
             content = ""
             if hasattr(response, 'text'):
                 content = response.text
@@ -145,12 +139,13 @@ async def evaluate_brands(request: BrandEvaluationRequest):
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
             
-            data = json.loads(content.strip())
+            # Sanitization: sometimes LLM outputs invalid control chars
+            content = content.strip()
             
-            # Validate
+            data = json.loads(content)
+            
             evaluation = BrandEvaluationResponse(**data)
             
-            # Save
             doc = evaluation.model_dump()
             doc['created_at'] = datetime.now(timezone.utc).isoformat()
             doc['request'] = request.model_dump()
@@ -162,24 +157,24 @@ async def evaluate_brands(request: BrandEvaluationRequest):
             last_error = e
             error_msg = str(e)
             
-            # If it's a budget error, fail immediately (retrying won't help)
             if "Budget has been exceeded" in error_msg:
                 logging.error(f"LLM Budget Exceeded: {error_msg}")
-                raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits to generate high-quality reports.")
+                raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
             
-            # If it's a 502/BadGateway, wait and retry
             if "502" in error_msg or "BadGateway" in error_msg or "ServiceUnavailable" in error_msg:
-                wait_time = (2 ** attempt) + random.uniform(0, 1) # Exponential backoff
+                wait_time = (2 ** attempt) + random.uniform(0, 1)
                 logging.warning(f"LLM 502 Error (Attempt {attempt+1}/{max_retries}). Retrying in {wait_time:.2f}s...")
                 await asyncio.sleep(wait_time)
                 continue
             
-            # Other errors (parsing, logic) - log and fail
             logging.error(f"LLM Error: {error_msg}")
+            # If JSON error, retry might not help unless we tweak prompt, but worth a shot if it's random truncation
+            if "Expecting" in error_msg or "JSON" in error_msg:
+                 logging.warning(f"JSON Parsing Error (Attempt {attempt+1}/{max_retries}). Retrying...")
+                 continue
             break
             
-    # If we get here, all retries failed
-    raise HTTPException(status_code=500, detail=f"Analysis failed after retries: {str(last_error)}")
+    raise HTTPException(status_code=500, detail=f"Analysis failed: {str(last_error)}")
 
 # Status Routes
 @api_router.post("/status", response_model=StatusCheck)
