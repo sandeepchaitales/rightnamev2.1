@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict, Literal
+from typing import List, Optional, Dict, Literal, Union, Any
 from datetime import datetime, timezone
 import uuid
 
@@ -28,8 +28,9 @@ class DomainAnalysis(BaseModel):
     strategy_note: str
 
 class VisibilityAnalysis(BaseModel):
-    google_presence: List[str]
-    app_store_presence: List[str]
+    # Relaxed to allow strings or dicts to prevent validation errors if LLM outputs objects
+    google_presence: List[Any] 
+    app_store_presence: List[Any]
     warning_triggered: bool
     warning_reason: Optional[str] = None
 
@@ -64,7 +65,8 @@ class FinalAssessment(BaseModel):
 class BrandScore(BaseModel):
     brand_name: str
     namescore: float
-    verdict: Literal["GO", "CONDITIONAL GO", "NO-GO", "REJECT"]
+    # Relaxed verdict to str to prevent crash on "GO with Caution"
+    verdict: str 
     summary: str
     strategic_classification: str
     pros: List[str]
@@ -73,7 +75,7 @@ class BrandScore(BaseModel):
     trademark_risk: dict 
     trademark_matrix: TrademarkRiskMatrix
     domain_analysis: DomainAnalysis
-    visibility_analysis: Optional[VisibilityAnalysis] = None # NEW FIELD
+    visibility_analysis: Optional[VisibilityAnalysis] = None
     cultural_analysis: List[CountryAnalysis]
     competitor_analysis: Optional[CompetitorAnalysis] = None
     final_assessment: Optional[FinalAssessment] = None

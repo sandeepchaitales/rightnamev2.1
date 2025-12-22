@@ -25,7 +25,7 @@ Return ONLY valid JSON.
     {
       "brand_name": "BRAND",
       "namescore": 85.5,
-      "verdict": "GO",
+      "verdict": "STRICTLY ONE OF: 'GO', 'CONDITIONAL GO', 'NO-GO', 'REJECT'",
       "summary": "2-sentence punchy summary.",
       "strategic_classification": "e.g., 'Differentiation Asset'",
       
@@ -75,8 +75,8 @@ Return ONLY valid JSON.
       },
       
       "visibility_analysis": {
-          "google_presence": [],
-          "app_store_presence": [],
+          "google_presence": ["String 1", "String 2"],
+          "app_store_presence": ["String 1", "String 2"],
           "warning_triggered": false,
           "warning_reason": null
       },
