@@ -32,8 +32,6 @@ const CustomTick = ({ payload, x, y, cx, cy, ...rest }) => {
 };
 
 export const BrandRadarChart = ({ data }) => {
-  // Normalize scores to 0-100 for display if needed, but chart domain is 0-10.
-  // Data comes in as 0-10 from backend.
   return (
     <div className="h-[400px] w-full min-w-[300px] relative">
       <ResponsiveContainer width="100%" height="100%">
@@ -73,7 +71,7 @@ export const BrandRadarChart = ({ data }) => {
         </RadarChart>
       </ResponsiveContainer>
       <div className="absolute bottom-2 right-2 text-[10px] text-slate-400 font-medium bg-white/80 px-2 py-1 rounded-md border border-slate-100">
-        Scale: 0-10
+        Scale: 0-10 (Higher is Better)
       </div>
     </div>
   );
@@ -168,11 +166,11 @@ export const CompetitionAnalysis = ({ data }) => {
                 </CardContent>
             </Card>
 
-            {/* Right: Competitor Table */}
+            {/* Right: Competitor 2x2 Matrix Table */}
             <Card className={`${CARD_STYLE} lg:col-span-2`}>
                 <CardHeader className="bg-white border-b border-slate-100 pb-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">
-                        Market Landscape
+                        Strategic Positioning Matrix (Price vs. Modernity)
                     </CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
@@ -180,16 +178,22 @@ export const CompetitionAnalysis = ({ data }) => {
                         <TableHeader>
                             <TableRow className="bg-slate-50/50 hover:bg-slate-50">
                                 <TableHead className="w-[30%] font-bold text-slate-700">Competitor</TableHead>
-                                <TableHead className="w-[45%] font-bold text-slate-700">Positioning</TableHead>
-                                <TableHead className="w-[25%] text-right font-bold text-slate-700">Price Range</TableHead>
+                                <TableHead className="w-[20%] font-bold text-slate-700 text-center">X-Axis (Price)</TableHead>
+                                <TableHead className="w-[20%] font-bold text-slate-700 text-center">Y-Axis (Modernity)</TableHead>
+                                <TableHead className="w-[30%] font-bold text-slate-700 text-right">Strategic Quadrant</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {data.competitors && data.competitors.map((comp, idx) => (
                                 <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors">
                                     <TableCell className="font-bold text-slate-900">{comp.name}</TableCell>
-                                    <TableCell className="text-slate-600 text-sm">{comp.positioning}</TableCell>
-                                    <TableCell className="text-right font-mono text-slate-500 text-sm">{comp.price_range}</TableCell>
+                                    <TableCell className="text-slate-600 text-sm text-center font-medium">
+                                        <Badge variant="outline" className="bg-slate-50 text-slate-600">{comp.price_axis}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-slate-600 text-sm text-center font-medium">
+                                        <Badge variant="outline" className="bg-slate-50 text-slate-600">{comp.modernity_axis}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono text-slate-700 text-sm font-bold">{comp.quadrant}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -265,6 +269,7 @@ export const TrademarkRiskTable = ({ matrix }) => {
                 </Table>
             </div>
             
+            {/* Scoring Legend Footer */}
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row gap-6 text-xs text-slate-500">
                 <div className="flex items-center gap-2">
                     <Info className="w-4 h-4 text-slate-400" />
