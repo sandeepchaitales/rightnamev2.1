@@ -58,20 +58,23 @@ class SocialAvailability(BaseModel):
 class ConflictItem(BaseModel):
     name: str
     category: str
+    their_product_intent: Optional[str] = Field(default=None, description="What does this product DO?")
     their_customer_avatar: Optional[str] = Field(default=None, description="Who uses this competitor/app")
+    intent_match: Optional[str] = Field(default=None, description="SAME/DIFFERENT - Does it solve the same problem?")
     customer_overlap: Optional[str] = Field(default=None, description="HIGH/NONE - overlap with user's customers")
-    risk_level: str = Field(default="LOW", description="HIGH for direct competitors with same customers, LOW for name twins")
+    risk_level: str = Field(default="LOW", description="HIGH only if SAME intent + SAME customers")
     reason: Optional[str] = None
 
 class VisibilityAnalysis(BaseModel):
+    user_product_intent: Optional[str] = Field(default=None, description="What does the user's product DO?")
     user_customer_avatar: Optional[str] = Field(default=None, description="Who buys the user's product")
-    direct_competitors: List[ConflictItem] = Field(default=[], description="Same industry + same customers - HIGH risk")
-    name_twins: List[ConflictItem] = Field(default=[], description="Different industry OR different customers - LOW risk, NOT rejection factors")
+    direct_competitors: List[ConflictItem] = Field(default=[], description="Same intent + same customers - HIGH risk")
+    name_twins: List[ConflictItem] = Field(default=[], description="Keyword matches with different intent/customers - LOW risk, NOT rejection factors")
     google_presence: List[Any] 
     app_store_presence: List[Any]
     warning_triggered: bool
     warning_reason: Optional[str] = None
-    conflict_summary: Optional[str] = Field(default=None, description="Summary of customer avatar analysis")
+    conflict_summary: Optional[str] = Field(default=None, description="Summary distinguishing real conflicts from false positives")
 
 class CountryAnalysis(BaseModel):
     country: str
