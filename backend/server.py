@@ -226,10 +226,22 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     user_prompt = f"""
     Evaluate the following brands:
     Brands: {request.brand_names}
+    
+    BUSINESS CONTEXT (Use this for Intent Matching & Customer Avatar):
+    Industry: {request.industry or 'Not specified'}
     Category: {request.category}
+    Product Type: {request.product_type or 'Digital'}
+    USP (Unique Selling Proposition): {request.usp or 'Not specified'}
+    Brand Vibe/Personality: {request.brand_vibe or 'Not specified'}
     Positioning: {request.positioning}
     Market Scope: {request.market_scope}
     Target Countries: {request.countries}
+
+    IMPORTANT: Use the above business context to:
+    1. Define the user's customer avatar accurately
+    2. Define the user's product intent accurately
+    3. Compare against found competitors using INTENT MATCHING (not keyword matching)
+    4. Ensure brand name fits the specified vibe and USP
 
     REAL-TIME DOMAIN AVAILABILITY DATA (DO NOT HALLUCINATE):
     {domain_context}
@@ -246,8 +258,9 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     REAL-TIME SEARCH & APP STORE VISIBILITY DATA:
     {visibility_context}
     INSTRUCTION: Use the above visibility data to populate 'visibility_analysis'.
-    - If the top result is a verified brand, open-source framework, or movie title, set 'warning_triggered' to true and explain why in 'warning_reason'.
-    - List the top found brands/apps in the JSON fields.
+    - Apply INTENT MATCHING: Compare found apps against user's business context (Industry: {request.industry}, Category: {request.category}, Product Type: {request.product_type})
+    - If intents are DIFFERENT, classify as "name_twins" not "direct_competitors"
+    - Only flag as fatal conflict if SAME intent + SAME customers
     """
     
     max_retries = 3
