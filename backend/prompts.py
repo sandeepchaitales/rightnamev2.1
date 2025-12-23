@@ -305,17 +305,51 @@ Return ONLY valid JSON.
       "CRITICAL_RULE_FOR_ALTERNATIVES": "NEVER include the poison word or any variation of it in suggestions. If 'Metro' is the problem, do NOT suggest MetroLink, MetroMart, MetroZone, etc. Use completely different words like Urban, City, Central, District, etc.",
       
       "competitor_analysis": {
+          "x_axis_label": "Category-specific X-axis label (e.g., 'Price: Budget → Luxury')",
+          "y_axis_label": "Category-specific Y-axis label (e.g., 'Style: Classic → Avant-Garde')",
           "competitors": [
               {
-                  "name": "Competitor Name", 
-                  "price_axis": "X-Axis: Price Level (e.g. High Premium)", 
-                  "modernity_axis": "Y-Axis: Modernity Level (e.g. Traditional Heritage)", 
-                  "quadrant": "Strategic Quadrant (e.g. Legacy Luxury)"
+                  "name": "REAL Competitor Brand Name (e.g., Nykaa, Boat, Swiggy)", 
+                  "x_coordinate": 75,
+                  "y_coordinate": 60,
+                  "price_position": "Premium",
+                  "category_position": "Modern/Innovative",
+                  "quadrant": "Premium Modern"
+              },
+              {
+                  "name": "Another REAL Competitor", 
+                  "x_coordinate": 30,
+                  "y_coordinate": 80,
+                  "price_position": "Mid-range",
+                  "category_position": "Avant-Garde",
+                  "quadrant": "Affordable Innovative"
+              },
+              {
+                  "name": "Third REAL Competitor", 
+                  "x_coordinate": 85,
+                  "y_coordinate": 25,
+                  "price_position": "Luxury",
+                  "category_position": "Classic/Traditional",
+                  "quadrant": "Heritage Luxury"
+              },
+              {
+                  "name": "Fourth REAL Competitor", 
+                  "x_coordinate": 20,
+                  "y_coordinate": 30,
+                  "price_position": "Budget",
+                  "category_position": "Basic",
+                  "quadrant": "Value Basic"
               }
           ],
-          "white_space_analysis": "A full paragraph analyzing the market gap using the Blue Ocean framework. Define the specific niche this name owns.",
-          "strategic_advantage": "The specific 'Unfair Advantage' this name provides over the competitors listed above.",
-          "suggested_pricing": "CRITICAL RULE: If verdict is REJECT or NO-GO, set this to 'N/A - Pricing analysis not applicable for rejected brand names. Focus on alternative names in Plan B section.' Otherwise, provide specific pricing strategy in LOCAL CURRENCY (e.g. 'Skimming strategy at ₹2,500-3,500 range')."
+          "user_brand_position": {
+              "x_coordinate": 65,
+              "y_coordinate": 70,
+              "quadrant": "Where the user's brand should position",
+              "rationale": "Why this position makes sense for the brand"
+          },
+          "white_space_analysis": "Identify the SPECIFIC gap in the market. Which quadrant is underserved? What opportunity exists?",
+          "strategic_advantage": "How does positioning in this white space give the brand an unfair advantage?",
+          "suggested_pricing": "CRITICAL RULE: If verdict is REJECT or NO-GO, set this to 'N/A - Pricing analysis not applicable for rejected brand names.' Otherwise, provide specific pricing strategy in LOCAL CURRENCY."
       },
       
       "PRICING_RULE": "Do NOT recommend pricing strategies for brand names with REJECT or NO-GO verdicts. It is illogical to suggest how to price a product with a name you are recommending they abandon.",
