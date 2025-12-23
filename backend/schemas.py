@@ -73,8 +73,7 @@ class BrandScore(BaseModel):
     dimensions: List[DimensionScore]
     trademark_risk: dict 
     trademark_matrix: TrademarkRiskMatrix
-    # NEW FIELD: Recommended Trademark Classes
-    trademark_classes: List[str] = Field(default=[], description="List of Nice Classes, e.g. ['Class 25 (Clothing)', 'Class 35 (Retail)']")
+    trademark_classes: List[str] = Field(default=[], description="List of Nice Classes")
     domain_analysis: DomainAnalysis
     visibility_analysis: Optional[VisibilityAnalysis] = None
     cultural_analysis: List[CountryAnalysis]
@@ -92,7 +91,8 @@ class BrandEvaluationRequest(BaseModel):
 class BrandEvaluationResponse(BaseModel):
     executive_summary: str
     brand_scores: List[BrandScore]
-    comparison_verdict: str
+    # Made optional to prevent validation errors when LLM omits it (e.g. single brand or fatal flaw)
+    comparison_verdict: Optional[str] = None 
 
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
