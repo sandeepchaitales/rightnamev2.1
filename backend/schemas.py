@@ -155,19 +155,19 @@ class BrandScore(BaseModel):
     namescore: float
     verdict: str 
     summary: str
-    strategic_classification: str
-    pros: List[str]
-    cons: List[str]
+    strategic_classification: Optional[str] = Field(default="Classification pending")
+    pros: List[str] = Field(default=[])
+    cons: List[str] = Field(default=[])
     alternative_names: Optional[AlternativeNames] = None
-    dimensions: List[DimensionScore]
-    trademark_risk: dict 
-    trademark_matrix: TrademarkRiskMatrix
+    dimensions: List[DimensionScore] = Field(default=[])
+    trademark_risk: Optional[dict] = Field(default={})
+    trademark_matrix: Optional[TrademarkRiskMatrix] = None
     trademark_classes: List[str] = Field(default=[], description="List of Nice Classes")
-    domain_analysis: DomainAnalysis
+    domain_analysis: Optional[DomainAnalysis] = None
     multi_domain_availability: Optional[MultiDomainAvailability] = None
     social_availability: Optional[SocialAvailability] = None
     visibility_analysis: Optional[VisibilityAnalysis] = None
-    cultural_analysis: List[CountryAnalysis]
+    cultural_analysis: List[CountryAnalysis] = Field(default=[])
     competitor_analysis: Optional[CompetitorAnalysis] = None
     final_assessment: Optional[FinalAssessment] = None
     positioning_fit: Optional[str] = Field(default="Positioning analysis pending")
