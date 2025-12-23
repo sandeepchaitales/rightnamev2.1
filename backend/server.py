@@ -78,6 +78,7 @@ def escape_newlines_in_json_strings(json_str):
     """
     Escapes literal newlines/tabs inside JSON string values.
     JSON doesn't allow raw newlines inside strings - they must be escaped.
+    Also fixes LLM issue where it incorrectly breaks strings across lines.
     """
     result = []
     in_string = False
@@ -86,6 +87,39 @@ def escape_newlines_in_json_strings(json_str):
         char = json_str[i]
         
         if char == '"' and (i == 0 or json_str[i-1] != '\\'):
+            # Check if this is an incorrectly split string
+            # Pattern: "..end of text" followed by whitespace then "continuation
+            # This happens when LLM breaks a single string value into multiple lines
+            if in_string:
+                # We're closing a string - check what comes after
+                # Look ahead for pattern: whitespace + another opening quote that's NOT a key
+                j = i + 1
+                while j < len(json_str) and json_str[j] in ' \t\n\r':
+                    j += 1
+                # If next non-whitespace is a quote, check if it's a key (followed eventually by :)
+                if j < len(json_str) and json_str[j] == '"':
+                    # Find the closing quote of this potential string
+                    k = j + 1
+                    while k < len(json_str) and json_str[k] != '"':
+                        if json_str[k] == '\\' and k + 1 < len(json_str):
+                            k += 2
+                        else:
+                            k += 1
+                    # Check what comes after the closing quote
+                    if k < len(json_str):
+                        m = k + 1
+                        while m < len(json_str) and json_str[m] in ' \t\n\r':
+                            m += 1
+                        # If followed by ':', it's a key - this is valid, close the string
+                        # If NOT followed by ':' (or followed by more text), merge the strings
+                        if m < len(json_str) and json_str[m] != ':':
+                            # This is a split string - merge by adding escaped newline instead of closing
+                            # Add the whitespace between as escaped newlines
+                            result.append('\\n\\n')
+                            # Skip the closing quote, whitespace, and opening quote
+                            i = j + 1  # Move past the opening quote of continuation
+                            continue
+            
             in_string = not in_string
             result.append(char)
         elif in_string:
