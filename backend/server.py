@@ -114,15 +114,13 @@ def repair_json(s):
     # Remove trailing commas before } or ]
     s = re.sub(r',(\s*[}\]])', r'\1', s)
     
-    # Fix missing commas between } and " (common LLM error)
-    # Pattern: }\n   " or }  " should become },\n   " 
-    s = re.sub(r'\}(\s*)"', r'},\1"', s)
+    # Fix missing commas between } and " at the START of a NEW JSON key
+    # Only match when " is followed by a key pattern (letter/underscore then more chars then colon)
+    # This avoids matching patterns inside strings like }\\n\\n**
+    s = re.sub(r'\}(\s*)"([a-zA-Z_][a-zA-Z0-9_]*)"(\s*):', r'},\1"\2"\3:', s)
     
-    # Fix missing commas between ] and " 
-    s = re.sub(r'\](\s*)"', r'],\1"', s)
-    
-    # Fix missing commas between strings: "value"\n  "key"
-    s = re.sub(r'"(\s*\n\s*)"([a-zA-Z_])', r'",\1"\2', s)
+    # Fix missing commas between ] and " for new keys
+    s = re.sub(r'\](\s*)"([a-zA-Z_][a-zA-Z0-9_]*)"(\s*):', r'],\1"\2"\3:', s)
     
     return s
 
