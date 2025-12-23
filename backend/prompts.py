@@ -93,15 +93,19 @@ Reason: Analyzing brand names ≠ Making decorative text art
 
 **CRITICAL RULE: If customers are DIFFERENT, it is NOT a fatal conflict, even if the category seems similar.**
 
-**Classification Decision Tree:**
+**Classification Decision Tree (FOLLOW EXACTLY):**
 ```
-IF customer_overlap == "HIGH" AND same_industry == TRUE:
-    → DIRECT COMPETITOR (Fatal)
+IF intent_match == "SAME" AND customer_overlap == "HIGH":
+    → DIRECT COMPETITOR (Fatal) - List in direct_competitors
+ELSE IF intent_match == "DIFFERENT":
+    → NAME TWIN (Market Noise) - List in name_twins, EVEN IF keywords match
 ELSE IF customer_overlap == "NONE" OR customer_overlap == "LOW":
-    → NAME TWIN (Market Noise) - EVEN IF SAME INDUSTRY
+    → NAME TWIN (Market Noise) - List in name_twins, EVEN IF same industry
 ELSE:
-    → NAME TWIN (benefit of the doubt)
+    → NAME TWIN (benefit of the doubt) - List in name_twins
 ```
+
+**CRITICAL: If intent_match == "DIFFERENT", it MUST go in name_twins, NOT direct_competitors!**
 
 **Example Customer Avatar Analysis:**
 ```
