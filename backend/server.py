@@ -69,15 +69,48 @@ def clean_json_string(s):
     # Remove BOM and other invisible characters
     s = s.replace('\ufeff', '')
     
-    # Remove control characters (0-8, 11, 12, 14-31) but keep newlines (\n=10) and tabs (\t=9) and carriage return (\r=13)
+    # Remove bad control characters (0-8, 11, 12, 14-31) but keep tab (9), newline (10), carriage return (13)
     s = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', s)
     
     return s
+
+def escape_newlines_in_json_strings(json_str):
+    """
+    Escapes literal newlines/tabs inside JSON string values.
+    JSON doesn't allow raw newlines inside strings - they must be escaped.
+    """
+    result = []
+    in_string = False
+    i = 0
+    while i < len(json_str):
+        char = json_str[i]
+        
+        if char == '"' and (i == 0 or json_str[i-1] != '\\'):
+            in_string = not in_string
+            result.append(char)
+        elif in_string:
+            if char == '\n':
+                result.append('\\n')
+            elif char == '\r':
+                result.append('\\r')
+            elif char == '\t':
+                result.append('\\t')
+            else:
+                result.append(char)
+        else:
+            result.append(char)
+        
+        i += 1
+    
+    return ''.join(result)
 
 def repair_json(s):
     """
     Attempts to repair common JSON syntax errors produced by LLMs.
     """
+    # First, escape literal newlines inside strings
+    s = escape_newlines_in_json_strings(s)
+    
     # Remove trailing commas before } or ]
     s = re.sub(r',(\s*[}\]])', r'\1', s)
     
