@@ -387,32 +387,37 @@ Return ONLY valid JSON.
       },
       
       "visibility_analysis": {
-          "user_customer_avatar": "Define who buys the User's product (e.g., 'Enterprise CTOs, B2B Marketers')",
+          "user_product_intent": "What does the USER'S product DO? (e.g., 'Analyze brand names for trademark risk')",
+          "user_customer_avatar": "Who buys the User's product (e.g., 'Startup founders, Brand consultants')",
           "direct_competitors": [
               {
                   "name": "Competitor App Name", 
-                  "category": "Same/Similar Category", 
-                  "their_customer_avatar": "Who uses this competitor (e.g., 'Enterprise IT Teams')",
-                  "customer_overlap": "HIGH/NONE - Compare with user's customer avatar",
+                  "category": "Same/Similar Category",
+                  "their_product_intent": "What does THIS product do? (e.g., 'Same - analyzes brand names')",
+                  "their_customer_avatar": "Who uses this (e.g., 'Same - Business owners')",
+                  "intent_match": "SAME/DIFFERENT - Does it solve the SAME problem?",
+                  "customer_overlap": "HIGH/NONE",
                   "risk_level": "HIGH", 
-                  "reason": "FATAL: Same industry AND same customer avatar"
+                  "reason": "FATAL: Same intent AND same customers"
               }
           ],
           "name_twins": [
               {
-                  "name": "Unrelated App Name", 
-                  "category": "Different Category (e.g., Photo Editor)", 
-                  "their_customer_avatar": "Who uses this app (e.g., 'Teenagers, Casual users')",
-                  "customer_overlap": "NONE - Different customer base",
+                  "name": "Unrelated App (e.g., Name Art Maker)", 
+                  "category": "Different (e.g., Photo/Art App)",
+                  "their_product_intent": "Different intent (e.g., 'Create decorative text art for social media')",
+                  "their_customer_avatar": "Different users (e.g., 'Teenagers, Instagram users')",
+                  "intent_match": "DIFFERENT - Solving different problems",
+                  "customer_overlap": "NONE",
                   "risk_level": "LOW", 
-                  "reason": "Different industry AND different customers - NOT a conflict"
+                  "reason": "KEYWORD MATCH ONLY - Different intent, different customers. NOT a real conflict."
               }
           ],
           "google_presence": [],
           "app_store_presence": [],
           "warning_triggered": false,
-          "warning_reason": "ONLY trigger warning for DIRECT COMPETITORS, not Name Twins",
-          "conflict_summary": "X direct competitors found (High Risk). Y name twins found (Low Risk - different industries, not rejection factors)."
+          "warning_reason": "ONLY trigger warning for DIRECT COMPETITORS with SAME INTENT + SAME CUSTOMERS",
+          "conflict_summary": "X direct competitors (same intent + same customers). Y false positives filtered (keyword matches with different intents)."
       },
       
       "cultural_analysis": [
