@@ -138,7 +138,11 @@ class BrandScore(BaseModel):
 
 class BrandEvaluationRequest(BaseModel):
     brand_names: List[str]
+    industry: Optional[str] = Field(default=None, description="Industry sector")
     category: str
+    product_type: Optional[str] = Field(default="Digital", description="Physical, Digital, Service, Hybrid")
+    usp: Optional[str] = Field(default=None, description="Unique Selling Proposition")
+    brand_vibe: Optional[str] = Field(default=None, description="Brand personality/vibe")
     positioning: Literal["Mass", "Premium", "Ultra-Premium"]
     market_scope: Literal["Single Country", "Multi-Country", "Global"]
     countries: List[str]
