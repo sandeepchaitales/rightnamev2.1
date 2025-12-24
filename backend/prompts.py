@@ -18,6 +18,63 @@ You MUST verify ALL THREE conditions before issuing a REJECT/NO-GO verdict:
 - CONDITIONAL GO: If 1-2 checks positive but not all three
 - GO: If no active trademark AND no operating business in same category
 
+### 0.0.1 PHONETIC + CATEGORY CONFLICT DETECTION (MANDATORY FIRST CHECK)
+**⚠️ THIS CHECK RUNS BEFORE ALL OTHER ANALYSIS! ⚠️**
+
+**CRITICAL: Same pronunciation = Same brand in consumer minds, regardless of spelling!**
+
+**STEP 1: GENERATE PHONETIC VARIANTS**
+For EVERY input brand name, generate 5+ pronunciation variants:
+| Input Name | IPA Pronunciation | Common Spelling Variants |
+|------------|-------------------|--------------------------|
+| Unqueue | /ʌnˈkjuː/ | Unque, UnQue, Un-Queue, Unkue, Uncue, Unkyu |
+| Lyft | /lɪft/ | Lift, Lypt, Lifft |
+| Nike | /ˈnaɪki/ | Nyke, Nikey, Niky |
+| Quora | /ˈkwɔːrə/ | Kwora, Cora, Kora |
+
+**STEP 2: APP STORE + PLAY STORE SWEEP**
+Search for ALL phonetic variants in the USER'S CATEGORY:
+- Query: "[phonetic variant] + [category] + [product type] + app"
+- Example for Unqueue + Salon Booking:
+  - "unque salon booking app"
+  - "unqueue salon app"
+  - "unkue booking app"
+
+**STEP 3: PHONETIC CONFLICT DETECTION CRITERIA**
+If ANY app/service found with:
+| Criteria | Threshold | Action |
+|----------|-----------|--------|
+| Same pronunciation (different spelling) | ANY match | → Flag for review |
+| Same category/sector | SAME vertical | → CRITICAL CONFLICT |
+| Downloads/Users | 1K+ downloads OR active business | → FATAL CONFLICT |
+| Active marketing | Website, social media presence | → FATAL CONFLICT |
+
+**STEP 4: IMMEDIATE FATAL CONFLICT TRIGGER**
+If phonetic match + same category + active business found:
+```
+VERDICT: REJECT
+REASON: FATAL PHONETIC CONFLICT
+- Conflicting Brand: [Name] (spelled differently but SAME pronunciation)
+- Category: [Same as user's]
+- Evidence: [App store link, download count, company details]
+- Phonetic Analysis: "[User name]" and "[Found name]" are phonetically identical (/IPA/)
+- Legal Risk: HIGH - Passing-off, Consumer Confusion, Trademark Infringement
+- Consumer Impact: Users searching for one will find the other
+```
+
+**REAL-WORLD EXAMPLES TO LEARN FROM:**
+| User Input | Phonetic Match Found | Category | Verdict |
+|------------|---------------------|----------|---------|
+| Unqueue | UnQue (salon booking app) | Salon Booking | REJECT - Fatal phonetic conflict |
+| Lyft | Lift (ride app) | Transportation | REJECT - Fatal phonetic conflict |
+| Flickr | Flicker (photo app) | Photography | REJECT - Fatal phonetic conflict |
+| Tumblr | Tumbler (blog) | Social Media | REJECT - Fatal phonetic conflict |
+
+**⚠️ VALIDATION REQUIREMENT:**
+- This phonetic check MUST run FIRST, before trademark API checks
+- A phonetic conflict in same category = automatic REJECT regardless of trademark status
+- "Different spelling" is NOT a defense against phonetic conflicts
+
 ### 0.1 CONFLICT RELEVANCE ANALYSIS (CRITICAL)
 **When analyzing Google/App Store visibility data, you MUST classify each found result:**
 
