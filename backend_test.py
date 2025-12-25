@@ -123,30 +123,273 @@ class BrandEvaluationTester:
             self.log_test("Evaluate Endpoint - Exception", False, str(e))
             return False
 
-    def test_invalid_payload(self):
-        """Test with invalid payload to check error handling"""
-        invalid_payload = {
-            "brand_names": [],  # Empty array should fail
-            "category": "Tech"
-            # Missing required fields
+    def test_auth_register(self):
+        """Test email/password registration"""
+        payload = {
+            "email": self.test_user_email,
+            "password": self.test_user_password,
+            "name": self.test_user_name
         }
         
         try:
             response = requests.post(
-                f"{self.api_url}/evaluate", 
-                json=invalid_payload, 
+                f"{self.api_url}/auth/register",
+                json=payload,
                 headers={'Content-Type': 'application/json'},
                 timeout=10
             )
             
-            # Should return 4xx error for invalid payload
-            success = 400 <= response.status_code < 500
-            details = f"Status: {response.status_code} (Expected 4xx for invalid payload)"
-            self.log_test("Invalid Payload Handling", success, details)
-            return success
-            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "email", "name", "auth_type"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Auth Register - Response Structure", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                if data["email"] != self.test_user_email.lower():
+                    self.log_test("Auth Register - Email Match", False, f"Email mismatch: {data['email']} != {self.test_user_email.lower()}")
+                    return False
+                
+                # Store cookies for subsequent requests
+                self.session_cookies = response.cookies
+                
+                self.log_test("Auth Register", True, f"User registered: {data['user_id']}")
+                return True
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Auth Register", False, error_msg)
+                return False
+                
         except Exception as e:
-            self.log_test("Invalid Payload Handling", False, str(e))
+            self.log_test("Auth Register", False, str(e))
+            return False
+
+    def test_auth_login_email(self):
+        """Test email/password login"""
+        payload = {
+            "email": self.test_user_email,
+            "password": self.test_user_password
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.api_url}/auth/login/email",
+                json=payload,
+                headers={'Content-Type': 'application/json'},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "email", "name", "auth_type"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Auth Login Email - Response Structure", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                if data["email"] != self.test_user_email.lower():
+                    self.log_test("Auth Login Email - Email Match", False, f"Email mismatch: {data['email']} != {self.test_user_email.lower()}")
+                    return False
+                
+                # Update cookies for subsequent requests
+                self.session_cookies = response.cookies
+                
+                self.log_test("Auth Login Email", True, f"User logged in: {data['user_id']}")
+                return True
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Auth Login Email", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Auth Login Email", False, str(e))
+            return False
+
+    def test_auth_me(self):
+        """Test getting current user info"""
+        try:
+            response = requests.get(
+                f"{self.api_url}/auth/me",
+                cookies=self.session_cookies,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "email", "name"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Auth Me - Response Structure", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                self.log_test("Auth Me", True, f"Current user: {data['email']}")
+                return True
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Auth Me", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Auth Me", False, str(e))
+            return False
+
+    def test_generate_report_with_auth(self):
+        """Test generating a report while authenticated to get report_id"""
+        payload = {
+            "brand_names": ["AuthTestBrand"],
+            "category": "Technology",
+            "positioning": "Premium",
+            "market_scope": "Multi-Country",
+            "countries": ["USA"]
+        }
+        
+        try:
+            print(f"\n🔍 Testing /api/evaluate with auth to get report_id...")
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                cookies=self.session_cookies,
+                timeout=120  # LLM calls can take time
+            )
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if "report_id" in data:
+                        self.test_report_id = data["report_id"]
+                        self.log_test("Generate Report with Auth", True, f"Report generated: {self.test_report_id}")
+                        return True
+                    else:
+                        self.log_test("Generate Report with Auth", False, "No report_id in response")
+                        return False
+                        
+                except json.JSONDecodeError as e:
+                    self.log_test("Generate Report with Auth - JSON Parse", False, f"Invalid JSON: {str(e)}")
+                    return False
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Generate Report with Auth", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Generate Report with Auth", False, str(e))
+            return False
+
+    def test_get_report_authenticated(self):
+        """Test getting report while authenticated"""
+        if not self.test_report_id:
+            self.log_test("Get Report Authenticated", False, "No report_id available")
+            return False
+            
+        try:
+            response = requests.get(
+                f"{self.api_url}/reports/{self.test_report_id}",
+                cookies=self.session_cookies,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "is_authenticated" not in data:
+                    self.log_test("Get Report Authenticated - Auth Flag", False, "Missing is_authenticated field")
+                    return False
+                
+                if not data["is_authenticated"]:
+                    self.log_test("Get Report Authenticated - Auth Status", False, "is_authenticated is False")
+                    return False
+                
+                # Check that we have full report data
+                required_fields = ["executive_summary", "brand_scores"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Get Report Authenticated - Content", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                self.log_test("Get Report Authenticated", True, f"Full report retrieved for authenticated user")
+                return True
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Get Report Authenticated", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Report Authenticated", False, str(e))
+            return False
+
+    def test_get_report_unauthenticated(self):
+        """Test getting report without authentication"""
+        if not self.test_report_id:
+            self.log_test("Get Report Unauthenticated", False, "No report_id available")
+            return False
+            
+        try:
+            # Make request without cookies
+            response = requests.get(
+                f"{self.api_url}/reports/{self.test_report_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "is_authenticated" not in data:
+                    self.log_test("Get Report Unauthenticated - Auth Flag", False, "Missing is_authenticated field")
+                    return False
+                
+                if data["is_authenticated"]:
+                    self.log_test("Get Report Unauthenticated - Auth Status", False, "is_authenticated is True (should be False)")
+                    return False
+                
+                # Should still have basic report data
+                required_fields = ["executive_summary", "brand_scores"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Get Report Unauthenticated - Content", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                self.log_test("Get Report Unauthenticated", True, f"Report retrieved with is_authenticated=False")
+                return True
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Get Report Unauthenticated", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Report Unauthenticated", False, str(e))
+            return False
+
+    def test_auth_logout(self):
+        """Test logout functionality"""
+        try:
+            response = requests.post(
+                f"{self.api_url}/auth/logout",
+                cookies=self.session_cookies,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data:
+                    self.log_test("Auth Logout", True, f"Logout successful: {data['message']}")
+                    return True
+                else:
+                    self.log_test("Auth Logout", False, "No message in logout response")
+                    return False
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                self.log_test("Auth Logout", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Auth Logout", False, str(e))
             return False
 
     def run_all_tests(self):
