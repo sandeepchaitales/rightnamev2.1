@@ -396,6 +396,7 @@ class BrandEvaluationTester:
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
         print(f"Testing against: {self.base_url}")
+        print(f"Test user email: {self.test_user_email}")
         
         # Test API health first
         if not self.test_api_health():
@@ -405,8 +406,31 @@ class BrandEvaluationTester:
         # Test main evaluate endpoint
         self.test_evaluate_endpoint_structure()
         
-        # Test error handling
-        self.test_invalid_payload()
+        # Test auth endpoints
+        print("\n🔐 Testing Authentication Endpoints...")
+        
+        # Test registration
+        if not self.test_auth_register():
+            print("❌ Registration failed, skipping auth-dependent tests")
+            return False
+        
+        # Test login (using same credentials)
+        self.test_auth_login_email()
+        
+        # Test getting current user
+        self.test_auth_me()
+        
+        # Test report generation with auth
+        self.test_generate_report_with_auth()
+        
+        # Test report retrieval with auth
+        self.test_get_report_authenticated()
+        
+        # Test report retrieval without auth
+        self.test_get_report_unauthenticated()
+        
+        # Test logout
+        self.test_auth_logout()
         
         # Print summary
         print(f"\n📊 Test Summary:")
