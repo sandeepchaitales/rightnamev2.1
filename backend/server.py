@@ -431,7 +431,15 @@ async def evaluate_brands(request: BrandEvaluationRequest):
                     end = min(len(content), error_pos + 100)
                     logging.error(f"JSON Parse Error at position {error_pos}: {je.msg}")
                     logging.error(f"Context around error: ...{repr(content[start:end])}...")
-                    raise
+                    
+                    # Try aggressive repair
+                    logging.info("Trying aggressive JSON repair...")
+                    content = aggressive_json_repair(content)
+                    try:
+                        data = json.loads(content)
+                        logging.info("Aggressive repair succeeded!")
+                    except json.JSONDecodeError:
+                        raise
             
             evaluation = BrandEvaluationResponse(**data)
             
