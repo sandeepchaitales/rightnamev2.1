@@ -784,23 +784,11 @@ async def root_health_check():
 # Get CORS origins - handle both wildcard and specific origins
 cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins_env == '*':
-    # For wildcard, we need to use a list that allows any origin
-    # But with credentials=True, we need to handle this dynamically
+    # For wildcard, allow any origin
     cors_origins = ["*"]
     allow_credentials = False  # Can't use credentials with wildcard
 else:
-    cors_origins = cors_origins_env.split(',')
-    allow_credentials = True
-
-# For development and production with credentials, add common origins
-if cors_origins == ["*"]:
-    cors_origins = [
-        "http://localhost:3000",
-        "http://localhost:8001",
-        "https://namecheck-1.preview.emergentagent.com",
-        "https://rightname.ai",
-        "https://www.rightname.ai"
-    ]
+    cors_origins = [origin.strip() for origin in cors_origins_env.split(',')]
     allow_credentials = True
 
 app.add_middleware(
