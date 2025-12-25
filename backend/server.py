@@ -21,6 +21,7 @@ from schemas import BrandEvaluationRequest, BrandEvaluationResponse, StatusCheck
 from prompts import SYSTEM_PROMPT
 from visibility import check_visibility
 from availability import check_full_availability, check_multi_domain_availability, check_social_availability
+from similarity import check_brand_similarity, format_similarity_report
 
 # Import Emergent Integration
 try:
