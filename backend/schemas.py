@@ -233,6 +233,7 @@ class BrandScore(BaseModel):
     visibility_analysis: Optional[VisibilityAnalysis] = None
     cultural_analysis: List[CountryAnalysis] = Field(default=[])
     competitor_analysis: Optional[CompetitorAnalysis] = None
+    country_competitor_analysis: List[CountryCompetitorAnalysis] = Field(default=[], description="Competitor analysis per country (max 4 countries)")
     final_assessment: Optional[FinalAssessment] = None
     positioning_fit: Optional[str] = Field(default="Positioning analysis pending")
 
