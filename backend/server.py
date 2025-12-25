@@ -354,12 +354,18 @@ async def evaluate_brands(request: BrandEvaluationRequest):
             
             evaluation = BrandEvaluationResponse(**data)
             
+            # Generate report_id and save to database
+            report_id = f"report_{uuid.uuid4().hex[:16]}"
             doc = evaluation.model_dump()
+            doc['report_id'] = report_id
             doc['created_at'] = datetime.now(timezone.utc).isoformat()
             doc['request'] = request.model_dump()
             await db.evaluations.insert_one(doc)
             
-            return evaluation
+            # Return response with report_id
+            response_data = evaluation.model_dump()
+            response_data['report_id'] = report_id
+            return response_data
             
         except Exception as e:
             last_error = e
