@@ -6,100 +6,75 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, ShieldCheck, Globe2, BrainCircuit, Search, ArrowRight, Zap, AlertCircle, LogIn, LogOut, User, CheckCircle, Star, Rocket, Target, Trophy, Heart, TrendingUp, Users, Building2, Briefcase } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, CheckCircle, Shield, Globe, Zap, TrendingUp, Users, Building2, Star, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { ReportCarousel } from '../components/ReportPreview';
 
-// Dynamic Cycling "Trusted By" Component
-const TrustedByCycler = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  
-  const trustedBy = [
-    { text: "Brand Consultants", icon: Users, color: "text-violet-600", bg: "bg-violet-100" },
-    { text: "Startup Founders", icon: Rocket, color: "text-fuchsia-600", bg: "bg-fuchsia-100" },
-    { text: "Consulting Firms", icon: Building2, color: "text-orange-500", bg: "bg-orange-100" },
-    { text: "Marketing Agencies", icon: Briefcase, color: "text-emerald-600", bg: "bg-emerald-100" },
-  ];
+// Animated Logo Component
+const AnimatedLogo = () => (
+  <div className="relative w-24 h-24 md:w-32 md:h-32">
+    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500 rounded-3xl animate-pulse opacity-50 blur-xl" />
+    <div className="relative w-full h-full bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-violet-500/30">
+      <Sparkles className="w-12 h-12 md:w-16 md:h-16 text-white" />
+    </div>
+  </div>
+);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % trustedBy.length);
-        setIsAnimating(false);
-      }, 300);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [trustedBy.length]);
+// Stats Component
+const StatItem = ({ value, label }) => (
+  <div className="text-center px-6 py-4">
+    <div className="text-2xl md:text-3xl font-black text-white">{value}</div>
+    <div className="text-xs md:text-sm text-slate-400 font-medium mt-1">{label}</div>
+  </div>
+);
 
-  const current = trustedBy[currentIndex];
-  const Icon = current.icon;
-
-  return (
-    <div className="flex flex-col items-center gap-1.5 mt-5">
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Trusted By</p>
-      <div className="relative h-9 flex items-center justify-center min-w-[200px]">
+// Trusted By Avatars
+const TrustedByAvatars = () => (
+  <div className="flex items-center gap-3">
+    <div className="flex -space-x-3">
+      {[...Array(5)].map((_, i) => (
         <div 
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 transition-all duration-300 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}
+          key={i} 
+          className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 border-2 border-slate-800 flex items-center justify-center"
+          style={{ zIndex: 5 - i }}
         >
-          <div className={`w-6 h-6 rounded-full ${current.bg} flex items-center justify-center`}>
-            <Icon className={`w-3.5 h-3.5 ${current.color}`} />
-          </div>
-          <span className="font-bold text-slate-700 text-sm whitespace-nowrap">{current.text}</span>
+          <span className="text-xs text-slate-300">👤</span>
         </div>
-      </div>
-      {/* Progress dots */}
-      <div className="flex gap-1 mt-0.5">
-        {trustedBy.map((_, idx) => (
-          <div 
-            key={idx} 
-            className={`w-1 h-1 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-violet-500 w-3' : 'bg-slate-300'}`}
-          />
-        ))}
-      </div>
+      ))}
     </div>
-  );
-};
-
-// Animated floating badge component
-const FloatingBadge = ({ children, className, delay = 0 }) => (
-  <div 
-    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 shadow-lg font-bold text-sm ${className}`}
-    style={{ 
-      animation: `float 3s ease-in-out infinite`,
-      animationDelay: `${delay}s`
-    }}
-  >
-    {children}
+    <span className="text-sm text-slate-400">Trusted by <span className="text-white font-semibold">10,000+</span> founders</span>
   </div>
 );
 
-// Trust badge pill
-const TrustPill = ({ icon: Icon, text, color }) => (
-  <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${color} font-bold text-sm shadow-md hover:scale-105 transition-transform cursor-default`}>
-    <Icon className="w-4 h-4" />
-    <span>{text}</span>
+// Feature Pill
+const FeaturePill = ({ icon: Icon, text, color }) => (
+  <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm`}>
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-sm font-medium text-slate-300">{text}</span>
   </div>
 );
 
-const FeatureCard = ({ icon: Icon, title, description, color, emoji }) => (
-  <div className={`p-6 rounded-3xl bg-white border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] hover:border-violet-200 group relative overflow-hidden`}>
-    <div className="absolute top-4 right-4 text-4xl opacity-20 group-hover:opacity-40 transition-opacity">{emoji}</div>
-    <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg`}>
-      <Icon className="w-7 h-7 text-white" />
+// Showcase Card (for report previews)
+const ShowcaseCard = ({ gradient, title, score, verdict }) => (
+  <div className={`relative w-64 h-40 rounded-2xl ${gradient} p-4 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-transform cursor-pointer`}>
+    <div>
+      <div className="text-xs text-white/60 font-medium">Brand Analysis</div>
+      <div className="text-lg font-bold text-white mt-1">{title}</div>
     </div>
-    <h3 className="font-black text-lg text-slate-900 mb-2">{title}</h3>
-    <p className="text-sm text-slate-500 font-medium leading-relaxed">{description}</p>
+    <div className="flex items-center justify-between">
+      <div className="text-3xl font-black text-white">{score}</div>
+      <div className={`px-3 py-1 rounded-full text-xs font-bold ${verdict === 'GO' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
+        {verdict}
+      </div>
+    </div>
   </div>
 );
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, loginWithGoogle, logout, openAuthModal } = useAuth();
+  const { user, loading: authLoading, logout, openAuthModal } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     brand_names: '',
     industry: '',
@@ -109,42 +84,16 @@ const LandingPage = () => {
     brand_vibe: '',
     positioning: 'Premium',
     market_scope: 'Multi-Country',
-    countries: ''
+    countries: 'USA, India, UK'
   });
 
-  // Industry options
   const industries = [
-    "Technology & Software",
-    "E-commerce & Retail",
-    "Finance & Banking",
-    "Healthcare & Pharma",
-    "Food & Beverage",
-    "Fashion & Apparel",
-    "Beauty & Cosmetics",
-    "Travel & Hospitality",
-    "Real Estate & Property",
-    "Education & EdTech",
-    "Media & Entertainment",
-    "Automotive",
-    "Manufacturing",
-    "Agriculture",
-    "Energy & Utilities",
-    "Logistics & Supply Chain",
-    "Professional Services",
-    "Non-Profit & NGO",
-    "Sports & Fitness",
-    "Home & Living",
-    "Pet Care",
-    "Kids & Baby",
-    "Jewelry & Accessories",
-    "Art & Crafts",
-    "Gaming",
-    "Telecom",
-    "Insurance",
-    "Legal Services",
-    "HR & Recruitment",
-    "Marketing & Advertising",
-    "Other"
+    "Technology & Software", "E-commerce & Retail", "Finance & Banking", "Healthcare & Pharma",
+    "Food & Beverage", "Fashion & Apparel", "Beauty & Cosmetics", "Travel & Hospitality",
+    "Real Estate & Property", "Education & EdTech", "Media & Entertainment", "Automotive",
+    "Manufacturing", "Agriculture", "Energy & Utilities", "Logistics & Supply Chain",
+    "Professional Services", "Non-Profit & NGO", "Sports & Fitness", "Home & Living",
+    "Pet Care", "Kids & Baby", "Jewelry & Accessories", "Gaming", "Other"
   ];
 
   const productTypes = [
@@ -155,29 +104,21 @@ const LandingPage = () => {
   ];
 
   const uspOptions = [
-    { value: "Price", label: "Price - Best value for money" },
-    { value: "Quality", label: "Quality - Superior craftsmanship" },
-    { value: "Speed", label: "Speed - Fastest delivery/service" },
-    { value: "Reliability", label: "Reliability - Always dependable" },
-    { value: "Design", label: "Design - Aesthetically superior" },
-    { value: "Personal Touch", label: "Personal Touch - Customized experience" },
-    { value: "Health", label: "Health - Better for wellbeing" },
-    { value: "Eco-Friendly", label: "Eco-Friendly - Sustainable choice" },
-    { value: "Pure", label: "Pure - Natural/Organic" },
-    { value: "No Hassle", label: "No Hassle - Convenience first" }
+    { value: "Price", label: "Best value for money" },
+    { value: "Quality", label: "Superior quality" },
+    { value: "Speed", label: "Fastest delivery" },
+    { value: "Design", label: "Beautiful design" },
+    { value: "Eco-Friendly", label: "Sustainable" },
+    { value: "Innovation", label: "Most innovative" }
   ];
 
   const brandVibes = [
-    { value: "Serious", label: "Serious & Professional" },
-    { value: "Playful", label: "Playful & Fun" },
-    { value: "Luxurious", label: "Luxurious & Premium" },
-    { value: "Minimalist", label: "Minimalist & Clean" },
-    { value: "Bold", label: "Bold & Edgy" },
-    { value: "Warm", label: "Warm & Friendly" },
-    { value: "Innovative", label: "Innovative & Futuristic" },
-    { value: "Traditional", label: "Traditional & Classic" },
-    { value: "Youthful", label: "Youthful & Energetic" },
-    { value: "Trustworthy", label: "Trustworthy & Reliable" }
+    { value: "Professional", label: "Professional" },
+    { value: "Playful", label: "Playful" },
+    { value: "Luxurious", label: "Luxurious" },
+    { value: "Minimalist", label: "Minimalist" },
+    { value: "Bold", label: "Bold" },
+    { value: "Innovative", label: "Innovative" }
   ];
 
   const handleChange = (e) => {
@@ -215,432 +156,386 @@ const LandingPage = () => {
       navigate('/dashboard', { state: { data: result, query: payload } });
     } catch (error) {
       console.error(error);
-      let errorMsg = "Evaluation failed. Please try again.";
-      
-      // Handle different error formats
-      const detail = error.response?.data?.detail;
-      if (detail) {
-        if (typeof detail === 'string') {
-          errorMsg = detail;
-        } else if (Array.isArray(detail)) {
-          // Pydantic validation errors come as array of objects
-          errorMsg = detail.map(err => err.msg || err.message || JSON.stringify(err)).join(', ');
-        } else if (typeof detail === 'object') {
-          errorMsg = detail.msg || detail.message || JSON.stringify(detail);
-        }
-      }
-      
-      toast.error(
-        <div className="flex flex-col gap-1">
-            <span className="font-bold">Analysis Failed</span>
-            <span className="text-xs">{errorMsg}</span>
-        </div>,
-        { duration: 5000 }
-      );
+      toast.error("Analysis failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 font-sans selection:bg-violet-200 overflow-x-hidden">
-      {/* Add floating animation keyframes */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 1; }
-          100% { transform: scale(2); opacity: 0; }
-        }
-        @keyframes gradient-x {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+      {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-violet-300/30 to-fuchsia-300/30 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-cyan-300/30 to-blue-300/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-[40%] left-[20%] w-[300px] h-[300px] bg-gradient-to-br from-amber-200/20 to-orange-200/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-violet-600/20 via-fuchsia-600/10 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-600/10 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-orange-600/10 to-transparent rounded-full blur-3xl" />
         
-        {/* Floating decorative elements */}
-        <div className="absolute top-[15%] left-[10%] text-6xl opacity-10 animate-bounce" style={{ animationDuration: '3s' }}>✨</div>
-        <div className="absolute top-[25%] right-[15%] text-5xl opacity-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>🚀</div>
-        <div className="absolute bottom-[30%] left-[5%] text-4xl opacity-10 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}>💎</div>
-        <div className="absolute bottom-[20%] right-[10%] text-5xl opacity-10 animate-bounce" style={{ animationDuration: '4.5s', animationDelay: '1.5s' }}>⚡</div>
+        {/* Grid pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }}
+        />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-8 lg:py-12">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center mb-12 lg:mb-16">
-            <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-300/50 hover:scale-110 transition-transform cursor-pointer">
-                    <Sparkles className="w-7 h-7 text-white" />
-                </div>
-                <h1 className="text-2xl lg:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 tracking-tight">RIGHTNAME</h1>
+      {/* Navigation */}
+      <nav className="relative z-50 max-w-7xl mx-auto px-6 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div className="flex items-center gap-3">
-                {authLoading ? (
-                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
-                ) : user ? (
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 rounded-full shadow-sm">
-                            {user.picture ? (
-                                <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full ring-2 ring-violet-200" />
-                            ) : (
-                                <User className="w-5 h-5 text-slate-500" />
-                            )}
-                            <span className="text-sm font-bold text-slate-700 hidden sm:inline">{user.name?.split(' ')[0]}</span>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={logout} className="text-slate-600 rounded-full border-2">
-                            <LogOut className="w-4 h-4 mr-1" />
-                            <span className="hidden sm:inline">Sign Out</span>
-                        </Button>
-                    </div>
-                ) : (
-                    <Button onClick={() => openAuthModal()} className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 hover:from-violet-700 hover:via-fuchsia-600 hover:to-orange-600 text-white font-bold shadow-xl shadow-violet-300/50 rounded-full px-6 hover:scale-105 transition-transform">
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Sign In
-                    </Button>
-                )}
-            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+              RIGHTNAME
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {authLoading ? (
+              <div className="w-24 h-10 bg-slate-800 rounded-lg animate-pulse" />
+            ) : user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-400">Hi, {user.name?.split(' ')[0]}</span>
+                <Button 
+                  variant="ghost" 
+                  onClick={logout}
+                  className="text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => openAuthModal()}
+                className="bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6"
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
+      </nav>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      {/* Hero Section */}
+      <main className="relative z-10">
+        <div className="max-w-7xl mx-auto px-6 pt-12 pb-20 md:pt-20 md:pb-32">
+          
+          {/* Centered Hero Content */}
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             
-            {/* Left Content: Hero Text */}
-            <div className="space-y-8 relative z-10">
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border-2 border-violet-200 shadow-lg text-sm font-black text-violet-700">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    🤖 AI-Powered Brand Intelligence
-                </div>
-                
-                <h1 className="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.05] tracking-tight">
-                    Is Your Startup <br />
-                    <span 
-                      className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500"
-                      style={{ 
-                        backgroundSize: '200% auto',
-                        animation: 'gradient-x 3s linear infinite'
-                      }}
-                    >
-                        Name Legally Safe?
-                    </span>
-                    <br /> 
-                    <span className="inline-flex items-center">
-                      Let AI Prove It
-                      <span className="ml-3 text-5xl animate-bounce">🚀</span>
-                    </span>
-                </h1>
-                
-                <p className="text-xl text-slate-600 font-medium leading-relaxed max-w-lg">
-                    Get instant, <span className="text-violet-600 font-bold">consulting-grade</span> <span className="text-slate-900 font-black">"BRAND NAME ANALYSIS"</span> on trademark risk, cultural resonance, and domain availability. <span className="text-fuchsia-600 font-bold">No guesswork.</span>
-                </p>
-
-                {/* Quick Stats */}
-                <div className="flex items-center gap-6 pt-2">
-                    <div className="text-center">
-                        <div className="text-3xl font-black text-violet-600">50K+</div>
-                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Names Analyzed</div>
-                    </div>
-                    <div className="w-px h-12 bg-slate-200"></div>
-                    <div className="text-center">
-                        <div className="text-3xl font-black text-fuchsia-600">30s</div>
-                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Avg. Report Time</div>
-                    </div>
-                    <div className="w-px h-12 bg-slate-200"></div>
-                    <div className="text-center">
-                        <div className="text-3xl font-black text-orange-500">98%</div>
-                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Accuracy</div>
-                    </div>
-                </div>
-
-                {/* Feature Pills */}
-                <div className="flex flex-wrap gap-3 pt-4">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                        <span className="font-bold text-sm text-emerald-700">Legal Risk Check</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200">
-                        <Globe2 className="w-4 h-4 text-blue-600" />
-                        <span className="font-bold text-sm text-blue-700">Global Culture Fit</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-violet-50 border border-violet-200">
-                        <BrainCircuit className="w-4 h-4 text-violet-600" />
-                        <span className="font-bold text-sm text-violet-700">AI Perception</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 border border-orange-200">
-                        <Search className="w-4 h-4 text-orange-600" />
-                        <span className="font-bold text-sm text-orange-700">Domain Scout</span>
-                    </div>
-                </div>
+            {/* Animated Logo */}
+            <AnimatedLogo />
+            
+            {/* Main Headline */}
+            <h1 className="mt-10 text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+              <span className="text-white">Validate Your</span>
+              <br />
+              <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-orange-400 bg-clip-text text-transparent">
+                Brand Name
+              </span>
+              <span className="text-white"> in Minutes</span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed">
+              AI-powered consulting-grade analysis for trademark risk, cultural resonance, 
+              domain availability, and competitive positioning across global markets.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
+              <Button 
+                onClick={() => setShowForm(true)}
+                className="h-14 px-8 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 hover:from-violet-500 hover:via-fuchsia-500 hover:to-orange-400 text-white font-semibold text-lg rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all"
+              >
+                Start Free Analysis
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              
+              <Button 
+                variant="ghost"
+                className="h-14 px-8 text-slate-400 hover:text-white hover:bg-slate-800/50 font-medium text-lg rounded-xl"
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                See How It Works
+                <ChevronDown className="ml-2 w-5 h-5" />
+              </Button>
             </div>
-
-            {/* Right Content: The Form */}
-            <div className="relative z-10">
-                <div className="absolute -inset-2 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 rounded-[2rem] blur opacity-30 group-hover:opacity-40 transition-opacity"></div>
-                <Card className="border-2 border-white/50 shadow-2xl rounded-[2rem] overflow-hidden bg-white/90 backdrop-blur-xl relative">
-                    <CardContent className="p-8">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
-                                    <Zap className="w-5 h-5 text-white" />
-                                </div>
-                                Start Analysis
-                            </h3>
-                            <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-400 shadow-sm"></div>
-                                <div className="w-3 h-3 rounded-full bg-amber-400 shadow-sm"></div>
-                                <div className="w-3 h-3 rounded-full bg-green-400 shadow-sm"></div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Brand Name(s) ✨</Label>
-                                <Input 
-                                    name="brand_names"
-                                    value={formData.brand_names}
-                                    onChange={handleChange}
-                                    placeholder="e.g. LUMINA, VESTRA"
-                                    className="h-14 bg-slate-50 border-2 border-slate-200 focus:border-violet-500 focus:ring-violet-200 font-bold text-lg rounded-xl hover:border-violet-300 transition-colors"
-                                    required
-                                />
-                            </div>
-
-                            {/* Industry & Category Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Industry</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('industry', val)} value={formData.industry}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue placeholder="Select..." />
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-[300px]">
-                                            {industries.map((ind) => (
-                                                <SelectItem key={ind} value={ind}>{ind}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Category</Label>
-                                    <Input 
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleChange}
-                                        placeholder="e.g. DTC Skincare"
-                                        className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Product Type & USP Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Product Type</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('product_type', val)} value={formData.product_type}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {productTypes.map((pt) => (
-                                                <SelectItem key={pt.value} value={pt.value}>{pt.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">USP</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('usp', val)} value={formData.usp}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue placeholder="Select..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {uspOptions.map((usp) => (
-                                                <SelectItem key={usp.value} value={usp.value}>{usp.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Brand Vibe & Positioning Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Brand Vibe</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('brand_vibe', val)} value={formData.brand_vibe}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue placeholder="Select..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {brandVibes.map((vibe) => (
-                                                <SelectItem key={vibe.value} value={vibe.value}>{vibe.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Positioning</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('positioning', val)} value={formData.positioning}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Budget">Budget</SelectItem>
-                                            <SelectItem value="Mid-Range">Mid-Range</SelectItem>
-                                            <SelectItem value="Premium">Premium</SelectItem>
-                                            <SelectItem value="Luxury">Luxury</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Market Scope & Countries Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Market Scope</Label>
-                                    <Select onValueChange={(val) => handleSelectChange('market_scope', val)} value={formData.market_scope}>
-                                        <SelectTrigger className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Single Country">Single Country</SelectItem>
-                                            <SelectItem value="Multi-Country">Multi-Country</SelectItem>
-                                            <SelectItem value="Global">Global</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500">Countries 🌍</Label>
-                                    <Input 
-                                        name="countries"
-                                        value={formData.countries}
-                                        onChange={handleChange}
-                                        placeholder="USA, India, UK"
-                                        className="h-12 bg-slate-50 border-2 border-slate-200 rounded-xl font-medium hover:border-violet-300 transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            <Button 
-                                type="submit" 
-                                className="w-full h-14 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 hover:from-violet-700 hover:via-fuchsia-600 hover:to-orange-600 text-white text-lg font-black rounded-xl shadow-xl shadow-violet-300/50 hover:shadow-2xl hover:shadow-violet-400/50 hover:scale-[1.02] transition-all"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Analyzing Magic... ✨
-                                    </>
-                                ) : (
-                                    <>
-                                        Generate Report
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </>
-                                )}
-                            </Button>
-                            
-                            {/* Trusted By - Under Generate Report */}
-                            <TrustedByCycler />
-                        </form>
-                    </CardContent>
-                </Card>
+            
+            {/* Trust Indicators */}
+            <div className="mt-12">
+              <TrustedByAvatars />
             </div>
-        </div>
-
-        {/* Report Preview Carousel */}
-        <ReportCarousel />
-
-        {/* Feature Grid Section */}
-        <div className="mt-28">
-            <div className="text-center mb-16">
-                <Badge className="mb-4 bg-violet-100 text-violet-700 border-violet-200 px-4 py-1.5 text-sm font-black">
-                  💡 What We Analyze
-                </Badge>
-                <h2 className="text-4xl font-black text-slate-900 mb-4">
-                  Everything a <span className="text-violet-600">$50k consultant</span> does.
-                  <br />
-                  <span className="text-fuchsia-600">In 30 seconds.</span>
-                </h2>
-                <p className="text-slate-500 font-medium max-w-2xl mx-auto text-lg">
-                    Our AI replicates the complete workflow of premium brand consultancies.
-                </p>
+          </div>
+          
+          {/* Stats Bar */}
+          <div className="mt-20 max-w-3xl mx-auto">
+            <div className="flex items-center justify-center divide-x divide-slate-700/50 bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800/50">
+              <StatItem value="50K+" label="Names Analyzed" />
+              <StatItem value="30s" label="Avg Report Time" />
+              <StatItem value="180+" label="Countries" />
+              <StatItem value="98%" label="Accuracy" />
             </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <FeatureCard 
-                    icon={BrainCircuit}
-                    title="Perception Mapping"
-                    description="Map your name against 6 core brand dimensions including distinctiveness and trust."
-                    color="bg-gradient-to-br from-violet-500 to-violet-600"
-                    emoji="🧠"
-                />
-                <FeatureCard 
-                    icon={ShieldCheck}
-                    title="Legal Sensitivity"
-                    description="Probabilistic risk assessment for trademark conflicts across global registries."
-                    color="bg-gradient-to-br from-emerald-500 to-emerald-600"
-                    emoji="⚖️"
-                />
-                <FeatureCard 
-                    icon={Globe2}
-                    title="Cultural Check"
-                    description="Linguistic safety checks in 10+ languages to prevent embarrassing fails."
-                    color="bg-gradient-to-br from-fuchsia-500 to-fuchsia-600"
-                    emoji="🌍"
-                />
-                <FeatureCard 
-                    icon={Search}
-                    title="Domain Scout"
-                    description="Instant availability for .com and strategic alternatives based on your industry."
-                    color="bg-gradient-to-br from-orange-500 to-orange-600"
-                    emoji="🔍"
-                />
-            </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="mt-28 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 rounded-[2rem] blur-xl opacity-20"></div>
-          <div className="relative bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 rounded-[2rem] p-12 text-center text-white overflow-hidden">
-            <div className="absolute top-4 left-4 text-6xl opacity-20">✨</div>
-            <div className="absolute bottom-4 right-4 text-6xl opacity-20">🚀</div>
-            <h2 className="text-3xl lg:text-4xl font-black mb-4">Ready to find your perfect name?</h2>
-            <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">Join thousands of founders who've validated their brand names with RIGHTNAME.</p>
-            <Button 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="bg-white text-violet-700 hover:bg-slate-100 font-black text-lg px-8 py-6 rounded-xl shadow-xl hover:scale-105 transition-transform"
-            >
-              Start Free Analysis <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
+          </div>
+          
+          {/* Showcase Cards */}
+          <div className="mt-20 flex items-center justify-center gap-6 overflow-hidden">
+            <ShowcaseCard gradient="bg-gradient-to-br from-violet-600 to-indigo-700" title="LUXEVA" score="89" verdict="GO" />
+            <ShowcaseCard gradient="bg-gradient-to-br from-fuchsia-600 to-pink-700" title="ZENOVA" score="85" verdict="GO" />
+            <ShowcaseCard gradient="bg-gradient-to-br from-orange-500 to-red-600" title="NOVAPAY" score="72" verdict="CONDITIONAL" />
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-20 border-t-2 border-slate-100 pt-12 text-center pb-8">
-            <div className="flex justify-center items-center gap-6 mb-6">
-                 <span className="font-black text-xl text-slate-800">OpenAI</span>
-                 <span className="text-slate-300">•</span>
-                 <span className="font-bold text-lg text-slate-600">React</span>
-                 <span className="text-slate-300">•</span>
-                 <span className="font-bold text-lg text-slate-600">FastAPI</span>
+        {/* Features Section */}
+        <section id="features" className="py-20 bg-slate-900/50">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-white">Everything You Need to Validate Your Brand</h2>
+              <p className="mt-4 text-slate-400 max-w-2xl mx-auto">
+                Comprehensive analysis powered by AI, delivering insights that would take consultants weeks in just seconds.
+              </p>
             </div>
-            <p className="text-sm text-slate-400 font-medium">© 2025 RIGHTNAME. All rights reserved.</p>
-        </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { icon: Shield, title: "Legal Risk Matrix", desc: "Trademark conflicts, genericness, and rebranding probability analysis", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                { icon: Globe, title: "Global Culture Fit", desc: "Linguistic and cultural resonance across 180+ countries", color: "text-blue-400", bg: "bg-blue-500/10" },
+                { icon: TrendingUp, title: "Market Positioning", desc: "Competitor analysis with strategic positioning matrices per country", color: "text-violet-400", bg: "bg-violet-500/10" },
+                { icon: Zap, title: "Domain & Social", desc: "Real-time availability check for domains and social handles", color: "text-orange-400", bg: "bg-orange-500/10" },
+              ].map((feature, i) => (
+                <div key={i} className={`p-6 rounded-2xl ${feature.bg} border border-slate-800/50 hover:border-slate-700/50 transition-colors`}>
+                  <feature.icon className={`w-10 h-10 ${feature.color} mb-4`} />
+                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-slate-400">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      </div>
+        {/* Report Preview Carousel */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white">See What's Inside Your Report</h2>
+              <p className="mt-4 text-slate-400">Detailed, actionable insights delivered in a beautiful format</p>
+            </div>
+            <ReportCarousel />
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-gradient-to-b from-slate-900/50 to-slate-950">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Ready to Validate Your Brand?</h2>
+            <p className="mt-4 text-slate-400">Join thousands of founders who trust RIGHTNAME for brand validation</p>
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="mt-8 h-14 px-10 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 hover:from-violet-500 hover:via-fuchsia-500 hover:to-orange-400 text-white font-semibold text-lg rounded-xl shadow-lg shadow-violet-500/25"
+            >
+              Get Started Free
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-10 border-t border-slate-800/50">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-sm text-slate-500">© 2025 RIGHTNAME. All rights reserved.</span>
+              </div>
+              <div className="flex items-center gap-6 text-sm text-slate-500">
+                <a href="#" className="hover:text-white transition-colors">Terms</a>
+                <a href="#" className="hover:text-white transition-colors">Privacy</a>
+                <a href="#" className="hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+
+      {/* Analysis Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl">
+            <div className="sticky top-0 bg-slate-900 border-b border-slate-800 px-8 py-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Start Your Analysis</h3>
+                <p className="text-sm text-slate-400 mt-1">Enter your brand details for a comprehensive report</p>
+              </div>
+              <button 
+                onClick={() => setShowForm(false)}
+                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              {/* Brand Name */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-300">Brand Name(s) *</Label>
+                <Input 
+                  name="brand_names"
+                  value={formData.brand_names}
+                  onChange={handleChange}
+                  placeholder="e.g. LUMINA, VESTRA, ZENOVA"
+                  className="h-14 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl text-lg"
+                  required
+                />
+                <p className="text-xs text-slate-500">Separate multiple names with commas</p>
+              </div>
+
+              {/* Industry & Category */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Industry</Label>
+                  <Select onValueChange={(val) => handleSelectChange('industry', val)} value={formData.industry}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue placeholder="Select industry..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {industries.map((ind) => (
+                        <SelectItem key={ind} value={ind} className="text-slate-300 focus:bg-slate-800 focus:text-white">{ind}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Category</Label>
+                  <Input 
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    placeholder="e.g. DTC Skincare"
+                    className="h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Product Type & USP */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Product Type</Label>
+                  <Select onValueChange={(val) => handleSelectChange('product_type', val)} value={formData.product_type}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {productTypes.map((pt) => (
+                        <SelectItem key={pt.value} value={pt.value} className="text-slate-300 focus:bg-slate-800 focus:text-white">{pt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">USP</Label>
+                  <Select onValueChange={(val) => handleSelectChange('usp', val)} value={formData.usp}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue placeholder="Select USP..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {uspOptions.map((usp) => (
+                        <SelectItem key={usp.value} value={usp.value} className="text-slate-300 focus:bg-slate-800 focus:text-white">{usp.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Brand Vibe & Positioning */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Brand Vibe</Label>
+                  <Select onValueChange={(val) => handleSelectChange('brand_vibe', val)} value={formData.brand_vibe}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue placeholder="Select vibe..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      {brandVibes.map((vibe) => (
+                        <SelectItem key={vibe.value} value={vibe.value} className="text-slate-300 focus:bg-slate-800 focus:text-white">{vibe.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Positioning</Label>
+                  <Select onValueChange={(val) => handleSelectChange('positioning', val)} value={formData.positioning}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      <SelectItem value="Budget" className="text-slate-300 focus:bg-slate-800 focus:text-white">Budget</SelectItem>
+                      <SelectItem value="Mid-Range" className="text-slate-300 focus:bg-slate-800 focus:text-white">Mid-Range</SelectItem>
+                      <SelectItem value="Premium" className="text-slate-300 focus:bg-slate-800 focus:text-white">Premium</SelectItem>
+                      <SelectItem value="Luxury" className="text-slate-300 focus:bg-slate-800 focus:text-white">Luxury</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Market Scope & Countries */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Market Scope</Label>
+                  <Select onValueChange={(val) => handleSelectChange('market_scope', val)} value={formData.market_scope}>
+                    <SelectTrigger className="h-12 bg-slate-800/50 border-slate-700 text-white rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-700">
+                      <SelectItem value="Single Country" className="text-slate-300 focus:bg-slate-800 focus:text-white">Single Country</SelectItem>
+                      <SelectItem value="Multi-Country" className="text-slate-300 focus:bg-slate-800 focus:text-white">Multi-Country</SelectItem>
+                      <SelectItem value="Global" className="text-slate-300 focus:bg-slate-800 focus:text-white">Global</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-300">Target Countries</Label>
+                  <Input 
+                    name="countries"
+                    value={formData.countries}
+                    onChange={handleChange}
+                    placeholder="USA, India, UK, Germany"
+                    className="h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <Button 
+                type="submit" 
+                className="w-full h-14 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 hover:from-violet-500 hover:via-fuchsia-500 hover:to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg shadow-violet-500/25"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    Generate Report
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
+                )}
+              </Button>
+              
+              <p className="text-center text-xs text-slate-500">
+                Free analysis • No credit card required • Results in ~30 seconds
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
