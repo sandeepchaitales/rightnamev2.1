@@ -87,6 +87,10 @@ export const AuthProvider = ({ children }) => {
                 throw new Error(data.detail || 'Registration failed');
             }
             
+            // Save auth status to localStorage for persistence
+            localStorage.setItem('user_authenticated', 'true');
+            localStorage.setItem('user_data', JSON.stringify(data));
+            
             setUser(data);
             setShowAuthModal(false);
             return { success: true, user: data };
@@ -119,6 +123,10 @@ export const AuthProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error(data.detail || 'Login failed');
             }
+            
+            // Save auth status to localStorage for persistence
+            localStorage.setItem('user_authenticated', 'true');
+            localStorage.setItem('user_data', JSON.stringify(data));
             
             setUser(data);
             setShowAuthModal(false);
