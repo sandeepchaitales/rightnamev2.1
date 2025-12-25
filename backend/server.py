@@ -708,7 +708,7 @@ if cors_origins == ["*"]:
     cors_origins = [
         "http://localhost:3000",
         "http://localhost:8001",
-        "https://brandcheck.preview.emergentagent.com",
+        "https://namecheck-1.preview.emergentagent.com",
         "https://rightname.ai",
         "https://www.rightname.ai"
     ]
