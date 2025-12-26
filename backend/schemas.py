@@ -5,14 +5,34 @@ import uuid
 
 class DimensionScore(BaseModel):
     name: str
-    score: float
-    reasoning: str
+    score: float = Field(default=0.0)
+    reasoning: str = Field(default="")
+    
+    @field_validator('score', mode='before')
+    @classmethod
+    def convert_score(cls, v):
+        if v is None or v == 'N/A' or v == '':
+            return 0.0
+        try:
+            return float(v)
+        except (ValueError, TypeError):
+            return 0.0
 
 class TrademarkRiskRow(BaseModel):
     likelihood: int = Field(default=1)
     severity: int = Field(default=1)
     zone: str = Field(default="Green")
     commentary: str = Field(default="No specific risk identified")
+    
+    @field_validator('likelihood', 'severity', mode='before')
+    @classmethod
+    def convert_int(cls, v):
+        if v is None or v == 'N/A' or v == '':
+            return 1
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return 1
 
 class TrademarkRiskMatrix(BaseModel):
     genericness: Optional[TrademarkRiskRow] = Field(default_factory=lambda: TrademarkRiskRow())
