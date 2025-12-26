@@ -1,30 +1,42 @@
 {
-  "test_focus": "Country-Specific Legal Precedents Testing",
-  "description": "Testing that legal precedents are relevant to the selected country's jurisdiction",
+  "test_focus": "QuickTest Smoke Test for RIGHTNAME API",
+  "description": "Quick smoke test to verify RIGHTNAME brand evaluation API is working after schema fix",
+  "test_case": {
+    "brand_names": [
+      "QuickTest"
+    ],
+    "category": "Technology",
+    "positioning": "Premium",
+    "market_scope": "Single Country",
+    "countries": [
+      "USA"
+    ]
+  },
+  "verification_points": [
+    "API returns successful response (200 OK)",
+    "Response contains brand_scores with namescore and verdict",
+    "No validation errors (especially for score_impact field)",
+    "Legal precedents contain USA cases (like Polaroid Corp.)"
+  ],
   "summary": {
-    "tests_run": 3,
+    "tests_run": 2,
     "tests_passed": 1,
-    "success_rate": 33.33333333333333
+    "success_rate": 50.0,
+    "overall_success": false
   },
   "results": [
     {
       "test": "API Health Check",
       "success": true,
       "details": "Status: 200, Response: {\"message\":\"RightName API is running\"}",
-      "timestamp": "2025-12-26T18:02:50.208249"
+      "timestamp": "2025-12-26T18:12:38.271955"
     },
     {
-      "test": "Legal Precedents USA - Timeout",
+      "test": "QuickTest Smoke - Timeout",
       "success": false,
-      "details": "Request timed out after 180 seconds",
-      "timestamp": "2025-12-26T18:05:50.366239"
-    },
-    {
-      "test": "Legal Precedents India - Timeout",
-      "success": false,
-      "details": "Request timed out after 180 seconds",
-      "timestamp": "2025-12-26T18:08:50.550012"
+      "details": "Request timed out after 120 seconds",
+      "timestamp": "2025-12-26T18:14:38.398139"
     }
   ],
-  "timestamp": "2025-12-26T18:08:50.550171"
+  "timestamp": "2025-12-26T18:14:38.398278"
 }
