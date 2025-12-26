@@ -281,10 +281,10 @@ def search_app_stores_comprehensive(brand_name: str, category: str = "", industr
                         app["match_type"] = "COMBINED"
                         results["category_competitors"].append(app)
     
-    # Strategy 3: Phonetic variants alone
-    logger.info(f"App search Strategy 3: Phonetic variants {phonetic_variants}")
+    # Strategy 3: Phonetic variants alone (only top 2)
+    logger.info(f"App search Strategy 3: Phonetic variants {phonetic_variants[:2]}")
     
-    for variant in phonetic_variants[:3]:  # Limit to top 3 variants
+    for variant in phonetic_variants[:2]:  # Limit to top 2 variants
         results["search_queries_used"].append(f"Phonetic: {variant}")
         
         variant_results = get_play_store_results(variant, country='us')
@@ -303,8 +303,6 @@ def search_app_stores_comprehensive(brand_name: str, category: str = "", industr
                     # Mark as potential conflict if it's a close match
                     if is_close_match(brand_name, app.get("title", "")):
                         results["potential_conflicts"].append(app)
-        
-        time.sleep(0.3)
     
     # Strategy 4: CRITICAL - Phonetic variants + category keywords
     # This is the key to finding "UnQue - Salon Booking App" when searching "Unque"
