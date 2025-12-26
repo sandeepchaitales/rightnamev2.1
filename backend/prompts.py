@@ -624,6 +624,96 @@ Return ONLY valid JSON.
           "overall_assessment": "Full legal strategy recommendation."
       },
 
+      "trademark_research": {
+          "CRITICAL_INSTRUCTION": "Populate this section using the REAL-TIME TRADEMARK RESEARCH DATA provided in the prompt. Reference actual conflicts found.",
+          "nice_classification": {
+              "class_number": 25,
+              "class_description": "Clothing, footwear, headgear",
+              "matched_term": "fashion"
+          },
+          "trademark_conflicts": [
+              {
+                  "name": "Name of conflicting trademark from research data",
+                  "source": "IP India/Trademarking.in/USPTO/Web Search",
+                  "conflict_type": "trademark_application/registered_company/common_law",
+                  "application_number": "7-digit application number if found (e.g., 6346642)",
+                  "status": "REGISTERED/PENDING/OBJECTED/ABANDONED",
+                  "owner": "Owner name if found",
+                  "class_number": "Nice class number",
+                  "risk_level": "CRITICAL/HIGH/MEDIUM/LOW",
+                  "details": "Brief description of the conflict"
+              }
+          ],
+          "company_conflicts": [
+              {
+                  "name": "Company Name Pvt Ltd",
+                  "cin": "Corporate Identification Number if found (e.g., U85500TZ2025PTC036174)",
+                  "status": "ACTIVE/INACTIVE",
+                  "industry": "Industry sector",
+                  "state": "State/Region",
+                  "source": "Tofler/Zauba Corp/MCA",
+                  "risk_level": "HIGH/MEDIUM/LOW"
+              }
+          ],
+          "common_law_conflicts": [
+              {
+                  "name": "Business operating without formal trademark",
+                  "platform": "Instagram/Website/Amazon/E-commerce",
+                  "industry_match": true,
+                  "risk_level": "MEDIUM/LOW"
+              }
+          ],
+          "legal_precedents": [
+              {
+                  "case_name": "X v. Y (relevant trademark case)",
+                  "court": "Delhi High Court/Supreme Court",
+                  "year": "2023",
+                  "relevance": "Why this case is relevant to this brand evaluation",
+                  "key_principle": "Legal principle established"
+              }
+          ],
+          "overall_risk_score": 7,
+          "registration_success_probability": 55,
+          "opposition_probability": 45,
+          "critical_conflicts_count": 0,
+          "high_risk_conflicts_count": 1,
+          "total_conflicts_found": 3
+      },
+
+      "registration_timeline": {
+          "estimated_duration": "12-18 months",
+          "stages": [
+              {"stage": "Examination by Registrar", "duration": "3-6 months", "risk": "Objections possible"},
+              {"stage": "Publication in Trademark Journal", "duration": "Upon passing exam", "risk": "Public visibility"},
+              {"stage": "Opposition Period", "duration": "4 months", "risk": "HIGH - Competitors can oppose"},
+              {"stage": "Registration", "duration": "Upon approval", "risk": "Exclusive rights granted"}
+          ],
+          "filing_cost": "₹4,500-9,000 (Startup/Company)",
+          "opposition_defense_cost": "₹50,000-200,000 if contested",
+          "total_estimated_cost": "₹15,000-250,000 depending on opposition"
+      },
+
+      "mitigation_strategies": [
+          {
+              "priority": "HIGH",
+              "action": "Conduct formal trademark search with IP India before filing",
+              "rationale": "Identify all potential conflicts before investment",
+              "estimated_cost": "₹3,000-5,000"
+          },
+          {
+              "priority": "HIGH", 
+              "action": "Develop distinctive visual identity/logo",
+              "rationale": "Strong design can offset wordmark similarity",
+              "estimated_cost": "₹10,000-50,000"
+          },
+          {
+              "priority": "MEDIUM",
+              "action": "Consider co-existence agreement with similar mark holders",
+              "rationale": "Negotiate market/geographic boundaries",
+              "estimated_cost": "₹50,000-200,000"
+          }
+      ],
+
       "trademark_classes": [
           "Class 25: Clothing, Footwear, Headgear",
           "Class 35: Advertising, Business Management, Retail Services"
