@@ -968,78 +968,82 @@ async def evaluate_brands(request: BrandEvaluationRequest):
                     # If LLM returned a list, wrap it as brand_scores
                     if len(data) > 0 and isinstance(data[0], dict):
                         data = {"brand_scores": data, "executive_summary": "Brand evaluation completed.", "comparison_verdict": ""}
-                else:
-                    raise ValueError("Invalid response format from LLM")
-            
-            # Pre-process data to fix common LLM output issues
-            data = fix_llm_response_types(data)
-            
-            evaluation = BrandEvaluationResponse(**data)
-            
-            # OVERRIDE: Force REJECT verdict for famous brands
-            if famous_brand_rejections:
-                for i, brand_score in enumerate(evaluation.brand_scores):
-                    brand_name = brand_score.brand_name
-                    if brand_name in famous_brand_rejections or brand_name.lower() in [b.lower() for b in famous_brand_rejections.keys()]:
-                        famous_info = famous_brand_rejections.get(brand_name) or famous_brand_rejections.get(brand_name.upper()) or list(famous_brand_rejections.values())[0]
-                        
-                        logging.warning(f"OVERRIDING LLM verdict for '{brand_name}' - Famous brand detected: {famous_info['matched_brand']}")
-                        
-                        # Force REJECT verdict
-                        evaluation.brand_scores[i].verdict = "REJECT"
-                        evaluation.brand_scores[i].namescore = 5.0  # Near-zero score
-                        evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is an EXISTING MAJOR TRADEMARK of {famous_info['matched_brand']}. Using this name would constitute trademark infringement and is legally prohibited. This name CANNOT be used for any business purpose."
-                        
-                        # Update trademark risk
-                        evaluation.brand_scores[i].trademark_risk = {
-                            "overall_risk": "CRITICAL",
-                            "reason": f"EXACT MATCH of famous brand '{famous_info['matched_brand']}'. Trademark infringement guaranteed."
-                        }
-                        
-                        # Clear recommendations (no point recommending anything for a rejected name)
-                        if evaluation.brand_scores[i].domain_analysis:
-                            evaluation.brand_scores[i].domain_analysis.alternatives = []
-                            evaluation.brand_scores[i].domain_analysis.strategy_note = "N/A - Name rejected due to famous brand conflict"
-                        if evaluation.brand_scores[i].multi_domain_availability:
-                            evaluation.brand_scores[i].multi_domain_availability.recommended_domain = "N/A - Name rejected"
-                            evaluation.brand_scores[i].multi_domain_availability.acquisition_strategy = "N/A - Name rejected"
-                        if evaluation.brand_scores[i].social_availability:
-                            evaluation.brand_scores[i].social_availability.recommendation = "N/A - Name rejected due to famous brand conflict"
-                        if evaluation.brand_scores[i].competitor_analysis:
-                            evaluation.brand_scores[i].competitor_analysis.suggested_pricing = "N/A - Name rejected"
-                        evaluation.brand_scores[i].positioning_fit = "N/A - Name rejected due to famous brand trademark conflict"
-            
-            # Generate report_id and save to database
-            report_id = f"report_{uuid.uuid4().hex[:16]}"
-            doc = evaluation.model_dump()
-            doc['report_id'] = report_id
-            doc['created_at'] = datetime.now(timezone.utc).isoformat()
-            doc['request'] = request.model_dump()
-            await db.evaluations.insert_one(doc)
-            
-            # Set report_id in the evaluation object
-            evaluation.report_id = report_id
-            
-            # Return the evaluation with report_id
-            return evaluation
-            
-        except Exception as e:
-            last_error = e
-            error_msg = str(e)
-            
-            if "Budget has been exceeded" in error_msg:
-                logging.error(f"LLM Budget Exceeded: {error_msg}")
-                raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
-            
-            # Retry on 502/Gateway/Service errors AND JSON/Validation errors
-            if any(x in error_msg for x in ["502", "BadGateway", "ServiceUnavailable", "Expecting", "JSON", "validation error", "control character"]):
-                wait_time = (2 ** attempt) + random.uniform(0, 1)
-                logging.warning(f"LLM Error (Attempt {attempt+1}/{max_retries}): {error_msg}. Retrying in {wait_time:.2f}s...")
-                await asyncio.sleep(wait_time)
-                continue
-            
-            logging.error(f"LLM Error: {error_msg}")
-            break
+                    else:
+                        raise ValueError("Invalid response format from LLM")
+                
+                # Pre-process data to fix common LLM output issues
+                data = fix_llm_response_types(data)
+                
+                evaluation = BrandEvaluationResponse(**data)
+                
+                # OVERRIDE: Force REJECT verdict for famous brands
+                if famous_brand_rejections:
+                    for i, brand_score in enumerate(evaluation.brand_scores):
+                        brand_name = brand_score.brand_name
+                        if brand_name in famous_brand_rejections or brand_name.lower() in [b.lower() for b in famous_brand_rejections.keys()]:
+                            famous_info = famous_brand_rejections.get(brand_name) or famous_brand_rejections.get(brand_name.upper()) or list(famous_brand_rejections.values())[0]
+                            
+                            logging.warning(f"OVERRIDING LLM verdict for '{brand_name}' - Famous brand detected: {famous_info['matched_brand']}")
+                            
+                            # Force REJECT verdict
+                            evaluation.brand_scores[i].verdict = "REJECT"
+                            evaluation.brand_scores[i].namescore = 5.0  # Near-zero score
+                            evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is an EXISTING MAJOR TRADEMARK of {famous_info['matched_brand']}. Using this name would constitute trademark infringement and is legally prohibited. This name CANNOT be used for any business purpose."
+                            
+                            # Update trademark risk
+                            evaluation.brand_scores[i].trademark_risk = {
+                                "overall_risk": "CRITICAL",
+                                "reason": f"EXACT MATCH of famous brand '{famous_info['matched_brand']}'. Trademark infringement guaranteed."
+                            }
+                            
+                            # Clear recommendations (no point recommending anything for a rejected name)
+                            if evaluation.brand_scores[i].domain_analysis:
+                                evaluation.brand_scores[i].domain_analysis.alternatives = []
+                                evaluation.brand_scores[i].domain_analysis.strategy_note = "N/A - Name rejected due to famous brand conflict"
+                            if evaluation.brand_scores[i].multi_domain_availability:
+                                evaluation.brand_scores[i].multi_domain_availability.recommended_domain = "N/A - Name rejected"
+                                evaluation.brand_scores[i].multi_domain_availability.acquisition_strategy = "N/A - Name rejected"
+                            if evaluation.brand_scores[i].social_availability:
+                                evaluation.brand_scores[i].social_availability.recommendation = "N/A - Name rejected due to famous brand conflict"
+                            if evaluation.brand_scores[i].competitor_analysis:
+                                evaluation.brand_scores[i].competitor_analysis.suggested_pricing = "N/A - Name rejected"
+                            evaluation.brand_scores[i].positioning_fit = "N/A - Name rejected due to famous brand trademark conflict"
+                
+                # Generate report_id and save to database
+                report_id = f"report_{uuid.uuid4().hex[:16]}"
+                doc = evaluation.model_dump()
+                doc['report_id'] = report_id
+                doc['created_at'] = datetime.now(timezone.utc).isoformat()
+                doc['request'] = request.model_dump()
+                await db.evaluations.insert_one(doc)
+                
+                # Set report_id in the evaluation object
+                evaluation.report_id = report_id
+                
+                # Return the evaluation with report_id
+                logging.info(f"Successfully generated report with model {model_provider}/{model_name}")
+                return evaluation
+                
+            except Exception as e:
+                last_error = e
+                error_msg = str(e)
+                
+                if "Budget has been exceeded" in error_msg:
+                    logging.error(f"LLM Budget Exceeded: {error_msg}")
+                    raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
+                
+                # Retry on 502/Gateway/Service errors AND JSON/Validation errors
+                if any(x in error_msg for x in ["502", "BadGateway", "ServiceUnavailable", "Expecting", "JSON", "validation error", "control character"]):
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    logging.warning(f"LLM Error ({model_provider}/{model_name}, Attempt {attempt+1}/{max_retries}): {error_msg}. Retrying in {wait_time:.2f}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
+                
+                logging.error(f"LLM Error with {model_provider}/{model_name}: {error_msg}")
+                break
+        
+        # If all retries failed for this model, try next model
+        logging.warning(f"All retries failed for {model_provider}/{model_name}, trying next model...")
             
     raise HTTPException(status_code=500, detail=f"Analysis failed: {str(last_error)}")
 
