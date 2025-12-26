@@ -1735,7 +1735,7 @@ const Dashboard = () => {
 
                 {/* SECTION 3: FINAL ASSESSMENT */}
                 {brand.final_assessment && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={Zap} title="Final Assessment" subtitle="Consultant Verdict & Roadmap" color="emerald" />
                         {isAuthenticated ? (
                             <FinalAssessmentFull assessment={brand.final_assessment} verdict={brand.verdict} score={brand.namescore} />
@@ -1746,7 +1746,7 @@ const Dashboard = () => {
                 )}
 
                 {/* SECTION 4: STRATEGY SNAPSHOT */}
-                <section className="print-section">
+                <section className="print-section print-page-break">
                     <SectionHeader icon={Target} title="Strategy Snapshot" subtitle="Strengths and risks analysis" color="emerald" />
                     {isAuthenticated ? (
                         <StrategySnapshot classification={brand.strategic_classification} pros={brand.pros} cons={brand.cons} />
@@ -1757,7 +1757,7 @@ const Dashboard = () => {
 
                 {/* SECTION 5: DETAILED DIMENSIONS */}
                 {brand.dimensions && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={BarChart3} title="Detailed Framework Analysis" subtitle="In-depth scoring breakdown" color="fuchsia" />
                         {isAuthenticated ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:gap-3">
@@ -1773,7 +1773,7 @@ const Dashboard = () => {
 
                 {/* SECTION 6: DIGITAL PRESENCE */}
                 {(brand.multi_domain_availability || brand.social_availability) && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={Globe} title="Digital Presence Check" subtitle="Domain & social availability" color="cyan" badge={`${brand.multi_domain_availability?.category_domains?.filter(d => d.available).length || 0}/${brand.multi_domain_availability?.category_domains?.length || 0} Available`} />
                         {isAuthenticated ? (
                             <DigitalPresenceSection 
@@ -1789,7 +1789,7 @@ const Dashboard = () => {
 
                 {/* SECTION 7: MARKET INTELLIGENCE */}
                 {(brand.domain_analysis || brand.visibility_analysis || brand.cultural_analysis) && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={TrendingUp} title="Market Intelligence" subtitle="Domain status, conflicts & cultural fit" color="amber" />
                         {isAuthenticated ? (
                             <MarketIntelligenceSection 
@@ -1805,7 +1805,7 @@ const Dashboard = () => {
 
                 {/* SECTION 8: COMPETITIVE LANDSCAPE */}
                 {(brand.competitor_analysis || brand.country_competitor_analysis?.length > 0) && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={Users} title="Competitive Landscape" subtitle="Strategic positioning matrix by market" color="blue" />
                         {isAuthenticated ? (
                             <CompetitiveLandscapeSection 
@@ -1820,7 +1820,7 @@ const Dashboard = () => {
 
                 {/* SECTION 9: LEGAL RISK MATRIX */}
                 {brand.trademark_matrix && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={Scale} title="Legal Risk Matrix" subtitle="IP Analysis & Trademark Assessment" color="red" />
                         {isAuthenticated ? (
                             <LegalRiskMatrix trademarkMatrix={brand.trademark_matrix} trademarkClasses={brand.trademark_classes} />
@@ -1832,7 +1832,7 @@ const Dashboard = () => {
 
                 {/* SECTION 10: TRADEMARK RESEARCH (NEW - Perplexity-Level Analysis) */}
                 {brand.trademark_research && (
-                    <section className="print-section">
+                    <section className="print-section print-page-break">
                         <SectionHeader icon={Shield} title="Trademark Research Intelligence" subtitle="Real-Time Conflict Discovery & Risk Analysis" color="violet" badge="NEW" />
                         {isAuthenticated ? (
                             <TrademarkResearchSection 
