@@ -1797,7 +1797,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-3">
                     <Badge variant="outline" className="hidden md:flex">
                         {query.category} • {query.countries?.length === 1 
-                            ? `${getCountryFlag(query.countries[0])} ${getCountryName(query.countries[0])}` 
+                            ? getCountryName(query.countries[0])
                             : (query.countries?.length > 1 
                                 ? `${query.countries.length} Countries` 
                                 : query.market_scope)}
