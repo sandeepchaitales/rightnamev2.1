@@ -219,6 +219,99 @@ def get_play_store_results(query, country='us', timeout=10):
     return results
 
 
+def get_ios_app_store_results(query, country='us', limit=5):
+    """
+    Search iOS App Store for apps matching query.
+    Uses app-store-scraper library.
+    
+    Returns list of app info dictionaries.
+    """
+    if not IOS_AVAILABLE:
+        logger.warning("iOS App Store scraper not available")
+        return []
+    
+    results = []
+    max_retries = 2
+    
+    for attempt in range(max_retries):
+        try:
+            # app-store-scraper search method
+            from itunes_app_scraper.scraper import AppStoreScraper
+            scraper = AppStoreScraper()
+            search_results = scraper.get_app_ids_for_query(query, country=country, limit=limit)
+            
+            for app_id in search_results[:limit]:
+                try:
+                    app_details = scraper.get_app_details(app_id, country=country)
+                    if app_details:
+                        results.append({
+                            "title": app_details.get('trackName', 'Unknown'),
+                            "developer": app_details.get('artistName', 'Unknown'),
+                            "appId": str(app_id),
+                            "score": app_details.get('averageUserRating', 0),
+                            "source": "iOS App Store"
+                        })
+                except Exception as e:
+                    logger.warning(f"Failed to get iOS app details for {app_id}: {e}")
+            break
+            
+        except ImportError:
+            # Try alternative method using web search
+            logger.info(f"Using web search fallback for iOS apps: '{query}'")
+            try:
+                web_results = get_web_search_results(f"{query} site:apps.apple.com")
+                for res in web_results[:limit]:
+                    if 'apps.apple.com' in res.lower():
+                        results.append({
+                            "title": query,
+                            "developer": "Unknown (from web)",
+                            "appId": "web_search",
+                            "score": 0,
+                            "source": "iOS App Store (web search)"
+                        })
+                        break
+            except Exception:
+                pass
+            break
+            
+        except Exception as e:
+            logger.warning(f"iOS App Store search failed for '{query}' (attempt {attempt+1}/{max_retries}): {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(0.5)
+                continue
+    
+    time.sleep(0.2)  # Rate limiting
+    return results
+
+
+def search_both_app_stores(query, countries=['us', 'in']):
+    """
+    Search BOTH Play Store AND iOS App Store.
+    Returns combined results.
+    """
+    all_results = []
+    
+    # Play Store search
+    for country in countries[:2]:  # Limit countries
+        try:
+            play_results = get_play_store_results(query, country=country)
+            for app in play_results:
+                app['source'] = f'Play Store ({country.upper()})'
+            all_results.extend(play_results)
+        except Exception as e:
+            logger.warning(f"Play Store search failed for '{query}' in {country}: {e}")
+    
+    # iOS App Store search
+    for country in countries[:2]:
+        try:
+            ios_results = get_ios_app_store_results(query, country=country)
+            all_results.extend(ios_results)
+        except Exception as e:
+            logger.warning(f"iOS App Store search failed for '{query}' in {country}: {e}")
+    
+    return all_results
+
+
 def search_app_stores_comprehensive(brand_name: str, category: str = "", industry: str = "") -> dict:
     """
     Comprehensive app store search using multiple strategies:
