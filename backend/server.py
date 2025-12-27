@@ -1051,27 +1051,18 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     import time as time_module
     start_time = time_module.time()
     
-    # ==================== LAYER 1: FAMOUS BRAND CHECK (Static List) - RUN FIRST ====================
-    # Check against curated list of famous brands FIRST (faster and more accurate for known brands)
-    famous_brand_rejections = {}
-    for brand in request.brand_names:
-        famous_check = check_famous_brand(brand)
-        if famous_check["is_famous"]:
-            famous_brand_rejections[brand] = famous_check
-            logging.warning(f"FAMOUS BRAND DETECTED: {brand} matches {famous_check['matched_brand']}")
+    # ==================== SINGLE LAYER: DYNAMIC COMPETITOR SEARCH ====================
+    # NO STATIC LIST - Everything is dynamic!
+    # 1. Search for competitors in the user's category
+    # 2. Compare user's brand against ALL found competitors
+    # 3. If phonetically similar to any competitor → REJECT
     
-    # ==================== LAYER 0: DYNAMIC WEB SEARCH (for brands not in static list) ====================
-    # Only run dynamic search for brands NOT caught by famous brand list
-    dynamic_rejections = {}
+    all_rejections = {}
     for brand in request.brand_names:
-        if brand not in famous_brand_rejections:  # Skip if already caught by famous list
-            dynamic_result = await dynamic_brand_search(brand, request.category)
-            if dynamic_result["exists"] and dynamic_result["confidence"] in ["HIGH", "MEDIUM"]:
-                dynamic_rejections[brand] = dynamic_result
-                logging.warning(f"🔍 DYNAMIC SEARCH DETECTED: {brand} - {dynamic_result['reason']}")
-    
-    # Combine all rejections (famous brand takes priority)
-    all_rejections = {**dynamic_rejections, **famous_brand_rejections}
+        dynamic_result = await dynamic_brand_search(brand, request.category)
+        if dynamic_result["exists"] and dynamic_result["confidence"] in ["HIGH", "MEDIUM"]:
+            all_rejections[brand] = dynamic_result
+            logging.warning(f"🔍 CONFLICT DETECTED: {brand} ~ {dynamic_result['matched_brand']} ({dynamic_result['reason']})")
     
     # ==================== EARLY STOPPING FOR DETECTED BRANDS ====================
     # If ALL brand names are detected (either by dynamic search or static list), skip expensive processing
