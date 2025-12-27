@@ -1268,14 +1268,15 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                     </PrintCard>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {countryCompetitorAnalysis.slice(0, 4).map((countryAnalysis, idx) => (
-                            renderMatrix(
+                        {countryCompetitorAnalysis.slice(0, 4).map((countryAnalysis, idx) => {
+                            const countryName = typeof countryAnalysis.country === 'object' ? countryAnalysis.country?.name : countryAnalysis.country;
+                            return renderMatrix(
                                 countryAnalysis, 
-                                `${countryAnalysis.country} Market`, 
+                                `${countryName} Market`, 
                                 countryColors[idx % countryColors.length],
                                 true
-                            )
-                        ))}
+                            );
+                        })}
                     </div>
                 </>
             )}
