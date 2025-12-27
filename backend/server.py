@@ -834,6 +834,8 @@ async def root():
 
 @api_router.post("/evaluate", response_model=BrandEvaluationResponse)
 async def evaluate_brands(request: BrandEvaluationRequest):
+    import time as time_module
+    start_time = time_module.time()
     
     # 0. FAMOUS BRAND CHECK - Auto-reject famous brands before any other processing
     famous_brand_rejections = {}
@@ -842,6 +844,59 @@ async def evaluate_brands(request: BrandEvaluationRequest):
         if famous_check["is_famous"]:
             famous_brand_rejections[brand] = famous_check
             logging.warning(f"FAMOUS BRAND DETECTED: {brand} matches {famous_check['matched_brand']}")
+    
+    # ==================== IMPROVEMENT #5: EARLY STOPPING FOR FAMOUS BRANDS ====================
+    # If ALL brand names are famous brands, skip expensive processing and return immediate rejection
+    if len(famous_brand_rejections) == len(request.brand_names):
+        logging.info(f"EARLY STOPPING: All {len(request.brand_names)} brand(s) are famous brands. Skipping LLM call.")
+        
+        # Build immediate rejection response
+        brand_scores = []
+        for brand in request.brand_names:
+            famous_info = famous_brand_rejections[brand]
+            brand_scores.append(BrandScore(
+                brand_name=brand,
+                namescore=5.0,
+                verdict="REJECT",
+                summary=f"⛔ FATAL CONFLICT: '{brand}' is an EXISTING MAJOR TRADEMARK of {famous_info['matched_brand']}. {famous_info['reason']}",
+                strategic_classification="BLOCKED - Famous Brand Conflict",
+                pros=[],
+                cons=[f"Exact/close match of famous brand '{famous_info['matched_brand']}'", "Trademark infringement guaranteed", "Legal action likely"],
+                dimensions=[
+                    DimensionScore(name="Distinctiveness", score=0, reasoning="Cannot be distinctive - already belongs to another brand"),
+                    DimensionScore(name="Memorability", score=0, reasoning="N/A - Blocked"),
+                    DimensionScore(name="Pronounceability", score=0, reasoning="N/A - Blocked"),
+                    DimensionScore(name="Trademark Safety", score=0, reasoning="FATAL - Famous brand conflict"),
+                    DimensionScore(name="Domain Availability", score=0, reasoning="N/A - Name blocked"),
+                    DimensionScore(name="Cultural Safety", score=0, reasoning="N/A - Blocked"),
+                    DimensionScore(name="Strategic Fit", score=0, reasoning="N/A - Blocked"),
+                    DimensionScore(name="Future-Proofing", score=0, reasoning="N/A - Blocked"),
+                ],
+                trademark_risk={"overall_risk": "CRITICAL", "reason": f"EXACT MATCH of famous brand '{famous_info['matched_brand']}'"},
+                positioning_fit="N/A - Name rejected due to famous brand conflict"
+            ))
+        
+        # Generate report ID and save
+        report_id = f"report_{uuid.uuid4().hex[:16]}"
+        response_data = BrandEvaluationResponse(
+            executive_summary=f"⛔ IMMEDIATE REJECTION: The brand name(s) submitted ({', '.join(request.brand_names)}) match existing famous brand(s). These names cannot be used due to trademark conflicts.",
+            brand_scores=brand_scores,
+            comparison_verdict="All submitted names are blocked due to famous brand conflicts.",
+            report_id=report_id
+        )
+        
+        # Save to database
+        doc = response_data.model_dump()
+        doc['report_id'] = report_id
+        doc['created_at'] = datetime.now(timezone.utc).isoformat()
+        doc['request'] = request.model_dump()
+        doc['early_stopped'] = True
+        doc['processing_time_seconds'] = time_module.time() - start_time
+        await db.evaluations.insert_one(doc)
+        
+        logging.info(f"Early stopping saved ~60-90s of processing time for famous brand rejection")
+        return response_data
+    # ==================== END EARLY STOPPING ====================
     
     if LlmChat and EMERGENT_KEY:
         # Try primary model first, then fallback
@@ -852,91 +907,247 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     else:
         raise HTTPException(status_code=500, detail="LLM Integration not initialized (Check EMERGENT_LLM_KEY)")
     
-    # 1. Check Domains
-    domain_statuses = []
-    for brand in request.brand_names:
-        status = check_domain_availability(brand)
-        domain_statuses.append(f"- {brand}: {status}")
-    domain_context = "\n".join(domain_statuses)
-
-    # 1.5 STRING SIMILARITY CHECK (Levenshtein + Jaro-Winkler)
-    similarity_data = []
-    similarity_should_reject = {}
-    for brand in request.brand_names:
-        sim_result = check_brand_similarity(brand, request.industry or "", request.category)
-        similarity_data.append(format_similarity_report(sim_result))
-        if sim_result['should_reject']:
-            similarity_should_reject[brand] = sim_result
+    # ==================== IMPROVEMENT #1: PARALLEL PROCESSING ====================
+    # Run all independent data gathering operations in parallel
+    logging.info(f"Starting PARALLEL data gathering for {len(request.brand_names)} brand(s)...")
+    parallel_start = time_module.time()
     
-    similarity_context = "\n\n".join(similarity_data)
-    
-    # 1.6 TRADEMARK RESEARCH - Real-time web search for trademark conflicts
-    trademark_research_data = []
-    for brand in request.brand_names:
+    async def gather_domain_data(brand):
+        """Check primary domain availability"""
         try:
+            return check_domain_availability(brand)
+        except Exception as e:
+            logging.error(f"Domain check failed for {brand}: {e}")
+            return f"{brand}.com: CHECK FAILED (Error: {str(e)})"
+    
+    async def gather_similarity_data(brand):
+        """Run similarity checks"""
+        try:
+            sim_result = check_brand_similarity(brand, request.industry or "", request.category)
+            return {
+                "report": format_similarity_report(sim_result),
+                "should_reject": sim_result.get('should_reject', False),
+                "result": sim_result
+            }
+        except Exception as e:
+            logging.error(f"Similarity check failed for {brand}: {e}")
+            return {"report": f"Similarity check failed: {str(e)}", "should_reject": False, "result": {}}
+    
+    async def gather_trademark_data(brand):
+        """Run trademark research"""
+        try:
+            # Include user-provided competitors and keywords for better search
             research_result = await conduct_trademark_research(
                 brand_name=brand,
                 industry=request.industry or "",
                 category=request.category,
-                countries=request.countries
+                countries=request.countries,
+                known_competitors=request.known_competitors or [],
+                product_keywords=request.product_keywords or []
             )
-            trademark_research_data.append(format_research_for_prompt(research_result))
-            logging.info(f"Trademark research for '{brand}': Risk {research_result.overall_risk_score}/10, "
-                        f"Conflicts: {research_result.total_conflicts_found}")
+            return {
+                "prompt_data": format_research_for_prompt(research_result),
+                "result": research_result,
+                "success": True
+            }
         except Exception as e:
-            logging.error(f"Trademark research failed for '{brand}': {str(e)}")
-            trademark_research_data.append(f"⚠️ Trademark research unavailable for {brand}: {str(e)}")
+            logging.error(f"Trademark research failed for {brand}: {str(e)}")
+            return {
+                "prompt_data": f"⚠️ Trademark research unavailable for {brand}: {str(e)}",
+                "result": None,
+                "success": False
+            }
     
+    async def gather_visibility_data(brand):
+        """Run visibility checks with improved error handling"""
+        try:
+            # Pass competitors and keywords for enhanced search
+            vis = check_visibility(
+                brand, 
+                category=request.category, 
+                industry=request.industry or "",
+                known_competitors=request.known_competitors or [],
+                product_keywords=request.product_keywords or []
+            )
+            return vis
+        except Exception as e:
+            logging.error(f"Visibility check failed for {brand}: {e}")
+            return {
+                "google": [f"Search failed: {str(e)}"],
+                "apps": ["App store search unavailable"],
+                "app_search_details": {},
+                "app_search_summary": f"Search failed: {str(e)}",
+                "phonetic_variants_checked": []
+            }
+    
+    async def gather_multi_domain_data(brand):
+        """Check multi-domain availability"""
+        try:
+            return await check_multi_domain_availability(brand, request.category, request.countries)
+        except Exception as e:
+            logging.error(f"Multi-domain check failed for {brand}: {e}")
+            return {"category_tlds_checked": [], "country_tlds_checked": [], "checked_domains": []}
+    
+    async def gather_social_data(brand):
+        """Check social handle availability"""
+        try:
+            return await check_social_availability(brand, request.countries)
+        except Exception as e:
+            logging.error(f"Social check failed for {brand}: {e}")
+            return {"handle": brand.lower().replace(" ", ""), "platforms_checked": []}
+    
+    # Run ALL checks in parallel for EACH brand
+    all_brand_data = {}
+    for brand in request.brand_names:
+        logging.info(f"Running parallel checks for brand: {brand}")
+        
+        # Create all tasks for this brand
+        tasks = [
+            gather_domain_data(brand),
+            gather_similarity_data(brand),
+            gather_trademark_data(brand),
+            gather_visibility_data(brand),
+            gather_multi_domain_data(brand),
+            gather_social_data(brand)
+        ]
+        
+        # Run all in parallel
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Handle any exceptions that occurred
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logging.error(f"Task {i} failed for {brand}: {result}")
+                processed_results.append(None)
+            else:
+                processed_results.append(result)
+        
+        all_brand_data[brand] = {
+            "domain": processed_results[0],
+            "similarity": processed_results[1],
+            "trademark": processed_results[2],
+            "visibility": processed_results[3],
+            "multi_domain": processed_results[4],
+            "social": processed_results[5]
+        }
+    
+    parallel_time = time_module.time() - parallel_start
+    logging.info(f"PARALLEL data gathering completed in {parallel_time:.2f}s (vs ~90s sequential)")
+    # ==================== END PARALLEL PROCESSING ====================
+    
+    # Format all gathered data for LLM prompt
+    # 1. Domain data
+    domain_statuses = []
+    for brand in request.brand_names:
+        domain_status = all_brand_data[brand]["domain"]
+        if domain_status:
+            domain_statuses.append(f"- {brand}: {domain_status}")
+        else:
+            domain_statuses.append(f"- {brand}: Domain check failed")
+    domain_context = "\n".join(domain_statuses)
+    
+    # 2. Similarity data
+    similarity_data = []
+    similarity_should_reject = {}
+    for brand in request.brand_names:
+        sim_data = all_brand_data[brand]["similarity"]
+        if sim_data:
+            similarity_data.append(sim_data.get("report", ""))
+            if sim_data.get("should_reject"):
+                similarity_should_reject[brand] = sim_data.get("result", {})
+        else:
+            similarity_data.append(f"Similarity check unavailable for {brand}")
+    similarity_context = "\n\n".join(similarity_data)
+    
+    # 3. Trademark research data
+    trademark_research_data = []
+    for brand in request.brand_names:
+        tm_data = all_brand_data[brand]["trademark"]
+        if tm_data and tm_data.get("success"):
+            trademark_research_data.append(tm_data.get("prompt_data", ""))
+            logging.info(f"Trademark research for '{brand}': Success")
+        else:
+            trademark_research_data.append(tm_data.get("prompt_data", f"Trademark research unavailable for {brand}") if tm_data else f"Trademark research unavailable for {brand}")
     trademark_research_context = "\n\n".join(trademark_research_data)
     
-    # 2. Check Visibility (Enhanced with category-aware app store search)
+    # 4. Visibility data
     visibility_data = []
     for brand in request.brand_names:
-        # Pass category and industry for comprehensive app store search
-        vis = check_visibility(brand, category=request.category, industry=request.industry or "")
-        visibility_data.append(f"BRAND: {brand}")
-        visibility_data.append("GOOGLE TOP RESULTS:")
-        for res in vis['google'][:10]:
-            visibility_data.append(f"  - {res}")
-        visibility_data.append("APP STORE RESULTS:")
-        for res in vis['apps'][:10]:  # Increased limit to show more app results
-            visibility_data.append(f"  - {res}")
-        # Add phonetic variants that were checked
-        if vis.get('phonetic_variants_checked'):
-            visibility_data.append(f"PHONETIC VARIANTS CHECKED: {', '.join(vis['phonetic_variants_checked'])}")
-        # Add detailed app search summary for LLM
-        if vis.get('app_search_summary'):
-            visibility_data.append("\nDETAILED APP SEARCH ANALYSIS:")
-            visibility_data.append(vis['app_search_summary'])
-        visibility_data.append("---")
-    
+        vis = all_brand_data[brand]["visibility"]
+        if vis:
+            visibility_data.append(f"BRAND: {brand}")
+            visibility_data.append("GOOGLE TOP RESULTS:")
+            for res in vis.get('google', [])[:10]:
+                visibility_data.append(f"  - {res}")
+            visibility_data.append("APP STORE RESULTS:")
+            for res in vis.get('apps', [])[:10]:
+                visibility_data.append(f"  - {res}")
+            if vis.get('phonetic_variants_checked'):
+                visibility_data.append(f"PHONETIC VARIANTS CHECKED: {', '.join(vis['phonetic_variants_checked'])}")
+            if vis.get('app_search_summary'):
+                visibility_data.append("\nDETAILED APP SEARCH ANALYSIS:")
+                visibility_data.append(vis['app_search_summary'])
+            visibility_data.append("---")
+        else:
+            visibility_data.append(f"BRAND: {brand}\nVisibility check failed\n---")
     visibility_context = "\n".join(visibility_data)
     
-    # 3. Check Multi-Domain Availability (category + country specific)
+    # 5. Multi-domain data
     multi_domain_data = []
     for brand in request.brand_names:
-        domain_result = await check_multi_domain_availability(brand, request.category, request.countries)
-        multi_domain_data.append(f"BRAND: {brand}")
-        multi_domain_data.append(f"Category TLDs checked: {domain_result['category_tlds_checked']}")
-        multi_domain_data.append(f"Country TLDs checked: {domain_result['country_tlds_checked']}")
-        for d in domain_result['checked_domains']:
-            status_icon = "✅" if d.get('available') else "❌"
-            multi_domain_data.append(f"  {status_icon} {d['domain']}: {d['status']}")
-        multi_domain_data.append("---")
-    
+        domain_result = all_brand_data[brand]["multi_domain"]
+        if domain_result:
+            multi_domain_data.append(f"BRAND: {brand}")
+            multi_domain_data.append(f"Category TLDs checked: {domain_result.get('category_tlds_checked', [])}")
+            multi_domain_data.append(f"Country TLDs checked: {domain_result.get('country_tlds_checked', [])}")
+            for d in domain_result.get('checked_domains', []):
+                status_icon = "✅" if d.get('available') else "❌"
+                multi_domain_data.append(f"  {status_icon} {d['domain']}: {d['status']}")
+            multi_domain_data.append("---")
+        else:
+            multi_domain_data.append(f"BRAND: {brand}\nMulti-domain check failed\n---")
     multi_domain_context = "\n".join(multi_domain_data)
     
-    # 4. Check Social Handle Availability
+    # 6. Social data
     social_data = []
     for brand in request.brand_names:
-        social_result = await check_social_availability(brand, request.countries)
-        social_data.append(f"BRAND: {brand} (Handle: @{social_result['handle']})")
-        for p in social_result['platforms_checked']:
-            status_icon = "✅" if p.get('available') else "❌" if p.get('available') == False else "❓"
-            social_data.append(f"  {status_icon} {p['platform']}: {p['status']}")
-        social_data.append("---")
-    
+        social_result = all_brand_data[brand]["social"]
+        if social_result:
+            social_data.append(f"BRAND: {brand} (Handle: @{social_result.get('handle', brand.lower())})")
+            for p in social_result.get('platforms_checked', []):
+                status_icon = "✅" if p.get('available') else "❌" if p.get('available') == False else "❓"
+                social_data.append(f"  {status_icon} {p['platform']}: {p['status']}")
+            social_data.append("---")
+        else:
+            social_data.append(f"BRAND: {brand}\nSocial check failed\n---")
     social_context = "\n".join(social_data)
+    
+    # ==================== IMPROVEMENT #2 & #3: INCLUDE USER-PROVIDED COMPETITORS & KEYWORDS IN PROMPT ====================
+    competitors_context = ""
+    if request.known_competitors:
+        competitors_context = f"""
+    USER-PROVIDED KNOWN COMPETITORS (CRITICAL - Compare against these!):
+    {', '.join(request.known_competitors)}
+    INSTRUCTION: Ensure the brand name is sufficiently different from these competitors. Check for trademark conflicts with these specific brands.
+    """
+    
+    keywords_context = ""
+    if request.product_keywords:
+        keywords_context = f"""
+    USER-PROVIDED PRODUCT KEYWORDS:
+    {', '.join(request.product_keywords)}
+    INSTRUCTION: Use these keywords to better understand the product space and identify potential conflicts.
+    """
+    
+    problem_context = ""
+    if request.problem_statement:
+        problem_context = f"""
+    PRODUCT PROBLEM STATEMENT:
+    {request.problem_statement}
+    INSTRUCTION: Use this to accurately define user_product_intent and user_customer_avatar in visibility_analysis.
+    """
+    # ==================== END IMPROVEMENTS #2 & #3 ====================
     
     # Construct User Message
     user_prompt = f"""
