@@ -1818,8 +1818,11 @@ const Dashboard = () => {
                                 </div>
                             </PrintCard>
                         </div>
-                        <div>
+                        <div className="space-y-4">
                             <ScoreCardRevamped score={brand.namescore} verdict={brand.verdict} />
+                            {brand.dimensions && (
+                                <PerformanceRadar dimensions={brand.dimensions} brandName={brand.brand_name} />
+                            )}
                         </div>
                     </div>
                 </section>
