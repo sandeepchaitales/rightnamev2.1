@@ -718,14 +718,12 @@ FAMOUS_BRANDS = {
 
 async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     """
-    DYNAMIC COMPETITOR SEARCH - NO STATIC LIST
+    DYNAMIC COMPETITOR SEARCH
     
     Strategy:
-    1. Search: Brand name + Category (find if exact/similar brand exists)
-    2. Search: Top apps/brands in Category (find competitors)
-    3. Compare user's brand against ALL found competitors phonetically
-    
-    If phonetically similar to any competitor in same category → REJECT
+    1. Search brand name + category to find similar existing brands
+    2. Look for well-known competitors in the category
+    3. Compare phonetically against found brands
     """
     import re
     import urllib.parse
@@ -745,28 +743,19 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     brand_lower = brand_name.lower().strip()
     brand_normalized = re.sub(r'[^a-z0-9]', '', brand_lower)
     
-    def extract_brand_names(html_content):
-        """Extract potential brand/company names from search results"""
-        names = set()
-        
-        # Extract from domains
-        domains = re.findall(r'https?://(?:www\.)?([a-z0-9]+)\.(?:com|in|co|app|io)', html_content.lower())
-        names.update(domains)
-        
-        # Extract capitalized words (brand names are usually capitalized)
-        caps = re.findall(r'\b([A-Z][a-z]{2,12})\b', html_content)
-        names.update([c.lower() for c in caps])
-        
-        # Extract from title patterns
-        titles = re.findall(r'>([A-Z][a-zA-Z]{2,12})(?:\s*[-:|<])', html_content)
-        names.update([t.lower() for t in titles])
-        
-        # Filter stopwords
-        stopwords = {'the', 'and', 'for', 'app', 'apps', 'best', 'top', 'new', 'free', 
-                     'download', 'get', 'search', 'more', 'view', 'click', 'here',
-                     'www', 'http', 'https', 'com', 'this', 'that', 'with', 'from'}
-        
-        return [n for n in names if n not in stopwords and len(n) >= 3 and len(n) <= 15]
+    # Category-specific known competitors (these are ALWAYS checked for similarity)
+    CATEGORY_COMPETITORS = {
+        'dating': ['tinder', 'bumble', 'hinge', 'okcupid', 'match', 'badoo', 'happn', 'grindr', 'shaadi', 'bharatmatrimony'],
+        'food': ['swiggy', 'zomato', 'ubereats', 'doordash', 'grubhub', 'deliveroo', 'dunzo', 'blinkit', 'zepto'],
+        'finance': ['paytm', 'phonepe', 'googlepay', 'razorpay', 'cred', 'groww', 'zerodha', 'mobikwik', 'freecharge'],
+        'streaming': ['netflix', 'prime', 'hulu', 'disney', 'hbo', 'hotstar', 'zee5', 'sonyliv', 'voot'],
+        'travel': ['makemytrip', 'goibibo', 'booking', 'airbnb', 'trivago', 'expedia', 'kayak', 'skyscanner'],
+        'ecommerce': ['amazon', 'flipkart', 'myntra', 'ajio', 'nykaa', 'meesho', 'snapdeal'],
+        'social': ['facebook', 'instagram', 'twitter', 'snapchat', 'tiktok', 'linkedin', 'pinterest', 'reddit'],
+        'gaming': ['pubg', 'freefire', 'codmobile', 'ludoking', 'candycrush', 'clashofclans', 'minecraft'],
+        'health': ['practo', 'netmeds', 'pharmeasy', 'apollo', 'medlife', 'healthify', 'cultfit'],
+        'education': ['byjus', 'unacademy', 'vedantu', 'toppr', 'coursera', 'udemy', 'skillshare'],
+    }
     
     def check_similarity(name1, name2):
         """Check phonetic similarity"""
@@ -775,14 +764,10 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
             n1 = re.sub(r'[^a-z0-9]', '', name1.lower())
             n2 = re.sub(r'[^a-z0-9]', '', name2.lower())
             
-            if len(n1) < 3 or len(n2) < 3:
+            if len(n1) < 3 or len(n2) < 3 or n1 == n2:
                 return False, 0, ""
             
-            # Skip if same
-            if n1 == n2:
-                return False, 0, ""
-            
-            # Dedupe match (bumbell→bumbel vs bumble→bumble)
+            # Dedupe match
             n1_dedupe = re.sub(r'(.)\1+', r'\1', n1)
             n2_dedupe = re.sub(r'(.)\1+', r'\1', n2)
             if n1_dedupe == n2_dedupe:
@@ -797,129 +782,79 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
             if len(n1) >= 4 and len(n2) >= 4:
                 if jellyfish.soundex(n1) == jellyfish.soundex(n2):
                     return True, 0.88, "SOUNDEX"
-                
-                # Metaphone
                 if jellyfish.metaphone(n1) == jellyfish.metaphone(n2):
                     return True, 0.86, "METAPHONE"
             
             return False, jw, ""
-        except Exception as e:
+        except:
             return False, 0, ""
     
+    # STEP 1: Get category-specific competitors
+    category_lower = category.lower() if category else ""
+    competitors_to_check = set()
+    
+    for cat_key, competitors in CATEGORY_COMPETITORS.items():
+        if cat_key in category_lower:
+            competitors_to_check.update(competitors)
+            logging.info(f"  Category '{cat_key}' competitors: {competitors}")
+    
+    # If no specific category, check all
+    if not competitors_to_check:
+        for competitors in CATEGORY_COMPETITORS.values():
+            competitors_to_check.update(competitors)
+    
+    result["competitors_found"] = list(competitors_to_check)
+    
+    # STEP 2: Compare brand against ALL category competitors
+    conflicts = []
+    for competitor in competitors_to_check:
+        is_similar, similarity, match_type = check_similarity(brand_name, competitor)
+        if is_similar and similarity >= 0.85:
+            conflicts.append({
+                "competitor": competitor,
+                "similarity": similarity,
+                "match_type": match_type
+            })
+            logging.warning(f"    🚨 CONFLICT: '{brand_name}' ~ '{competitor}' ({similarity:.0%} {match_type})")
+    
+    # STEP 3: Also do web search to find additional brands
     try:
         from primp import Client
         client = Client(impersonate="chrome_131", follow_redirects=True, timeout=10)
         
-        all_competitors = set()
+        # Search brand + category
+        query = f"{brand_name} {category}" if category else brand_name
+        logging.info(f"  Web search: '{query}'")
+        url = f"https://www.bing.com/search?q={urllib.parse.quote(query)}"
+        response = client.get(url)
         
-        # SEARCH 1: Brand name + Category (find if similar brand exists)
-        query1 = f"{brand_name} {category}" if category else brand_name
-        logging.info(f"  Search 1: '{query1}'")
-        try:
-            url1 = f"https://www.bing.com/search?q={urllib.parse.quote(query1)}"
-            response1 = client.get(url1)
-            if response1.status_code == 200:
-                names1 = extract_brand_names(response1.text)
-                all_competitors.update(names1)
-                logging.info(f"    Found {len(names1)} potential brands")
-        except Exception as e:
-            logging.warning(f"    Search 1 failed: {e}")
-        
-        # SEARCH 2: Top competitors in category
-        if category:
-            # Extract key category word
-            cat_words = category.lower().replace('app', '').strip().split()
-            cat_keyword = cat_words[0] if cat_words else category
-            
-            query2 = f"best {cat_keyword} apps 2024"
-            logging.info(f"  Search 2: '{query2}'")
-            try:
-                url2 = f"https://www.bing.com/search?q={urllib.parse.quote(query2)}"
-                response2 = client.get(url2)
-                if response2.status_code == 200:
-                    names2 = extract_brand_names(response2.text)
-                    all_competitors.update(names2)
-                    logging.info(f"    Found {len(names2)} potential brands")
-            except Exception as e:
-                logging.warning(f"    Search 2 failed: {e}")
-            
-            # SEARCH 3: Category competitors with example brands
-            query3 = f"{cat_keyword} apps like tinder bumble"
-            logging.info(f"  Search 3: '{query3}'")
-            try:
-                url3 = f"https://www.bing.com/search?q={urllib.parse.quote(query3)}"
-                response3 = client.get(url3)
-                if response3.status_code == 200:
-                    names3 = extract_brand_names(response3.text)
-                    all_competitors.update(names3)
-                    logging.info(f"    Found {len(names3)} potential brands")
-            except Exception as e:
-                logging.warning(f"    Search 3 failed: {e}")
-        
-        result["competitors_found"] = list(all_competitors)[:50]
-        logging.info(f"  Total unique competitors: {len(all_competitors)}")
-        
-        # COMPARE user's brand against ALL competitors
-        # Prioritize matches that are in the same category context
-        conflicts = []
-        category_lower = category.lower() if category else ""
-        
-        for competitor in all_competitors:
-            is_similar, similarity, match_type = check_similarity(brand_name, competitor)
-            if is_similar and similarity >= 0.85:
-                # Boost score if competitor name suggests same category
-                # e.g., "bumble" is likely a dating app, "dumbbell" is fitness
-                is_category_relevant = False
-                if category_lower:
-                    # Check if this competitor was found in category-specific searches
-                    # Dating apps: tinder, bumble, hinge, etc.
-                    dating_keywords = ['tinder', 'bumble', 'hinge', 'match', 'okcupid', 'badoo', 'happn']
-                    food_keywords = ['swiggy', 'zomato', 'uber', 'doordash', 'deliveroo', 'grubhub']
-                    finance_keywords = ['paytm', 'phonepe', 'gpay', 'razorpay', 'paypal', 'venmo']
-                    streaming_keywords = ['netflix', 'prime', 'hulu', 'disney', 'hbo', 'hotstar']
-                    
-                    if 'dating' in category_lower and competitor.lower() in dating_keywords:
-                        is_category_relevant = True
-                        similarity = min(similarity + 0.05, 1.0)  # Boost
-                    elif 'food' in category_lower and competitor.lower() in food_keywords:
-                        is_category_relevant = True
-                        similarity = min(similarity + 0.05, 1.0)
-                    elif 'finance' in category_lower and competitor.lower() in finance_keywords:
-                        is_category_relevant = True
-                        similarity = min(similarity + 0.05, 1.0)
-                    elif 'stream' in category_lower and competitor.lower() in streaming_keywords:
-                        is_category_relevant = True
-                        similarity = min(similarity + 0.05, 1.0)
-                
-                # Penalize generic words that are unlikely to be brand conflicts
-                generic_words = ['dumbbell', 'dumbbells', 'exercise', 'fitness', 'workout', 
-                                'shopping', 'search', 'browser', 'phone', 'mobile']
-                if competitor.lower() in generic_words:
-                    similarity = max(similarity - 0.10, 0)  # Penalize
-                    if similarity < 0.85:
-                        continue
-                
-                conflicts.append({
-                    "competitor": competitor,
-                    "similarity": similarity,
-                    "match_type": match_type,
-                    "category_relevant": is_category_relevant
-                })
-                logging.warning(f"    🚨 CONFLICT: '{brand_name}' ~ '{competitor}' ({similarity:.0%} {match_type}) [Category: {is_category_relevant}]")
-        
-        if conflicts:
-            best_match = max(conflicts, key=lambda x: x["similarity"])
-            result["exists"] = True
-            result["confidence"] = "HIGH" if best_match["similarity"] >= 0.90 else "MEDIUM"
-            result["matched_brand"] = best_match["competitor"].title()
-            result["evidence"] = [f"{c['competitor']} ({c['similarity']:.0%})" for c in conflicts[:5]]
-            result["reason"] = f"'{brand_name}' is {best_match['similarity']:.0%} similar to '{best_match['competitor'].title()}' in {category} market."
-            logging.warning(f"🚨 RESULT: '{brand_name}' conflicts with '{best_match['competitor']}' ({best_match['similarity']:.0%})")
-        else:
-            logging.info(f"✅ '{brand_name}' appears unique (checked {len(all_competitors)} competitors)")
-    
+        if response.status_code == 200:
+            # Extract domains as potential brands
+            domains = re.findall(r'https?://(?:www\.)?([a-z0-9]+)\.(?:com|in|co|app|io)', response.text.lower())
+            for domain in set(domains):
+                if domain not in ['bing', 'microsoft', 'google', 'facebook', 'amazon', 'wikipedia']:
+                    is_similar, similarity, match_type = check_similarity(brand_name, domain)
+                    if is_similar and similarity >= 0.88:  # Higher threshold for web results
+                        conflicts.append({
+                            "competitor": domain,
+                            "similarity": similarity,
+                            "match_type": match_type
+                        })
+                        logging.warning(f"    🚨 WEB CONFLICT: '{brand_name}' ~ '{domain}' ({similarity:.0%})")
     except Exception as e:
-        logging.error(f"Dynamic search error: {e}")
+        logging.warning(f"  Web search failed: {e}")
+    
+    # Determine result
+    if conflicts:
+        best_match = max(conflicts, key=lambda x: x["similarity"])
+        result["exists"] = True
+        result["confidence"] = "HIGH" if best_match["similarity"] >= 0.90 else "MEDIUM"
+        result["matched_brand"] = best_match["competitor"].title()
+        result["evidence"] = [f"{c['competitor']} ({c['similarity']:.0%})" for c in conflicts[:5]]
+        result["reason"] = f"'{brand_name}' is {best_match['similarity']:.0%} similar to '{best_match['competitor'].title()}' in {category or 'this'} market."
+        logging.warning(f"🚨 RESULT: '{brand_name}' conflicts with '{best_match['competitor']}' ({best_match['similarity']:.0%})")
+    else:
+        logging.info(f"✅ '{brand_name}' appears unique (checked {len(competitors_to_check)} competitors)")
     
     return result
 
