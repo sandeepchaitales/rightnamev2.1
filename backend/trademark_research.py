@@ -1062,13 +1062,23 @@ async def conduct_trademark_research(
     brand_name: str,
     industry: str,
     category: str,
-    countries: List[str]
+    countries: List[str],
+    known_competitors: List[str] = None,
+    product_keywords: List[str] = None
 ) -> TrademarkResearchResult:
     """
     Conduct trademark research for a brand name.
     Optimized for speed - uses known data cache primarily.
+    
+    Improvements #2 & #3:
+    - known_competitors: User-provided competitors to check for conflicts
+    - product_keywords: Additional keywords for more targeted searches
     """
     logger.info(f"Starting trademark research for '{brand_name}' in {industry}/{category}")
+    
+    # Default empty lists
+    known_competitors = known_competitors or []
+    product_keywords = product_keywords or []
     
     # Initialize result
     result = TrademarkResearchResult(
@@ -1119,8 +1129,44 @@ async def conduct_trademark_research(
         # Add common law conflicts
         result.common_law_conflicts = known_data.get("common_law", [])
     
+    # Improvement #2: Check similarity with user-provided competitors
+    if known_competitors:
+        logger.info(f"Checking brand similarity with {len(known_competitors)} user-provided competitors")
+        for competitor in known_competitors[:5]:
+            # Simple similarity check
+            brand_lower = brand_name.lower().replace(" ", "")
+            comp_lower = competitor.lower().replace(" ", "")
+            
+            # Check for substring or significant overlap
+            if brand_lower in comp_lower or comp_lower in brand_lower:
+                result.company_conflicts.append(CompanyConflict(
+                    name=competitor,
+                    status="ACTIVE",
+                    industry=category,
+                    source="User-provided competitor",
+                    overlap_analysis="Direct name overlap detected - HIGH trademark risk",
+                    risk_level="CRITICAL"
+                ))
+            elif len(set(brand_lower) & set(comp_lower)) > len(brand_lower) * 0.7:
+                result.company_conflicts.append(CompanyConflict(
+                    name=competitor,
+                    status="ACTIVE",
+                    industry=category,
+                    source="User-provided competitor",
+                    overlap_analysis="Significant character overlap - MEDIUM trademark risk",
+                    risk_level="HIGH"
+                ))
+    
     # Step 2: Quick web search (limited to 3 queries for speed)
     queries = generate_search_queries(brand_name, industry, category, countries)[:3]  # Only first 3 queries
+    
+    # Improvement #3: Add keyword-enhanced searches
+    if product_keywords:
+        for keyword in product_keywords[:2]:  # Limit to 2 keywords
+            queries.append({
+                "query": f'"{brand_name}" {keyword} trademark',
+                "purpose": f"keyword_search_{keyword}"
+            })
     
     all_search_results = []
     for q in queries:
