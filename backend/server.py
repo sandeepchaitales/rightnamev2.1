@@ -987,17 +987,32 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     import time as time_module
     start_time = time_module.time()
     
-    # 0. FAMOUS BRAND CHECK - Auto-reject famous brands before any other processing
+    # ==================== LAYER 0: DYNAMIC SEARCH-BASED DETECTION ====================
+    # NEW: Search the web for brand name FIRST before checking static list
+    # This catches brands that aren't in our static list
+    dynamic_rejections = {}
+    for brand in request.brand_names:
+        dynamic_result = await dynamic_brand_search(brand, request.category)
+        if dynamic_result["exists"] and dynamic_result["confidence"] in ["HIGH", "MEDIUM"]:
+            dynamic_rejections[brand] = dynamic_result
+            logging.warning(f"🔍 DYNAMIC SEARCH DETECTED: {brand} - {dynamic_result['reason']}")
+    
+    # ==================== LAYER 1: FAMOUS BRAND CHECK (Static List) ====================
+    # Also check against static list for instant matches
     famous_brand_rejections = {}
     for brand in request.brand_names:
-        famous_check = check_famous_brand(brand)
-        if famous_check["is_famous"]:
-            famous_brand_rejections[brand] = famous_check
-            logging.warning(f"FAMOUS BRAND DETECTED: {brand} matches {famous_check['matched_brand']}")
+        if brand not in dynamic_rejections:  # Skip if already caught by dynamic search
+            famous_check = check_famous_brand(brand)
+            if famous_check["is_famous"]:
+                famous_brand_rejections[brand] = famous_check
+                logging.warning(f"FAMOUS BRAND DETECTED: {brand} matches {famous_check['matched_brand']}")
     
-    # ==================== IMPROVEMENT #5: EARLY STOPPING FOR FAMOUS BRANDS ====================
-    # If ALL brand names are famous brands, skip expensive processing and return immediate rejection
-    if len(famous_brand_rejections) == len(request.brand_names):
+    # Combine all rejections
+    all_rejections = {**dynamic_rejections, **famous_brand_rejections}
+    
+    # ==================== EARLY STOPPING FOR DETECTED BRANDS ====================
+    # If ALL brand names are detected (either by dynamic search or static list), skip expensive processing
+    if len(all_rejections) == len(request.brand_names):
         logging.info(f"EARLY STOPPING: All {len(request.brand_names)} brand(s) are famous brands. Skipping LLM call.")
         
         # Build immediate rejection response
