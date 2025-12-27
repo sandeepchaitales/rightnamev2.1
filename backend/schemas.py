@@ -366,6 +366,10 @@ class BrandEvaluationRequest(BaseModel):
     positioning: Literal["Budget", "Mid-Range", "Premium", "Luxury", "Mass", "Ultra-Premium"]
     market_scope: Literal["Single Country", "Multi-Country", "Global"]
     countries: List[str]
+    # NEW: Enhanced input fields for better accuracy
+    known_competitors: Optional[List[str]] = Field(default=[], description="Known competitors in the market (top 3-5)")
+    product_keywords: Optional[List[str]] = Field(default=[], description="Product keywords for better search (e.g., UPI, wallet, payments)")
+    problem_statement: Optional[str] = Field(default=None, description="What problem does your product solve?")
 
 class BrandEvaluationResponse(BaseModel):
     executive_summary: str
