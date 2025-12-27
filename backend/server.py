@@ -1013,40 +1013,53 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     # ==================== EARLY STOPPING FOR DETECTED BRANDS ====================
     # If ALL brand names are detected (either by dynamic search or static list), skip expensive processing
     if len(all_rejections) == len(request.brand_names):
-        logging.info(f"EARLY STOPPING: All {len(request.brand_names)} brand(s) are famous brands. Skipping LLM call.")
+        logging.info(f"EARLY STOPPING: All {len(request.brand_names)} brand(s) detected as existing brands. Skipping LLM call.")
         
         # Build immediate rejection response
         brand_scores = []
         for brand in request.brand_names:
-            famous_info = famous_brand_rejections[brand]
+            # Get rejection info from either dynamic search or famous brand check
+            rejection_info = all_rejections[brand]
+            
+            # Handle both dynamic search results and famous brand results
+            if "matched_brand" in rejection_info:
+                matched_brand = rejection_info.get("matched_brand", brand)
+                reason = rejection_info.get("reason", "Existing brand detected")
+            else:
+                matched_brand = brand
+                reason = rejection_info.get("reason", "Existing brand detected")
+            
+            # Determine detection method
+            detection_method = "Dynamic Web Search" if brand in dynamic_rejections else "Famous Brand List"
+            
             brand_scores.append(BrandScore(
                 brand_name=brand,
                 namescore=5.0,
                 verdict="REJECT",
-                summary=f"⛔ FATAL CONFLICT: '{brand}' is an EXISTING MAJOR TRADEMARK of {famous_info['matched_brand']}. {famous_info['reason']}",
-                strategic_classification="BLOCKED - Famous Brand Conflict",
+                summary=f"⛔ FATAL CONFLICT: '{brand}' is an EXISTING BRAND. Detected via {detection_method}. {reason}",
+                strategic_classification="BLOCKED - Existing Brand Conflict",
                 pros=[],
-                cons=[f"Exact/close match of famous brand '{famous_info['matched_brand']}'", "Trademark infringement guaranteed", "Legal action likely"],
+                cons=[f"Brand '{matched_brand}' already exists", "Trademark infringement likely", "Legal action possible"],
                 dimensions=[
-                    DimensionScore(name="Distinctiveness", score=0, reasoning="Cannot be distinctive - already belongs to another brand"),
+                    DimensionScore(name="Distinctiveness", score=0, reasoning="Cannot be distinctive - brand already exists in market"),
                     DimensionScore(name="Memorability", score=0, reasoning="N/A - Blocked"),
                     DimensionScore(name="Pronounceability", score=0, reasoning="N/A - Blocked"),
-                    DimensionScore(name="Trademark Safety", score=0, reasoning="FATAL - Famous brand conflict"),
+                    DimensionScore(name="Trademark Safety", score=0, reasoning=f"FATAL - Existing brand conflict detected via {detection_method}"),
                     DimensionScore(name="Domain Availability", score=0, reasoning="N/A - Name blocked"),
                     DimensionScore(name="Cultural Safety", score=0, reasoning="N/A - Blocked"),
                     DimensionScore(name="Strategic Fit", score=0, reasoning="N/A - Blocked"),
                     DimensionScore(name="Future-Proofing", score=0, reasoning="N/A - Blocked"),
                 ],
-                trademark_risk={"overall_risk": "CRITICAL", "reason": f"EXACT MATCH of famous brand '{famous_info['matched_brand']}'"},
-                positioning_fit="N/A - Name rejected due to famous brand conflict"
+                trademark_risk={"overall_risk": "CRITICAL", "reason": f"Existing brand '{matched_brand}' detected via {detection_method}"},
+                positioning_fit="N/A - Name rejected due to existing brand conflict"
             ))
         
         # Generate report ID and save
         report_id = f"report_{uuid.uuid4().hex[:16]}"
         response_data = BrandEvaluationResponse(
-            executive_summary=f"⛔ IMMEDIATE REJECTION: The brand name(s) submitted ({', '.join(request.brand_names)}) match existing famous brand(s). These names cannot be used due to trademark conflicts.",
+            executive_summary=f"⛔ IMMEDIATE REJECTION: The brand name(s) submitted ({', '.join(request.brand_names)}) match existing brands found via web search. These names cannot be used due to trademark conflicts.",
             brand_scores=brand_scores,
-            comparison_verdict="All submitted names are blocked due to famous brand conflicts.",
+            comparison_verdict="All submitted names are blocked due to existing brand conflicts.",
             report_id=report_id
         )
         
@@ -1056,10 +1069,11 @@ async def evaluate_brands(request: BrandEvaluationRequest):
         doc['created_at'] = datetime.now(timezone.utc).isoformat()
         doc['request'] = request.model_dump()
         doc['early_stopped'] = True
+        doc['detection_method'] = "dynamic_search" if dynamic_rejections else "famous_brand_list"
         doc['processing_time_seconds'] = time_module.time() - start_time
         await db.evaluations.insert_one(doc)
         
-        logging.info(f"Early stopping saved ~60-90s of processing time for famous brand rejection")
+        logging.info(f"Early stopping saved ~60-90s of processing time for existing brand rejection")
         return response_data
     # ==================== END EARLY STOPPING ====================
     
