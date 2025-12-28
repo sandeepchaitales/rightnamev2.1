@@ -982,6 +982,7 @@ const LandingPage = () => {
       {/* Footer */}
       <Footer />
     </div>
+    </>
   );
 };
 
