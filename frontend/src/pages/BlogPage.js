@@ -201,7 +201,7 @@ const BlogPage = () => {
                 <div className="mt-12 text-center p-8 bg-gradient-to-r from-blue-50 to-violet-50 rounded-2xl border-2 border-dashed border-blue-200">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">More Content Coming Soon!</h3>
                   <p className="text-slate-600">
-                    We're working on in-depth guides, case studies, and expert interviews. Check back soon!
+                    We are working on in-depth guides, case studies, and expert interviews. Check back soon!
                   </p>
                 </div>
               </div>
