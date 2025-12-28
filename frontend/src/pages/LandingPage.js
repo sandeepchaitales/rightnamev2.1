@@ -139,7 +139,7 @@ const TestimonialCard = ({ quote, author, role, company, avatar }) => (
   <Card className="border-2 border-slate-200 hover:border-violet-300 transition-all duration-300 hover:shadow-xl">
     <CardContent className="p-6">
       <Quote className="w-8 h-8 text-violet-300 mb-4" />
-      <p className="text-slate-700 mb-6 leading-relaxed italic">"{quote}"</p>
+      <p className="text-slate-700 mb-6 leading-relaxed italic">&ldquo;{quote}&rdquo;</p>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg">
           {avatar}
