@@ -2247,6 +2247,469 @@ class BrandEvaluationTester:
         
         return self.tests_passed == self.tests_run
 
+    def test_llm_brand_detection_andhrajyoothi(self):
+        """Test Case 1: AndhraJyoothi (News App) - should detect conflict with Andhra Jyothi newspaper"""
+        payload = {
+            "brand_names": ["AndhraJyoothi"],
+            "category": "News App",
+            "industry": "Media/News",
+            "product_type": "Digital",
+            "positioning": "Regional",
+            "market_scope": "Single Country",
+            "countries": ["India"]
+        }
+        
+        try:
+            print(f"\n🔍 Testing LLM Brand Detection - AndhraJyoothi (News App)...")
+            print(f"Expected: REJECT verdict (conflict with 'Andhra Jyothi' Telugu newspaper)")
+            
+            import time
+            start_time = time.time()
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180
+            )
+            
+            response_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Response Time: {response_time:.2f}s")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("LLM Brand Detection - AndhraJyoothi HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("LLM Brand Detection - AndhraJyoothi Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check verdict should be REJECT
+                verdict = brand.get("verdict", "")
+                if verdict != "REJECT":
+                    issues.append(f"Expected REJECT verdict for AndhraJyoothi, got: {verdict}")
+                
+                # Test 2: Check if LLM detected the phonetic similarity
+                summary = brand.get("summary", "").lower()
+                executive_summary = data.get("executive_summary", "").lower()
+                full_response = json.dumps(data).lower()
+                
+                # Look for evidence of conflict detection
+                conflict_indicators = [
+                    "andhra jyothi", "andhra jyoti", "phonetic", "similar", 
+                    "conflict", "newspaper", "telugu", "existing brand"
+                ]
+                
+                found_indicators = [indicator for indicator in conflict_indicators 
+                                  if indicator in full_response]
+                
+                if len(found_indicators) < 2:
+                    issues.append(f"LLM should detect phonetic similarity to 'Andhra Jyothi' newspaper. Found indicators: {found_indicators}")
+                
+                # Test 3: Check response time (should be reasonable for LLM call)
+                if response_time > 10:  # Allow up to 10 seconds for LLM processing
+                    print(f"⚠️  Warning: Response time {response_time:.2f}s is longer than expected for LLM brand check")
+                
+                # Test 4: Check if early stopping was triggered (should be fast if detected immediately)
+                if response_time < 5 and "immediate rejection" in full_response:
+                    print(f"✅ Early stopping detected - fast rejection in {response_time:.2f}s")
+                
+                if issues:
+                    self.log_test("LLM Brand Detection - AndhraJyoothi", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("LLM Brand Detection - AndhraJyoothi", True, 
+                            f"REJECT verdict correctly issued. Conflict detected with indicators: {found_indicators}. Response time: {response_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("LLM Brand Detection - AndhraJyoothi JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("LLM Brand Detection - AndhraJyoothi Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("LLM Brand Detection - AndhraJyoothi Exception", False, str(e))
+            return False
+
+    def test_llm_brand_detection_bumbell(self):
+        """Test Case 2: BUMBELL (Dating App) - should detect conflict with Bumble dating app"""
+        payload = {
+            "brand_names": ["BUMBELL"],
+            "category": "Dating App",
+            "industry": "Social/Dating",
+            "product_type": "Digital",
+            "positioning": "Premium",
+            "market_scope": "Multi-Country",
+            "countries": ["USA", "India"]
+        }
+        
+        try:
+            print(f"\n🔍 Testing LLM Brand Detection - BUMBELL (Dating App)...")
+            print(f"Expected: REJECT verdict (conflict with 'Bumble' dating app)")
+            
+            import time
+            start_time = time.time()
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180
+            )
+            
+            response_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Response Time: {response_time:.2f}s")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("LLM Brand Detection - BUMBELL HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("LLM Brand Detection - BUMBELL Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check verdict should be REJECT
+                verdict = brand.get("verdict", "")
+                if verdict != "REJECT":
+                    issues.append(f"Expected REJECT verdict for BUMBELL, got: {verdict}")
+                
+                # Test 2: Check if LLM detected the phonetic similarity to Bumble
+                summary = brand.get("summary", "").lower()
+                executive_summary = data.get("executive_summary", "").lower()
+                full_response = json.dumps(data).lower()
+                
+                # Look for evidence of Bumble conflict detection
+                conflict_indicators = [
+                    "bumble", "phonetic", "similar", "conflict", "dating app", 
+                    "existing brand", "trademark", "confusion"
+                ]
+                
+                found_indicators = [indicator for indicator in conflict_indicators 
+                                  if indicator in full_response]
+                
+                if len(found_indicators) < 2:
+                    issues.append(f"LLM should detect phonetic similarity to 'Bumble' dating app. Found indicators: {found_indicators}")
+                
+                # Test 3: Check if Bumble is specifically mentioned
+                if "bumble" not in full_response:
+                    issues.append("LLM should specifically identify 'Bumble' as the conflicting brand")
+                
+                # Test 4: Check response time
+                if response_time > 10:
+                    print(f"⚠️  Warning: Response time {response_time:.2f}s is longer than expected for LLM brand check")
+                
+                if issues:
+                    self.log_test("LLM Brand Detection - BUMBELL", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("LLM Brand Detection - BUMBELL", True, 
+                            f"REJECT verdict correctly issued. Bumble conflict detected with indicators: {found_indicators}. Response time: {response_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("LLM Brand Detection - BUMBELL JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("LLM Brand Detection - BUMBELL Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("LLM Brand Detection - BUMBELL Exception", False, str(e))
+            return False
+
+    def test_llm_brand_detection_unique_name(self):
+        """Test Case 3: Zyntrix2025 (Finance App) - unique name, should pass"""
+        payload = {
+            "brand_names": ["Zyntrix2025"],
+            "category": "Finance App",
+            "industry": "Fintech",
+            "product_type": "Digital",
+            "positioning": "Premium",
+            "market_scope": "Global",
+            "countries": ["USA"]
+        }
+        
+        try:
+            print(f"\n🔍 Testing LLM Brand Detection - Zyntrix2025 (Unique Name)...")
+            print(f"Expected: GO or CAUTION verdict (unique name, no conflicts)")
+            
+            import time
+            start_time = time.time()
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180
+            )
+            
+            response_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Response Time: {response_time:.2f}s")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("LLM Brand Detection - Zyntrix2025 HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("LLM Brand Detection - Zyntrix2025 Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check verdict should NOT be REJECT
+                verdict = brand.get("verdict", "")
+                if verdict == "REJECT":
+                    issues.append(f"Unique name Zyntrix2025 should NOT be rejected, got verdict: {verdict}")
+                
+                # Test 2: Check if verdict is reasonable for unique name
+                valid_verdicts = ["GO", "CAUTION", "APPROVE"]
+                if verdict not in valid_verdicts:
+                    issues.append(f"Expected GO/CAUTION/APPROVE for unique name, got: {verdict}")
+                
+                # Test 3: Check NameScore should be reasonable for unique name
+                namescore = brand.get("namescore", 0)
+                if namescore < 30:  # Unique names should score reasonably well
+                    issues.append(f"Unique name should have decent NameScore (30+), got: {namescore}")
+                
+                # Test 4: Check that no major conflicts are mentioned
+                full_response = json.dumps(data).lower()
+                major_conflict_indicators = [
+                    "fatal conflict", "immediate rejection", "existing brand", 
+                    "trademark infringement", "legal action"
+                ]
+                
+                found_conflicts = [indicator for indicator in major_conflict_indicators 
+                                 if indicator in full_response]
+                
+                if found_conflicts:
+                    issues.append(f"Unique name should not have major conflicts. Found: {found_conflicts}")
+                
+                # Test 5: Check response time (should be longer for full analysis since no early stopping)
+                if response_time < 30:
+                    print(f"✅ Good response time for full analysis: {response_time:.2f}s")
+                
+                if issues:
+                    self.log_test("LLM Brand Detection - Zyntrix2025", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("LLM Brand Detection - Zyntrix2025", True, 
+                            f"Unique name correctly passed. Verdict: {verdict}, NameScore: {namescore}. Response time: {response_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("LLM Brand Detection - Zyntrix2025 JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("LLM Brand Detection - Zyntrix2025 Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("LLM Brand Detection - Zyntrix2025 Exception", False, str(e))
+            return False
+
+    def test_llm_brand_detection_moneycontrols(self):
+        """Test Case 4: MoneyControls (Finance App) - should detect conflict with Moneycontrol"""
+        payload = {
+            "brand_names": ["MoneyControls"],
+            "category": "Finance App",
+            "industry": "Fintech",
+            "product_type": "Digital",
+            "positioning": "Mass Market",
+            "market_scope": "Single Country",
+            "countries": ["India"]
+        }
+        
+        try:
+            print(f"\n🔍 Testing LLM Brand Detection - MoneyControls (Pluralization Test)...")
+            print(f"Expected: REJECT verdict (conflict with 'Moneycontrol' finance app)")
+            
+            import time
+            start_time = time.time()
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180
+            )
+            
+            response_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Response Time: {response_time:.2f}s")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("LLM Brand Detection - MoneyControls HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("LLM Brand Detection - MoneyControls Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check verdict should be REJECT
+                verdict = brand.get("verdict", "")
+                if verdict != "REJECT":
+                    issues.append(f"Expected REJECT verdict for MoneyControls (pluralization of Moneycontrol), got: {verdict}")
+                
+                # Test 2: Check if LLM detected the pluralization similarity
+                summary = brand.get("summary", "").lower()
+                executive_summary = data.get("executive_summary", "").lower()
+                full_response = json.dumps(data).lower()
+                
+                # Look for evidence of Moneycontrol conflict detection
+                conflict_indicators = [
+                    "moneycontrol", "money control", "pluralization", "plural", 
+                    "similar", "conflict", "finance app", "existing brand", "trademark"
+                ]
+                
+                found_indicators = [indicator for indicator in conflict_indicators 
+                                  if indicator in full_response]
+                
+                if len(found_indicators) < 2:
+                    issues.append(f"LLM should detect pluralization similarity to 'Moneycontrol'. Found indicators: {found_indicators}")
+                
+                # Test 3: Check if Moneycontrol is specifically mentioned
+                if "moneycontrol" not in full_response:
+                    issues.append("LLM should specifically identify 'Moneycontrol' as the conflicting brand")
+                
+                # Test 4: Check response time
+                if response_time > 10:
+                    print(f"⚠️  Warning: Response time {response_time:.2f}s is longer than expected for LLM brand check")
+                
+                # Test 5: Check if early stopping was triggered for famous brand
+                if response_time < 5 and "immediate rejection" in full_response:
+                    print(f"✅ Early stopping detected - fast rejection in {response_time:.2f}s")
+                
+                if issues:
+                    self.log_test("LLM Brand Detection - MoneyControls", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("LLM Brand Detection - MoneyControls", True, 
+                            f"REJECT verdict correctly issued. Moneycontrol conflict detected with indicators: {found_indicators}. Response time: {response_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("LLM Brand Detection - MoneyControls JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("LLM Brand Detection - MoneyControls Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("LLM Brand Detection - MoneyControls Exception", False, str(e))
+            return False
+
+    def test_llm_backend_logs_verification(self):
+        """Verify backend logs show LLM brand check messages"""
+        try:
+            print(f"\n📋 Checking Backend Logs for LLM Brand Check Messages...")
+            
+            # Check supervisor backend logs
+            import subprocess
+            result = subprocess.run(
+                ["tail", "-n", "200", "/var/log/supervisor/backend.out.log"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                self.log_test("LLM Backend Logs - Read Error", False, f"Failed to read backend logs: {result.stderr}")
+                return False
+            
+            log_content = result.stdout
+            issues = []
+            
+            # Test 1: Check for LLM brand check initiation messages
+            llm_check_messages = [
+                "🔍 LLM BRAND CHECK",
+                "LLM BRAND CHECK:",
+                "dynamic_brand_search"
+            ]
+            
+            found_check_messages = [msg for msg in llm_check_messages if msg in log_content]
+            if not found_check_messages:
+                issues.append(f"No LLM brand check initiation messages found. Expected: {llm_check_messages}")
+            
+            # Test 2: Check for conflict detection messages
+            conflict_messages = [
+                "🚨 LLM DETECTED CONFLICT",
+                "LLM DETECTED CONFLICT:",
+                "CONFLICT DETECTED:"
+            ]
+            
+            found_conflict_messages = [msg for msg in conflict_messages if msg in log_content]
+            
+            # Test 3: Check for early stopping messages
+            early_stopping_messages = [
+                "EARLY STOPPING:",
+                "IMMEDIATE REJECTION",
+                "early_stopped"
+            ]
+            
+            found_early_stopping = [msg for msg in early_stopping_messages if msg in log_content]
+            
+            # Test 4: Check for LLM model usage
+            llm_model_messages = [
+                "gpt-4o-mini",
+                "gpt-4o",
+                "openai"
+            ]
+            
+            found_model_messages = [msg for msg in llm_model_messages if msg in log_content]
+            if not found_model_messages:
+                issues.append(f"No LLM model usage messages found. Expected: {llm_model_messages}")
+            
+            print(f"Found LLM check messages: {found_check_messages}")
+            print(f"Found conflict messages: {found_conflict_messages}")
+            print(f"Found early stopping messages: {found_early_stopping}")
+            print(f"Found model messages: {found_model_messages}")
+            
+            if issues:
+                self.log_test("LLM Backend Logs Verification", False, "; ".join(issues))
+                return False
+            
+            self.log_test("LLM Backend Logs Verification", True, 
+                        f"Backend logs show LLM activity. Check messages: {len(found_check_messages)}, Model messages: {len(found_model_messages)}")
+            return True
+            
+        except subprocess.TimeoutExpired:
+            self.log_test("LLM Backend Logs - Timeout", False, "Timeout reading backend logs")
+            return False
+        except Exception as e:
+            self.log_test("LLM Backend Logs - Exception", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
