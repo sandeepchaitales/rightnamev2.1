@@ -782,8 +782,9 @@ Examples (BE STRICT LIKE THESE):
 NOW ANALYZE: "{brand_name}" in "{category or 'General'}"
 Return ONLY the JSON, no other text."""
 
-        # send_message is async, call it directly
-        response = await llm.send_message(prompt)
+        # send_message is async and expects UserMessage object
+        user_msg = UserMessage(content=prompt)
+        response = await llm.send_message(user_msg)
         
         print(f"📝 LLM Response for '{brand_name}': {response[:200]}...", flush=True)
         
