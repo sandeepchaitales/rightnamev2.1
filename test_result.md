@@ -234,6 +234,8 @@ test_plan:
 
 agent_communication:
   - agent: "main"
+    message: "TESTING LLM-FIRST BRAND DETECTION: Testing the new dynamic_brand_search() function that uses GPT-4o-mini to detect brand conflicts. Test cases: 1) AndhraJyoothi (News) - should detect Andhra Jyothi newspaper, 2) BUMBELL (Dating) - should detect Bumble, 3) Random unique names - should pass. Focus on verifying the LLM can detect conflicts without relying on static lists."
+  - agent: "main"
     message: "Fixed the critical P0 bug - JSON parsing was failing due to: 1) Missing comma in prompts.py between rebranding_probability and overall_assessment, 2) Literal newlines in JSON string values from LLM needed to be escaped. Added escape_newlines_in_json_strings() and repair_json() functions. API is now working - tested with multiple brand names successfully. Please verify the full E2E flow."
   - agent: "main"
     message: "Fixed schema validation error for TrademarkRiskMatrix - the LLM was omitting rebranding_probability field. Made all TrademarkRiskMatrix fields Optional with defaults to handle LLM inconsistencies. Also installed framer-motion dependency. Backend logs show successful requests now completing. Please test the full E2E flow from landing page form submission to dashboard display."
