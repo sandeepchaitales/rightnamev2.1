@@ -782,7 +782,9 @@ Examples (BE STRICT LIKE THESE):
 NOW ANALYZE: "{brand_name}" in "{category or 'General'}"
 Return ONLY the JSON, no other text."""
 
-        response = llm.generate_response(prompt)
+        response = await asyncio.to_thread(llm.generate_response, prompt)
+        
+        print(f"📝 LLM Response for '{brand_name}': {response[:200]}...", flush=True)
         
         # Parse LLM response
         import json
@@ -795,6 +797,8 @@ Return ONLY the JSON, no other text."""
             
             llm_result = json.loads(clean_response)
             
+            print(f"📊 Parsed LLM result for '{brand_name}': conflict={llm_result.get('has_conflict')}, confidence={llm_result.get('confidence')}", flush=True)
+            
             if llm_result.get("has_conflict") and llm_result.get("confidence") in ["HIGH", "MEDIUM"]:
                 result["exists"] = True
                 result["confidence"] = llm_result.get("confidence", "MEDIUM")
@@ -805,8 +809,10 @@ Return ONLY the JSON, no other text."""
                 ]
                 result["reason"] = llm_result.get("reason", "Conflict detected by AI analysis")
                 
+                print(f"🚨 LLM DETECTED CONFLICT: '{brand_name}' ~ '{result['matched_brand']}' ({llm_result.get('similarity_percentage')}%)", flush=True)
                 logging.warning(f"🚨 LLM DETECTED CONFLICT: '{brand_name}' ~ '{result['matched_brand']}' ({llm_result.get('similarity_percentage')}%)")
             else:
+                print(f"✅ LLM: '{brand_name}' appears unique", flush=True)
                 logging.info(f"✅ LLM: '{brand_name}' appears unique")
                 
         except json.JSONDecodeError as e:
