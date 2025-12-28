@@ -725,7 +725,8 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     """
     import re
     
-    logging.info(f"🔍 LLM BRAND CHECK: '{brand_name}' in category '{category}'")
+    print(f"🔍 LLM BRAND CHECK: '{brand_name}' in category '{category}'", flush=True)
+    logging.warning(f"🔍 LLM BRAND CHECK: '{brand_name}' in category '{category}'")
     
     result = {
         "exists": False,
