@@ -766,73 +766,41 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
                     brand_pattern = re.escape(brand_with_space)
                     mentions = len(re.findall(brand_pattern, html_lower))
                     
-                    # STRONG signals - these indicate definite business presence
-                    # Must be near the brand name (within 500 chars)
-                    strong_signals_found = []
-                    
-                    # Check for brand-specific domain
+                    # Check for strong signals (platform presence)
+                    strong_signals = []
                     if any(f"{brand_lower}.{ext}" in html_lower for ext in ["com", "in", "co.in", "co"]):
-                        strong_signals_found.append("domain")
+                        strong_signals.append("domain")
+                    if "zomato" in html_lower and mentions >= 1:
+                        strong_signals.append("zomato")
+                    if "swiggy" in html_lower and mentions >= 1:
+                        strong_signals.append("swiggy")
+                    if "justdial" in html_lower and mentions >= 1:
+                        strong_signals.append("justdial")
                     
-                    # Check for platform presence NEAR brand mentions
-                    for match in re.finditer(brand_pattern, html_lower):
-                        context_start = max(0, match.start() - 300)
-                        context_end = min(len(html_lower), match.end() + 300)
-                        context = html_lower[context_start:context_end]
-                        
-                        if "zomato" in context and "zomato" not in strong_signals_found:
-                            strong_signals_found.append("zomato")
-                        if "swiggy" in context and "swiggy" not in strong_signals_found:
-                            strong_signals_found.append("swiggy")
-                        if "justdial" in context and "justdial" not in strong_signals_found:
-                            strong_signals_found.append("justdial")
-                        if ("google.com/maps" in context or "maps.google" in context) and "maps" not in strong_signals_found:
-                            strong_signals_found.append("maps")
+                    print(f"🔎 WEB: '{brand_name}' mentions={mentions}, strong={strong_signals}", flush=True)
+                    logging.warning(f"🔎 WEB: '{brand_name}' mentions={mentions}, strong={strong_signals}")
                     
-                    # MEDIUM signals - check for business indicators NEAR brand mentions
-                    medium_signals_found = []
-                    for match in re.finditer(brand_pattern, html_lower):
-                        context_start = max(0, match.start() - 200)
-                        context_end = min(len(html_lower), match.end() + 200)
-                        context = html_lower[context_start:context_end]
-                        
-                        if "menu" in context and "menu" not in medium_signals_found:
-                            medium_signals_found.append("menu")
-                        if any(x in context for x in ["outlet", "branch", "location"]) and "outlet" not in medium_signals_found:
-                            medium_signals_found.append("outlet")
-                        if any(x in context for x in ["review", "rating"]) and "reviews" not in medium_signals_found:
-                            medium_signals_found.append("reviews")
-                        if any(x in context for x in ["order online", "delivery"]) and "order" not in medium_signals_found:
-                            medium_signals_found.append("order")
-                        if any(x in context for x in ["franchise", "chain"]) and "franchise" not in medium_signals_found:
-                            medium_signals_found.append("franchise")
-                    
-                    all_signals = strong_signals_found + medium_signals_found
-                    
-                    print(f"🔎 WEB: '{brand_name}' mentions={mentions}, strong={strong_signals_found}, medium={medium_signals_found}", flush=True)
-                    logging.warning(f"🔎 WEB: '{brand_name}' mentions={mentions}, strong={strong_signals_found}, medium={medium_signals_found}")
-                    
-                    # DETECTION RULES:
-                    # Rule 1: Any platform presence = DEFINITE business
-                    if len(strong_signals_found) >= 1:
+                    # SIMPLE DETECTION RULES:
+                    # Rule 1: Platform presence = HIGH confidence
+                    if len(strong_signals) >= 1:
                         brand_found_online = True
                         web_confidence = "HIGH"
-                        web_evidence = [f"mentions:{mentions}"] + all_signals[:3]
-                        logging.warning(f"🌐 WEB CONFIRMED: '{brand_name}' found on business platform!")
+                        web_evidence = [f"mentions:{mentions}"] + strong_signals
+                        logging.warning(f"🌐 WEB HIGH: '{brand_name}' found on business platform!")
                     
-                    # Rule 2: Multiple medium signals NEAR brand + mentions = LIKELY business  
-                    elif len(medium_signals_found) >= 2 and mentions >= 2:
+                    # Rule 2: Multiple mentions = MEDIUM confidence (trust the count)
+                    elif mentions >= 3:
                         brand_found_online = True
                         web_confidence = "MEDIUM"
-                        web_evidence = [f"mentions:{mentions}"] + all_signals[:3]
-                        logging.warning(f"🌐 WEB LIKELY: '{brand_name}' has business indicators near brand mentions")
+                        web_evidence = [f"mentions:{mentions}"]
+                        logging.warning(f"🌐 WEB MEDIUM: '{brand_name}' has {mentions} search mentions")
                     
-                    # Rule 3: High mentions alone = worth checking but LOW confidence
-                    elif mentions >= 8:
+                    # Rule 3: Some mentions = LOW confidence
+                    elif mentions >= 1:
                         brand_found_online = True
                         web_confidence = "LOW"
                         web_evidence = [f"mentions:{mentions}"]
-                        logging.warning(f"🌐 WEB POSSIBLE: '{brand_name}' has {mentions} mentions")
+                        logging.warning(f"🌐 WEB LOW: '{brand_name}' has {mentions} mentions")
                         
     except Exception as e:
         logging.error(f"Web search failed for {brand_name}: {e}")
