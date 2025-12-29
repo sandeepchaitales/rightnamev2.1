@@ -737,45 +737,82 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
         "reason": ""
     }
     
-    # ========== STEP 1: ENHANCED WEB SEARCH TO CHECK IF BRAND EXISTS ==========
+    # ========== SIMPLIFIED & RELIABLE BRAND DETECTION ==========
+    # PRINCIPLE: If web search finds the brand with category context, it's likely real
     web_evidence = []
     brand_found_online = False
+    web_confidence = "LOW"
     
     try:
         import re
         brand_lower = brand_name.lower().replace(" ", "")
         brand_with_space = brand_name.lower()
         
-        # Multiple search queries for comprehensive coverage
-        search_queries = [
-            f'"{brand_name}"',                          # Exact brand name
-            f'"{brand_name}" {category}',               # Brand + category
-            f'"{brand_name}" zomato OR swiggy',         # F&B delivery platforms
-            f'"{brand_name}" franchise OR outlet',      # Franchise/chain indicators
-        ]
-        
-        total_mentions = 0
-        all_indicators = []
-        all_html = ""
+        # Simple search: exact brand name in quotes
+        search_query = f'"{brand_name}"'
+        search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
         
         async with aiohttp.ClientSession() as session:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             
-            for query in search_queries[:2]:  # Limit to 2 searches to avoid rate limiting
-                try:
-                    search_url = f"https://www.bing.com/search?q={query.replace(' ', '+')}"
-                    async with session.get(search_url, headers=headers, timeout=aiohttp.ClientTimeout(total=8)) as response:
-                        if response.status == 200:
-                            html = await response.text()
-                            all_html += html.lower()
-                except Exception as e:
-                    logging.debug(f"Search query failed: {query}: {e}")
-                    continue
-        
-        if all_html:
-            html_lower = all_html
+            async with session.get(search_url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    html_lower = html.lower()
+                    
+                    # Count exact brand mentions
+                    brand_pattern = re.escape(brand_with_space)
+                    mentions = len(re.findall(brand_pattern, html_lower))
+                    
+                    # Key business signals in search results
+                    signals = {
+                        "has_domain": any(f"{brand_lower}.{ext}" in html_lower for ext in ["com", "in", "co.in", "co"]),
+                        "has_zomato": "zomato" in html_lower,
+                        "has_swiggy": "swiggy" in html_lower,
+                        "has_justdial": "justdial" in html_lower,
+                        "has_maps": "google.com/maps" in html_lower or "maps.google" in html_lower,
+                        "has_menu": "menu" in html_lower and mentions >= 2,
+                        "has_outlet": any(x in html_lower for x in ["outlet", "branch", "location", "store"]) and mentions >= 2,
+                        "has_reviews": any(x in html_lower for x in ["review", "rating", "stars"]) and mentions >= 3,
+                        "has_order": any(x in html_lower for x in ["order online", "delivery", "order now"]) and mentions >= 2,
+                    }
+                    
+                    # Count strong signals
+                    strong_signals = sum([signals["has_domain"], signals["has_zomato"], signals["has_swiggy"], 
+                                         signals["has_justdial"], signals["has_maps"]])
+                    medium_signals = sum([signals["has_menu"], signals["has_outlet"], signals["has_reviews"], signals["has_order"]])
+                    
+                    signal_list = [k.replace("has_", "") for k, v in signals.items() if v]
+                    
+                    print(f"🔎 WEB: '{brand_name}' mentions={mentions}, signals={signal_list}", flush=True)
+                    logging.warning(f"🔎 WEB: '{brand_name}' mentions={mentions}, signals={signal_list}")
+                    
+                    # DETECTION RULES (SIMPLE & EFFECTIVE):
+                    # Rule 1: Any platform presence (Zomato/Swiggy/JustDial/Maps) = DEFINITE business
+                    if strong_signals >= 1:
+                        brand_found_online = True
+                        web_confidence = "HIGH"
+                        web_evidence = [f"mentions:{mentions}"] + signal_list[:3]
+                        logging.warning(f"🌐 WEB CONFIRMED: '{brand_name}' found on business platform!")
+                    
+                    # Rule 2: Multiple business signals + mentions = LIKELY business  
+                    elif medium_signals >= 2 and mentions >= 3:
+                        brand_found_online = True
+                        web_confidence = "MEDIUM"
+                        web_evidence = [f"mentions:{mentions}"] + signal_list[:3]
+                        logging.warning(f"🌐 WEB LIKELY: '{brand_name}' has business indicators")
+                    
+                    # Rule 3: High mentions alone = worth checking
+                    elif mentions >= 5:
+                        brand_found_online = True
+                        web_confidence = "LOW"
+                        web_evidence = [f"mentions:{mentions}"]
+                        logging.warning(f"🌐 WEB POSSIBLE: '{brand_name}' has {mentions} mentions")
+                        
+    except Exception as e:
+        logging.error(f"Web search failed for {brand_name}: {e}")
             
             # Count brand mentions (both with and without spaces)
             brand_pattern = re.escape(brand_with_space)
