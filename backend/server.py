@@ -876,7 +876,13 @@ TASK: Determine if this brand name:
 - Search your knowledge for "{brand_name}" as an existing business
 - Check if there's a company, cafe chain, restaurant, app, or product called "{brand_name}"
 - Regional brands in India, USA, or globally count!
-- Even small chains with 10+ locations should be flagged
+- Even small chains with 5-10+ locations should be flagged
+- Check Zomato, Swiggy, Google Maps presence
+
+⚠️ INDIAN CAFE/CHAI BRANDS TO CHECK AGAINST:
+- Chai Duniya, Chai Point, Chaayos, Chai Sutta Bar, MBA Chai Wala, Chai Break
+- Chai Bunk, Chai Kings, Chai Waale, Chai Garam, Chai Time
+- Any brand with "Chai" + Hindi word combination
 
 ⚠️ STRICT CONFLICT RULES - Flag as conflict if ANY of these apply:
 1. EXACT BRAND EXISTS: A company/brand called "{brand_name}" already operates (even regionally)
@@ -889,9 +895,9 @@ TASK: Determine if this brand name:
 8. GLOBAL BRANDS: Tech companies, apps, products
 
 IMPORTANT: 
-- When in doubt, FLAG AS CONFLICT
+- When in doubt, FLAG AS CONFLICT - it's safer to reject
 - If "{brand_name}" sounds like it could be an existing cafe/restaurant/business - CHECK CAREFULLY
-- Indian chai cafe chains to consider: Chaayos, Chai Point, Chai Sutta Bar, MBA Chai Wala, etc.
+- "Chai Duniya" IS an existing chai cafe chain - if this exact name or similar is asked, REJECT IT
 
 RESPOND IN THIS EXACT JSON FORMAT:
 {{
@@ -905,6 +911,7 @@ RESPOND IN THIS EXACT JSON FORMAT:
 }}
 
 Examples (BE STRICT LIKE THESE):
+- "Chai Duniya" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chai Duniya", "similarity_percentage": 100, "reason": "Chai Duniya is an existing chai cafe chain in India", "brand_info": "Chai Duniya is a chai cafe brand operating in India", "brand_already_exists": true}}
 - "Chaibunk" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chai Bunk", "similarity_percentage": 100, "reason": "Chai Bunk is an existing chai cafe chain in India with 100+ stores", "brand_info": "Chai Bunk is a popular Indian chai cafe chain", "brand_already_exists": true}}
 - "Chaayos" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chaayos", "similarity_percentage": 100, "reason": "Chaayos is a major chai cafe chain in India", "brand_info": "Chaayos is one of India's largest chai cafe chains", "brand_already_exists": true}}
 - "MoneyControls" in "Finance" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Moneycontrol", "similarity_percentage": 98, "reason": "Pluralized version of Moneycontrol", "brand_info": "Moneycontrol is India's leading financial platform", "brand_already_exists": false}}
