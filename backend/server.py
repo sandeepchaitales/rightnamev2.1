@@ -1542,7 +1542,7 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     {problem_context}
     """
     
-    max_retries = 2  # Reduced to 2 for faster fallback
+    max_retries = 3  # Increased for better reliability
     last_error = None
     
     # Try each model with retries
