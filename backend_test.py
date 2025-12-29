@@ -3494,7 +3494,7 @@ class BrandEvaluationTester:
             "category": "Technology",
             "industry": "Software",
             "product_type": "Business Software",
-            "positioning": "Next-generation business solutions",
+            "positioning": "Premium",
             "market_scope": "Multi-Country",
             "countries": ["USA", "UK", "India"]
         }
