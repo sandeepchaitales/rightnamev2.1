@@ -1876,7 +1876,7 @@ const Dashboard = () => {
                     .print-card { break-inside: avoid !important; page-break-inside: avoid !important; margin-bottom: 8px; }
                     .no-print { display: none !important; }
                     /* Force new page for each major section (except pages 1 & 2) */
-                    .pdf-page-break print-new-page { page-break-before: always !important; break-before: page !important; }
+                    .pdf-page-break, .print-new-page { page-break-before: always !important; break-before: page !important; }
                     .pdf-page-break { page-break-before: always !important; break-before: page !important; }
                     .pdf-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
                     .print-section { break-inside: avoid !important; }
