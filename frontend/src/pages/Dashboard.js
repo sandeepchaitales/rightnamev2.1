@@ -1903,9 +1903,9 @@ const Dashboard = () => {
                     <QuickDimensionsGrid dimensions={brand.dimensions} />
                 </section>
 
-                {/* SECTION 3: FINAL ASSESSMENT */}
+                {/* SECTION 3: FINAL ASSESSMENT - Pages 1&2 flow naturally */}
                 {brand.final_assessment && (
-                    <section className="print-section print-page-break">
+                    <section className="print-section">
                         <SectionHeader icon={Zap} title="Final Assessment" subtitle="Consultant Verdict & Roadmap" color="emerald" />
                         {isAuthenticated ? (
                             <FinalAssessmentFull assessment={brand.final_assessment} verdict={brand.verdict} score={brand.namescore} />
@@ -1915,8 +1915,8 @@ const Dashboard = () => {
                     </section>
                 )}
 
-                {/* SECTION 4: STRATEGY SNAPSHOT */}
-                <section className="print-section print-page-break">
+                {/* SECTION 4: STRATEGY SNAPSHOT - Still on Page 2 */}
+                <section className="print-section">
                     <SectionHeader icon={Target} title="Strategy Snapshot" subtitle="Strengths and risks analysis" color="emerald" />
                     {isAuthenticated ? (
                         <StrategySnapshot classification={brand.strategic_classification} pros={brand.pros} cons={brand.cons} />
@@ -1925,7 +1925,7 @@ const Dashboard = () => {
                     )}
                 </section>
 
-                {/* "WHAT'S IN THE NAME?" BANNER - New Page */}
+                {/* "WHAT'S IN THE NAME?" BANNER - New Page (Page 3) */}
                 {brand.dimensions && (
                     <section className="print-new-page">
                         <div className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 rounded-2xl p-8 text-center mb-6">
