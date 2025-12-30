@@ -76,12 +76,17 @@ const SubSectionHeader = ({ icon: Icon, title, color = "slate" }) => (
 );
 
 // ============ COVER PAGE ============
-const CoverPage = ({ brandName, score, verdict, date, query, reportId }) => {
+const CoverPage = ({ brandName, score, verdict, date, query, reportId, forPdf = false }) => {
+    // For PDF: always visible. For screen: hidden (only show in print)
+    const baseClass = forPdf 
+        ? "flex flex-col min-h-[297mm] items-center justify-center bg-white p-8 pdf-cover-page"
+        : "hidden print:flex print:flex-col print:min-h-screen print:items-center print:justify-center print:bg-white print:p-8";
+    
     return (
-        <div className="hidden print:flex print:flex-col print:min-h-screen print:items-center print:justify-center print:bg-white print:p-8">
+        <div className={baseClass} style={forPdf ? { pageBreakAfter: 'always' } : {}}>
             {/* Logo - Decent Size */}
             <div className="mb-6">
-                <img src={LOGO_URL} alt="RIGHTNAME" className="h-20 mx-auto" />
+                <img src={LOGO_URL} alt="RIGHTNAME" className="h-20 mx-auto" crossOrigin="anonymous" />
             </div>
             
             {/* Brand Name - Large and Bold */}
@@ -163,7 +168,7 @@ const CoverPage = ({ brandName, score, verdict, date, query, reportId }) => {
             </div>
             
             {/* Footer */}
-            <div className="absolute bottom-8 left-0 right-0 text-center">
+            <div className="mt-auto pt-8 text-center">
                 <p className="text-xs text-slate-400">https://rightname.ai</p>
             </div>
         </div>
