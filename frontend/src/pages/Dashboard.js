@@ -1780,11 +1780,17 @@ const Dashboard = () => {
                 brand.cons.forEach(c => { consHtml += '<li style="margin-bottom:8px;">' + c + '</li>'; });
             }
             
-            // Complete PDF HTML
+            // Complete PDF HTML - Using text-based logo for reliability
+            const logoSvg = `<svg width="200" height="50" xmlns="http://www.w3.org/2000/svg">
+                <text x="0" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="900" fill="#7c3aed">RIGHT</text>
+                <text x="105" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="900" fill="#0f172a">NAME</text>
+            </svg>`;
+            const logoDataUri = 'data:image/svg+xml;base64,' + btoa(logoSvg);
+            
             pdfContainer.innerHTML = `
                 <!-- ==================== PAGE 1: COVER PAGE ==================== -->
                 <div style="min-height:287mm;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:white;page-break-after:always;">
-                    <img src="${LOGO_URL}" alt="RIGHTNAME" style="height:80px;margin-bottom:30px;" crossorigin="anonymous" />
+                    <div style="font-size:42px;font-weight:900;margin-bottom:30px;"><span style="color:#7c3aed;">RIGHT</span><span style="color:#0f172a;">NAME</span></div>
                     <h1 style="font-size:52px;font-weight:900;color:#0f172a;margin:0 0 20px 0;text-align:center;">${brandName}</h1>
                     <div style="display:inline-flex;align-items:center;padding:16px 40px;border-radius:50px;font-size:28px;font-weight:900;margin-bottom:30px;${getVerdictStyle(brand?.verdict)}">
                         ${brand?.namescore || 0}/100 • ${brand?.verdict || 'N/A'}
