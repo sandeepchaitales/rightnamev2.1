@@ -725,29 +725,22 @@ INAPPROPRIATE_PATTERNS = [
     "masturbat", "masterbat", "masturbate", "masterbate",
     "pornhub", "xvideo", "xnxx", "redtube", "youporn",
     "fuck", "fuk", "phuck", "phuk", "fck",
-    "shit", "shyt", "sht",
-    "ass", "arse", "azz",
+    "shit", "shyt",
     "bitch", "bich", "bytch",
     "cunt", "kunt",
-    "dick", "dik", "dck",
-    "cock", "cok", "kok",
     "penis", "pnis",
     "vagina", "vajina",
-    "boob", "bewb", "boobs",
-    "titty", "tity", "tits",
+    "titty", "tity",
     "whore", "hore", "hoar",
     "slut", "slutt",
     "nigger", "nigga", "nigg",
-    "faggot", "fag", "fagg",
+    "faggot", "fagg",
     "retard", "retrd",
     # Drugs
-    "cocaine", "cocain", "heroin", "heroine",
+    "cocaine", "cocain",
     "meth", "methamphetamine",
     # Violence
-    "kill", "murder", "rape",
-    # Phonetic traps (words that sound inappropriate)
-    "classbate", "classbait", "masturb", "masterbait",
-    "analytic" # This is fine - but "anal" alone is not
+    "rape",
 ]
 
 def check_inappropriate_name(brand_name: str) -> dict:
