@@ -1729,9 +1729,10 @@ const Dashboard = () => {
             const dims = brand?.dimensions || [];
             const query = queryData || {};
             
-            // Create PDF container
+            // Create PDF container - FIXED: Use visibility hidden instead of position off-screen
             const pdfContainer = document.createElement('div');
-            pdfContainer.style.cssText = 'position:absolute;left:-9999px;width:210mm;background:white;font-family:system-ui,-apple-system,sans-serif;color:#1e293b;';
+            pdfContainer.id = 'pdf-export-container';
+            pdfContainer.style.cssText = 'position:fixed;top:0;left:0;width:210mm;background:white;font-family:system-ui,-apple-system,sans-serif;color:#1e293b;z-index:-1;visibility:hidden;';
             document.body.appendChild(pdfContainer);
             
             // Verdict colors
