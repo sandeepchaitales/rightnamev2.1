@@ -1937,8 +1937,8 @@ const Dashboard = () => {
                 </section>
 
                 {/* ==================== PAGE 2: EVALUATION SUMMARY ==================== */}
-                {/* Hero + Score + Radar + Quick Dimensions */}
-                <section className="print-section">
+                {/* Evaluation Summary (left), Verdict & Index + Performance Radar (right) */}
+                <section className="page-2-content">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:gap-4">
                         <div className="lg:col-span-2">
                             <PrintCard>
@@ -1965,12 +1965,12 @@ const Dashboard = () => {
                     </div>
                 </section>
 
-                {/* Quick Dimensions Index - Still Page 2 */}
-                <section className="print-section">
+                {/* Quick Dimensions - Screen only, not in PDF per spec */}
+                <section className="no-print">
                     <QuickDimensionsGrid dimensions={brand.dimensions} />
                 </section>
 
-                {/* ==================== PAGE 3: FINAL ASSESSMENT + STRATEGY ==================== */}
+                {/* ==================== PAGE 3: FINAL ASSESSMENT + STRATEGY SNAPSHOT ==================== */}
                 {/* Final Assessment */}
                 {brand.final_assessment && (
                     <section className="print-new-page print-section">
