@@ -2015,7 +2015,7 @@ const Dashboard = () => {
 
                 {/* ==================== NEW PAGE: DIGITAL PRESENCE ==================== */}
                 {(brand.multi_domain_availability || brand.social_availability) && (
-                    <section className="print-section pdf-page-break print-new-page">
+                    <section className="print-new-page">
                         <SectionHeader icon={Globe} title="Digital Presence Check" subtitle="Domain & social availability" color="cyan" badge={`${brand.multi_domain_availability?.category_domains?.filter(d => d.available).length || 0}/${brand.multi_domain_availability?.category_domains?.length || 0} Available`} />
                         {isAuthenticated ? (
                             <DigitalPresenceSection 
@@ -2029,9 +2029,9 @@ const Dashboard = () => {
                     </section>
                 )}
 
-                {/* SECTION 7: MARKET INTELLIGENCE - New Page */}
+                {/* ==================== NEW PAGE: MARKET INTELLIGENCE ==================== */}
                 {(brand.domain_analysis || brand.visibility_analysis || brand.cultural_analysis) && (
-                    <section className="print-section pdf-page-break print-new-page">
+                    <section className="print-new-page">
                         <SectionHeader icon={TrendingUp} title="Market Intelligence" subtitle="Domain status, conflicts & cultural fit" color="amber" />
                         {isAuthenticated ? (
                             <MarketIntelligenceSection 
@@ -2045,9 +2045,9 @@ const Dashboard = () => {
                     </section>
                 )}
 
-                {/* SECTION 8: COMPETITIVE LANDSCAPE - New Page */}
+                {/* ==================== NEW PAGE: COMPETITIVE LANDSCAPE ==================== */}
                 {(brand.competitor_analysis || brand.country_competitor_analysis?.length > 0) && (
-                    <section className="print-section pdf-page-break print-new-page">
+                    <section className="print-new-page">
                         <SectionHeader icon={Users} title="Competitive Landscape" subtitle="Strategic positioning matrix by market" color="blue" />
                         {isAuthenticated ? (
                             <CompetitiveLandscapeSection 
@@ -2060,9 +2060,9 @@ const Dashboard = () => {
                     </section>
                 )}
 
-                {/* SECTION 9: LEGAL RISK MATRIX - New Page */}
+                {/* ==================== NEW PAGE: LEGAL RISK MATRIX ==================== */}
                 {brand.trademark_matrix && (
-                    <section className="print-section pdf-page-break print-new-page">
+                    <section className="print-new-page">
                         <SectionHeader icon={Scale} title="Legal Risk Matrix" subtitle="IP Analysis & Trademark Assessment" color="red" />
                         {isAuthenticated ? (
                             <LegalRiskMatrix trademarkMatrix={brand.trademark_matrix} trademarkClasses={brand.trademark_classes} />
@@ -2072,9 +2072,9 @@ const Dashboard = () => {
                     </section>
                 )}
 
-                {/* SECTION 10: TRADEMARK RESEARCH - New Page */}
+                {/* ==================== NEW PAGE: TRADEMARK RESEARCH ==================== */}
                 {brand.trademark_research && (
-                    <section className="print-section pdf-page-break print-new-page">
+                    <section className="print-new-page">
                         <SectionHeader icon={Shield} title="Trademark Research Intelligence" subtitle="Real-Time Conflict Discovery & Risk Analysis" color="violet" badge="NEW" />
                         {isAuthenticated ? (
                             <TrademarkResearchSection 
