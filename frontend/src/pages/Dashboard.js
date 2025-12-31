@@ -77,19 +77,28 @@ const SubSectionHeader = ({ icon: Icon, title, color = "slate" }) => (
 
 // ============ COVER PAGE ============
 const CoverPage = ({ brandName, score, verdict, date, query, reportId, forPdf = false }) => {
-    // For PDF: always visible. For screen: hidden (only show in print)
+    // For PDF: always visible. For screen: invisible but still renders (so images load)
     const baseClass = forPdf 
         ? "flex flex-col min-h-[297mm] items-center justify-center bg-white p-8 pdf-cover-page"
-        : "hidden print:flex print:flex-col print:min-h-screen print:items-center print:justify-center print:bg-white print:p-8";
+        : "print:flex print:flex-col print:min-h-screen print:items-center print:justify-center print:bg-white print:p-8";
+    
+    // Use visibility:hidden instead of display:none so images preload
+    const screenStyle = forPdf ? {} : { 
+        position: 'absolute', 
+        left: '-9999px', 
+        visibility: 'hidden',
+        width: '210mm'
+    };
+    const printStyle = forPdf ? { pageBreakAfter: 'always' } : {};
     
     return (
-        <div className={baseClass} style={forPdf ? { pageBreakAfter: 'always' } : {}}>
+        <div className={baseClass} style={{...screenStyle, ...printStyle}}>
             {/* Logo */}
-            <div className="mb-6">
+            <div className="mb-6 print:mb-6">
                 <img 
                     src={LOGO_URL} 
                     alt="RIGHTNAME" 
-                    className="h-20 mx-auto"
+                    className="h-20 mx-auto print:h-20"
                 />
             </div>
             
