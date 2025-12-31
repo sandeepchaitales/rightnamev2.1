@@ -384,6 +384,39 @@ const LandingPage = () => {
             <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-sm font-semibold text-violet-600">Home</Link>
               <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors">Features</a>
+              
+              {/* Tools Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors outline-none">
+                  Tools
+                  <ChevronDown className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/" className="flex items-center gap-3 cursor-pointer">
+                      <div className="p-1.5 bg-violet-100 rounded-lg">
+                        <Sparkles className="w-4 h-4 text-violet-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900">Brand Evaluation</div>
+                        <div className="text-xs text-slate-500">For New Brands</div>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/brand-audit" className="flex items-center gap-3 cursor-pointer">
+                      <div className="p-1.5 bg-emerald-100 rounded-lg">
+                        <BarChart3 className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900">Brand Audit</div>
+                        <div className="text-xs text-slate-500">For Existing Brands</div>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               <a href="#how-it-works" className="text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors">How It Works</a>
               <Link to="/blog" className="text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors">Blog</Link>
               <a href="#faq" className="text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors">FAQ</a>
