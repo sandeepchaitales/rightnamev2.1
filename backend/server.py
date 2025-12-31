@@ -1210,6 +1210,76 @@ async def evaluate_brands(request: BrandEvaluationRequest):
     import time as time_module
     start_time = time_module.time()
     
+    # ==================== FIRST CHECK: INAPPROPRIATE/OFFENSIVE NAMES ====================
+    # Check for vulgar, offensive, or phonetically inappropriate names FIRST
+    inappropriate_rejections = {}
+    for brand in request.brand_names:
+        inappropriate_check = check_inappropriate_name(brand)
+        if inappropriate_check["is_inappropriate"]:
+            inappropriate_rejections[brand] = inappropriate_check
+            logging.warning(f"🚫 INAPPROPRIATE NAME DETECTED: {brand} - {inappropriate_check['reason']}")
+    
+    # If ANY names are inappropriate, reject immediately
+    if inappropriate_rejections:
+        logging.info(f"IMMEDIATE REJECTION: {len(inappropriate_rejections)} inappropriate brand name(s) detected.")
+        
+        brand_scores = []
+        for brand in request.brand_names:
+            if brand in inappropriate_rejections:
+                rejection_info = inappropriate_rejections[brand]
+                brand_scores.append(BrandScore(
+                    brand_name=brand,
+                    namescore=0.0,
+                    verdict="REJECT",
+                    summary=f"⛔ FATAL: '{brand}' is INAPPROPRIATE/OFFENSIVE. {rejection_info['reason']}",
+                    strategic_classification="BLOCKED - Inappropriate/Offensive Content",
+                    pros=[],
+                    cons=["Contains or sounds like inappropriate content", "Would cause severe reputational damage", "Unsuitable for commercial use", "Could violate advertising standards"],
+                    dimensions=[
+                        DimensionScore(name="Distinctiveness", score=0, reasoning="BLOCKED - Inappropriate content"),
+                        DimensionScore(name="Memorability", score=0, reasoning="BLOCKED - Would be remembered for wrong reasons"),
+                        DimensionScore(name="Pronounceability", score=0, reasoning="BLOCKED - Phonetically inappropriate"),
+                        DimensionScore(name="Trademark Safety", score=0, reasoning="BLOCKED - Would not be registrable"),
+                        DimensionScore(name="Domain Availability", score=0, reasoning="BLOCKED - Inappropriate"),
+                        DimensionScore(name="Cultural Safety", score=0, reasoning=f"FATAL - {rejection_info['reason']}"),
+                    ],
+                    trademark_risk={"overall_risk": "CRITICAL", "reason": "Inappropriate/offensive content"},
+                    positioning_fit="BLOCKED - Inappropriate brand name"
+                ))
+            else:
+                # If mixed (some inappropriate, some not), still reject all
+                brand_scores.append(BrandScore(
+                    brand_name=brand,
+                    namescore=0.0,
+                    verdict="REJECT",
+                    summary=f"Evaluation blocked due to inappropriate names in submission",
+                    strategic_classification="BLOCKED",
+                    pros=[],
+                    cons=["Submission contained inappropriate brand names"],
+                    dimensions=[],
+                    positioning_fit="BLOCKED"
+                ))
+        
+        report_id = f"report_{uuid.uuid4().hex[:16]}"
+        response_data = BrandEvaluationResponse(
+            executive_summary=f"⛔ IMMEDIATE REJECTION: Brand name(s) contain or sound like inappropriate/offensive content. '{list(inappropriate_rejections.keys())[0]}' is unsuitable for commercial use.",
+            brand_scores=brand_scores,
+            comparison_verdict="REJECTED - Inappropriate content detected",
+            report_id=report_id
+        )
+        
+        doc = response_data.model_dump()
+        doc['report_id'] = report_id
+        doc['created_at'] = datetime.now(timezone.utc).isoformat()
+        doc['request'] = request.model_dump()
+        doc['early_stopped'] = True
+        doc['rejection_reason'] = "inappropriate_content"
+        doc['processing_time_seconds'] = time_module.time() - start_time
+        await db.evaluations.insert_one(doc)
+        
+        return response_data
+    # ==================== END INAPPROPRIATE CHECK ====================
+    
     # ==================== SINGLE LAYER: DYNAMIC COMPETITOR SEARCH ====================
     # NO STATIC LIST - Everything is dynamic!
     # 1. Search for competitors in the user's category
