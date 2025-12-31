@@ -84,9 +84,12 @@ const CoverPage = ({ brandName, score, verdict, date, query, reportId, forPdf = 
     
     return (
         <div className={baseClass} style={forPdf ? { pageBreakAfter: 'always' } : {}}>
-            {/* Logo - Decent Size */}
+            {/* Logo - Text-based for reliable printing */}
             <div className="mb-6">
-                <img src={LOGO_URL} alt="RIGHTNAME" className="h-20 mx-auto" crossOrigin="anonymous" />
+                <div className="text-5xl font-black">
+                    <span className="text-violet-600">RIGHT</span>
+                    <span className="text-slate-900">NAME</span>
+                </div>
             </div>
             
             {/* Brand Name - Large and Bold */}
