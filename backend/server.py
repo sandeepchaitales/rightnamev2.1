@@ -649,6 +649,10 @@ FAMOUS_BRANDS = {
     "costco", "walmart", "target", "kroger", "walgreens", "cvs", "home depot", "lowes",
     "best buy", "macys", "nordstrom", "kohls", "jcpenney", "sears", "ikea", "aldi", "lidl",
     "whole foods", "trader joes", "safeway", "publix", "wegmans", "costco wholesale",
+    # Stationery & Office Supplies - INDIAN BRANDS
+    "classmate", "class mate", "itc classmate", "camlin", "doms", "natraj", "cello", 
+    "reynolds", "parker", "faber castell", "staedtler", "pilot", "uniball", "uni-ball",
+    "papermate", "paper mate", "bic", "sharpie", "post-it", "scotch", "3m",
     # Tech Giants
     "apple", "google", "microsoft", "amazon", "meta", "facebook", "instagram", "whatsapp",
     "netflix", "spotify", "uber", "lyft", "airbnb", "twitter", "tiktok", "snapchat", 
