@@ -717,7 +717,15 @@ FAMOUS_BRANDS = {
     # E-commerce & Delivery
     "fedex", "ups", "usps", "dhl", "amazon prime", "ebay", "etsy", "shopify",
     "alibaba", "aliexpress", "wish", "wayfair", "overstock", "chewy", "petco", "petsmart",
-    "flipkart", "snapdeal", "bigbasket", "blinkit", "zepto", "instamart", "dunzo"
+    "flipkart", "snapdeal", "bigbasket", "blinkit", "zepto", "instamart", "dunzo",
+    # Indian Supermarkets & Retail Chains
+    "ratnadeep", "ratna deep", "ratnadeep supermarket", "dmart", "d-mart", "d mart", 
+    "avenue supermarts", "reliance fresh", "reliance retail", "reliance smart", "jiomart", 
+    "more", "more supermarket", "more megastore", "spencers", "spencer's", "spencer retail",
+    "star bazaar", "starbazaar", "hypercity", "hyper city", "spar", "spar hypermarket",
+    "easy day", "easyday", "heritage fresh", "heritage supermarket", "nilgiris", "nilgiri's",
+    "foodhall", "food hall", "nature's basket", "natures basket", "godrej nature's basket",
+    "smart bazaar", "smartbazaar", "vishal mega mart", "vishal megamart", "v-mart", "vmart"
 }
 
 # INAPPROPRIATE/OFFENSIVE WORDS - Brand names that sound like or contain these should be REJECTED
