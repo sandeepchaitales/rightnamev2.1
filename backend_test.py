@@ -4039,6 +4039,142 @@ class BrandEvaluationTester:
             self.log_test("Zyphlora Comprehensive - Exception", False, str(e))
             return False
 
+    def test_brand_audit_chaayos_final(self):
+        """Final test of Brand Audit API with Chaayos after fixing Claude timeout and schema validation"""
+        payload = {
+            "brand_name": "Chaayos",
+            "brand_website": "https://chaayos.com",
+            "category": "Food & Beverage",
+            "geography": "India",
+            "competitor_1": "Chai Point",
+            "competitor_2": "Tea Trails"
+        }
+        
+        try:
+            print(f"\n🔍 FINAL TEST: Brand Audit API with Chaayos after fixes...")
+            print(f"Payload: {json.dumps(payload, indent=2)}")
+            print(f"Expected: Status 200 OK, JSON with report_id, overall_score (0-100), verdict, executive_summary, dimensions (8 items)")
+            print(f"Fixed: 1) Claude timeout (removed Claude, OpenAI only), 2) Schema validation (sources.id now accepts Any type)")
+            print(f"Timeout: 120 seconds allowed")
+            
+            start_time = time.time()
+            response = requests.post(
+                f"{self.api_url}/brand-audit", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=120  # 120 seconds as requested
+            )
+            
+            processing_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Processing Time: {processing_time:.2f} seconds")
+            
+            # Test 1: API should return 200 OK
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:500]}"
+                if response.status_code == 500:
+                    # Check if it's still the schema validation error
+                    if "sources.0.id Input should be a valid string" in response.text:
+                        self.log_test("Brand Audit - Chaayos Schema Error", False, f"Schema validation error still present: sources.id expects string but gets integer")
+                    else:
+                        self.log_test("Brand Audit - Chaayos Server Error", False, f"Server error: {error_msg}")
+                elif response.status_code in [502, 503]:
+                    self.log_test("Brand Audit - Chaayos Gateway Error", False, f"Gateway/service error: {error_msg}")
+                elif response.status_code == 408:
+                    self.log_test("Brand Audit - Chaayos Timeout", False, f"Request timeout: {error_msg}")
+                else:
+                    self.log_test("Brand Audit - Chaayos HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                print(f"✅ Response received successfully, checking structure...")
+                
+                # Test 2: Check required top-level fields
+                required_fields = ["report_id", "overall_score", "verdict", "executive_summary", "dimensions"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Brand Audit - Chaayos Required Fields", False, f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Test 3: Check report_id is string
+                report_id = data.get("report_id")
+                if not isinstance(report_id, str) or len(report_id) == 0:
+                    self.log_test("Brand Audit - Chaayos Report ID", False, f"Invalid report_id: {report_id}")
+                    return False
+                
+                # Test 4: Check overall_score is number 0-100
+                overall_score = data.get("overall_score")
+                if not isinstance(overall_score, (int, float)) or not (0 <= overall_score <= 100):
+                    self.log_test("Brand Audit - Chaayos Overall Score", False, f"Invalid overall_score: {overall_score} (should be 0-100)")
+                    return False
+                
+                # Test 5: Check verdict is string
+                verdict = data.get("verdict", "")
+                if not isinstance(verdict, str) or len(verdict) == 0:
+                    self.log_test("Brand Audit - Chaayos Verdict", False, f"Invalid verdict: {verdict} (should be non-empty string)")
+                    return False
+                
+                # Test 6: Check executive_summary is substantial
+                executive_summary = data.get("executive_summary", "")
+                if not isinstance(executive_summary, str) or len(executive_summary) < 50:
+                    self.log_test("Brand Audit - Chaayos Executive Summary", False, f"Invalid executive_summary: {len(executive_summary)} chars (should be 50+ chars)")
+                    return False
+                
+                # Test 7: Check dimensions array has 8 items
+                dimensions = data.get("dimensions", [])
+                if not isinstance(dimensions, list) or len(dimensions) != 8:
+                    self.log_test("Brand Audit - Chaayos Dimensions Count", False, f"Expected 8 dimensions, got {len(dimensions)}")
+                    return False
+                
+                # Test 8: Check each dimension has required structure
+                for i, dimension in enumerate(dimensions):
+                    if not isinstance(dimension, dict):
+                        self.log_test("Brand Audit - Chaayos Dimension Structure", False, f"Dimension {i} is not a dict: {type(dimension)}")
+                        return False
+                    
+                    dim_required = ["name", "score", "analysis"]
+                    dim_missing = [field for field in dim_required if field not in dimension]
+                    if dim_missing:
+                        self.log_test("Brand Audit - Chaayos Dimension Fields", False, f"Dimension {i} missing fields: {dim_missing}")
+                        return False
+                    
+                    # Check score is 0-100
+                    dim_score = dimension.get("score")
+                    if not isinstance(dim_score, (int, float)) or not (0 <= dim_score <= 100):
+                        self.log_test("Brand Audit - Chaayos Dimension Score", False, f"Dimension {i} invalid score: {dim_score}")
+                        return False
+                
+                # Test 9: Check for schema validation issues (sources.id)
+                response_text = json.dumps(data)
+                if "sources" in response_text:
+                    print(f"✅ Sources field present in response - checking for schema validation fix...")
+                    # If we got here with 200 OK, the schema validation is likely fixed
+                
+                print(f"✅ Chaayos Brand Audit completed successfully:")
+                print(f"   - Report ID: {report_id}")
+                print(f"   - Overall Score: {overall_score}/100")
+                print(f"   - Verdict: {verdict}")
+                print(f"   - Executive Summary: {len(executive_summary)} characters")
+                print(f"   - Dimensions: {len(dimensions)} items")
+                print(f"   - Processing Time: {processing_time:.2f} seconds")
+                
+                self.log_test("Brand Audit - Chaayos Final Test", True, 
+                            f"SUCCESS: 200 OK with valid JSON. Report ID: {report_id}, Score: {overall_score}/100, Verdict: {verdict}, Dimensions: {len(dimensions)}, Time: {processing_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Brand Audit - Chaayos JSON Parse", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Brand Audit - Chaayos Timeout", False, "Request timed out after 120 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Brand Audit - Chaayos Exception", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
