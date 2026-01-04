@@ -2155,13 +2155,17 @@ async def brand_audit(request: BrandAuditRequest):
             logging.info(f"Brand Audit: {provider}/{model} succeeded!")
             break  # Success, exit the retry loop
             
+        except asyncio.TimeoutError:
+            last_error = f"Timeout after 120s"
+            logging.warning(f"Brand Audit: {provider}/{model} timed out")
+            continue
         except Exception as e:
             last_error = e
             logging.warning(f"Brand Audit: {provider}/{model} failed: {e}")
             continue  # Try next model
     
     # If all models failed
-    if not content or content == "":
+    if not data:
         logging.error(f"Brand Audit: All models failed. Last error: {last_error}")
         raise HTTPException(status_code=500, detail=f"All LLM models failed. Please try again later.")
     
