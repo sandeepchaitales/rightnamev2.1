@@ -2099,10 +2099,10 @@ async def brand_audit(request: BrandAuditRequest):
         research_data=research_data
     )
     
-    # Models to try in order - OpenAI only for reliability (Claude has timeout issues)
+    # Models to try in order - prioritize stable models that work
     models_to_try = [
-        ("openai", "gpt-4o-mini"),
         ("openai", "gpt-4o"),
+        ("openai", "gpt-4o-mini"),
         ("openai", "gpt-4.1"),
     ]
     
