@@ -4131,9 +4131,11 @@ def main():
     tester = BrandEvaluationTester()
     
     # Run Brand Audit test as per review request
-    print("🔍 BRAND AUDIT API TEST: Testing /api/brand-audit endpoint")
+    print("🔍 BRAND AUDIT API TEST: Testing /api/brand-audit endpoint after Claude timeout fix")
     print("=" * 80)
-    print("🎯 TESTING: Brand Audit API with Haldiram test case")
+    print("🎯 TESTING: Brand Audit API with Tea Villa test case")
+    print("🔧 FIXED: Removed Claude from fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1")
+    print("🔧 FIXED: Added 120-second timeout per model to prevent hanging")
     print("=" * 80)
     
     # Test API health first
@@ -4143,10 +4145,10 @@ def main():
     
     # PRIORITY: Run Brand Audit test as per review request
     print("\n🔍 BRAND AUDIT TEST:")
-    print("Testing Brand Audit API with Haldiram (famous Indian food brand)...")
+    print("Testing Brand Audit API with Tea Villa (simple Indian cafe) after Claude timeout fix...")
     
     # Run the specific test requested
-    success = tester.test_brand_audit_haldiram()
+    success = tester.test_brand_audit_tea_villa_claude_fix()
     
     # Print summary
     print(f"\n📊 Brand Audit Test Summary:")
@@ -4157,24 +4159,30 @@ def main():
     # Save detailed results
     with open('/app/backend_test_results.json', 'w') as f:
         json.dump({
-            "test_focus": "Brand Audit API Test",
-            "description": "Test the Brand Audit API endpoint /api/brand-audit which was failing with 502 errors",
+            "test_focus": "Brand Audit API Test - Claude Timeout Fix",
+            "description": "Re-test the Brand Audit API /api/brand-audit after fixing the Claude timeout issue",
+            "fix_details": {
+                "issue": "Claude model was hanging/timing out in fallback chain",
+                "solution": "Removed Claude from fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1",
+                "timeout_fix": "Added 120-second timeout per model to prevent hanging"
+            },
             "test_case": {
-                "brand_name": "Haldiram",
-                "brand_website": "https://haldirams.com",
+                "brand_name": "Tea Villa",
+                "brand_website": "https://teavilla.in",
                 "category": "Food & Beverage",
                 "geography": "India",
-                "competitor_1": "Bikaji",
-                "competitor_2": "Balaji"
+                "competitor_1": "Chai Point",
+                "competitor_2": "Chaayos"
             },
             "verification_points": [
-                "API returns successful response (200 OK, not 502)",
+                "API returns successful response (200 OK, not timeout)",
                 "Response contains report_id (string)",
                 "Response contains overall_score (number 0-100)",
                 "Response contains verdict (STRONG/MODERATE/WEAK/CRITICAL)",
                 "Response contains executive_summary (text)",
                 "Response contains dimensions (array of 8 brand dimensions)",
-                "Model fallback working: gpt-4o-mini → claude-sonnet-4-20250514 → gpt-4o"
+                "Processing completes within 180 seconds total",
+                "Backend logs show OpenAI model usage without Claude hanging"
             ],
             "summary": {
                 "tests_run": tester.tests_run,
