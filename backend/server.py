@@ -2099,16 +2099,27 @@ async def brand_audit(request: BrandAuditRequest):
         research_data=research_data
     )
     
-    # Use gpt-4o-mini for reliability
-    llm_chat = LlmChat(
-        api_key=EMERGENT_KEY,
-        session_id=f"brand_audit_{uuid.uuid4()}",
-        system_message=BRAND_AUDIT_SYSTEM_PROMPT
-    ).with_model("openai", "gpt-4o-mini")
+    # Models to try in order (most reliable first)
+    models_to_try = [
+        ("openai", "gpt-4o-mini"),
+        ("anthropic", "claude-sonnet-4-20250514"),
+        ("openai", "gpt-4o"),
+    ]
     
-    try:
-        user_message = UserMessage(text=user_prompt)
-        response = await llm_chat.send_message(user_message)
+    content = ""
+    last_error = None
+    
+    for provider, model in models_to_try:
+        try:
+            logging.info(f"Brand Audit: Trying {provider}/{model}...")
+            llm_chat = LlmChat(
+                api_key=EMERGENT_KEY,
+                session_id=f"brand_audit_{uuid.uuid4()}",
+                system_message=BRAND_AUDIT_SYSTEM_PROMPT
+            ).with_model(provider, model)
+            
+            user_message = UserMessage(text=user_prompt)
+            response = await llm_chat.send_message(user_message)
         
         content = ""
         if hasattr(response, 'text'):
