@@ -400,7 +400,7 @@ PHASE 5: DIGITAL & SOCIAL ANALYSIS
 YOUR MISSION
 ================================================================================
 
-Synthesize ALL research data above into a comprehensive, McKinsey-grade brand audit report.
+Synthesize ALL research data above into a comprehensive, institutional-grade brand audit report.
 
 REQUIREMENTS:
 1. Score ALL 8 dimensions (1-10) with evidence-backed reasoning
