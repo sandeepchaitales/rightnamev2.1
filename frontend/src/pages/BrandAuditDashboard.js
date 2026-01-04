@@ -145,22 +145,95 @@ const SWOTCard = ({ type, items, icon: Icon, bgColor, textColor }) => (
 // Recommendation Card
 const RecommendationCard = ({ rec, index, timeline }) => {
     const timelineColors = {
-        'immediate': 'border-l-emerald-500',
-        'medium': 'border-l-amber-500',
-        'long': 'border-l-violet-500'
+        'immediate': 'border-l-emerald-500 bg-emerald-50/30',
+        'medium': 'border-l-amber-500 bg-amber-50/30',
+        'long': 'border-l-violet-500 bg-violet-50/30'
+    };
+    
+    const priorityColors = {
+        'CRITICAL': 'bg-red-100 text-red-700',
+        'HIGH': 'bg-orange-100 text-orange-700',
+        'MEDIUM': 'bg-amber-100 text-amber-700',
+        'LOW': 'bg-slate-100 text-slate-700'
     };
     
     return (
-        <div className={`bg-white border border-slate-200 rounded-xl p-4 border-l-4 ${timelineColors[timeline]}`}>
-            <div className="flex items-start justify-between mb-2">
-                <h4 className="font-bold text-slate-900">{rec.title}</h4>
-                <Badge variant="outline" className="text-xs">{rec.priority || 'MEDIUM'}</Badge>
+        <div className={`bg-white border border-slate-200 rounded-xl p-5 border-l-4 ${timelineColors[timeline]}`}>
+            {/* Header */}
+            <div className="flex items-start justify-between mb-3">
+                <h4 className="font-bold text-slate-900 text-lg">{rec.title}</h4>
+                <Badge className={`text-xs font-bold ${priorityColors[rec.priority] || priorityColors['MEDIUM']}`}>
+                    {rec.priority || 'MEDIUM'}
+                </Badge>
             </div>
-            <p className="text-sm text-slate-600 mb-2">{rec.recommended_action}</p>
+            
+            {/* Current State & Root Cause */}
+            {(rec.current_state || rec.root_cause) && (
+                <div className="mb-4 p-3 bg-slate-50 rounded-lg">
+                    {rec.current_state && (
+                        <div className="mb-2">
+                            <span className="text-xs font-bold text-slate-500 uppercase">Current State:</span>
+                            <p className="text-sm text-slate-700 mt-1">{rec.current_state}</p>
+                        </div>
+                    )}
+                    {rec.root_cause && (
+                        <div>
+                            <span className="text-xs font-bold text-slate-500 uppercase">Root Cause:</span>
+                            <p className="text-sm text-slate-700 mt-1">{rec.root_cause}</p>
+                        </div>
+                    )}
+                </div>
+            )}
+            
+            {/* Recommended Action */}
+            <div className="mb-4">
+                <span className="text-xs font-bold text-emerald-600 uppercase">Recommended Action:</span>
+                <p className="text-sm text-slate-700 mt-1 leading-relaxed">{rec.recommended_action}</p>
+            </div>
+            
+            {/* Implementation Steps */}
+            {rec.implementation_steps && rec.implementation_steps.length > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <span className="text-xs font-bold text-blue-600 uppercase mb-2 block">Implementation Steps:</span>
+                    <ol className="space-y-1.5">
+                        {rec.implementation_steps.map((step, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                                {step}
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
+            
+            {/* Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                {rec.timeline && (
+                    <div className="p-2 bg-slate-50 rounded-lg">
+                        <span className="text-xs text-slate-500 block">Timeline</span>
+                        <span className="text-sm font-semibold text-slate-900">{rec.timeline}</span>
+                    </div>
+                )}
+                {rec.estimated_cost && (
+                    <div className="p-2 bg-slate-50 rounded-lg">
+                        <span className="text-xs text-slate-500 block">Est. Cost</span>
+                        <span className="text-sm font-semibold text-slate-900">{rec.estimated_cost}</span>
+                    </div>
+                )}
+                {rec.success_metric && (
+                    <div className="p-2 bg-slate-50 rounded-lg col-span-2">
+                        <span className="text-xs text-slate-500 block">Success Metric</span>
+                        <span className="text-sm font-semibold text-slate-900">{rec.success_metric}</span>
+                    </div>
+                )}
+            </div>
+            
+            {/* Expected Outcome */}
             {rec.expected_outcome && (
-                <p className="text-xs text-slate-500">
-                    <strong>Expected:</strong> {rec.expected_outcome}
-                </p>
+                <div className="p-3 bg-green-50 rounded-lg">
+                    <span className="text-xs font-bold text-green-600 uppercase">Expected Outcome:</span>
+                    <p className="text-sm text-green-800 mt-1">{rec.expected_outcome}</p>
+                </div>
             )}
         </div>
     );
