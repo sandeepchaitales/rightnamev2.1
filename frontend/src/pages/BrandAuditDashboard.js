@@ -720,26 +720,62 @@ const BrandAuditDashboard = () => {
                         </section>
                     )}
                     
-                    {/* 8-Dimension Analysis */}
+                    {/* 8-Dimension Analysis - Radar + Quick Grid + Detailed Cards */}
                     <section>
-                        <SectionHeader icon={BarChart3} title="8-Dimension Brand Analysis" subtitle="Comprehensive scoring breakdown" color="violet" />
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <RadarDisplay dimensions={data.dimensions || []} />
+                        <SectionHeader icon={BarChart3} title="8-Dimension Brand Analysis" subtitle="Comprehensive scoring breakdown with performance radar" color="violet" />
+                        
+                        {/* Radar Chart + Quick Grid Side by Side */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            {/* Performance Radar Chart */}
+                            <PerformanceRadar dimensions={data.dimensions || []} brandName={data.brand_name} />
+                            
+                            {/* Quick Dimensions Overview */}
                             <Card>
-                                <h3 className="font-bold text-slate-900 mb-4">Dimension Details</h3>
-                                <div className="space-y-4">
-                                    {data.dimensions?.map((dim, i) => (
-                                        <div key={i} className="border-b border-slate-100 pb-3 last:border-0">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="font-semibold text-slate-800">{DIMENSION_ICONS[dim.name]} {dim.name}</span>
-                                                <span className={`font-bold ${getScoreColor(dim.score)}`}>{dim.score}/10</span>
-                                            </div>
-                                            <p className="text-xs text-slate-600">{dim.reasoning}</p>
-                                            <Badge variant="outline" className="text-xs mt-1">{dim.confidence} confidence</Badge>
-                                        </div>
-                                    ))}
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                                        <BarChart3 className="w-5 h-5 text-violet-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-800">Score Overview</h3>
+                                        <p className="text-xs text-slate-500">At-a-glance dimension scores</p>
+                                    </div>
+                                </div>
+                                <QuickDimensionsGrid dimensions={data.dimensions || []} />
+                                
+                                {/* Legend */}
+                                <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap justify-center gap-4">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                        <span className="text-xs text-slate-600">Excellent (8-10)</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                                        <span className="text-xs text-slate-600">Good (6-7)</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                        <span className="text-xs text-slate-600">Fair (4-5)</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <span className="text-xs text-slate-600">Poor (0-3)</span>
+                                    </div>
                                 </div>
                             </Card>
+                        </div>
+                        
+                        {/* Detailed Dimension Cards Grid */}
+                        <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Activity className="w-5 h-5 text-violet-600" />
+                                <h3 className="text-lg font-bold text-slate-800">Detailed Dimension Analysis</h3>
+                                <Badge variant="outline" className="ml-2">{data.dimensions?.length || 0} Dimensions</Badge>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {data.dimensions?.map((dim, i) => (
+                                <DetailedDimensionCard key={i} dimension={dim} index={i} />
+                            ))}
                         </div>
                     </section>
                     
