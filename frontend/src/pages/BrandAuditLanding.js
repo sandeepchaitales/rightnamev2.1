@@ -144,12 +144,14 @@ const BrandAuditLanding = () => {
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50">
                 {/* Navigation */}
                 <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-                                <img src={LOGO_URL} alt="RIGHTNAME" className="h-8" />
+                                <img src={LOGO_URL} alt="RIGHTNAME" className="h-7 md:h-8" />
                             </div>
-                            <div className="flex items-center gap-6">
+                            
+                            {/* Desktop Navigation */}
+                            <div className="hidden md:flex items-center gap-6">
                                 <Link to="/" className="text-sm font-semibold text-slate-600 hover:text-violet-600 transition-colors">Home</Link>
                                 
                                 {/* Tools Dropdown */}
@@ -184,9 +186,82 @@ const BrandAuditLanding = () => {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
+                            
+                            {/* Mobile Menu Button */}
+                            <button 
+                              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                              className="md:hidden p-2 rounded-xl bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
+                            >
+                              {mobileMenuOpen ? <X className="w-5 h-5 text-slate-600" /> : <Menu className="w-5 h-5 text-slate-600" />}
+                            </button>
                         </div>
                     </div>
                 </nav>
+                
+                {/* Mobile Navigation Menu */}
+                {mobileMenuOpen && (
+                  <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
+                    <div 
+                      className="absolute right-0 top-0 h-full w-72 bg-white shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-center mb-8">
+                          <h2 className="text-lg font-bold text-slate-900">Menu</h2>
+                          <button 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                          >
+                            <X className="w-5 h-5 text-slate-600" />
+                          </button>
+                        </div>
+                        
+                        <nav className="space-y-2">
+                          <Link 
+                            to="/" 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold transition-colors"
+                          >
+                            <Sparkles className="w-5 h-5" />
+                            Home
+                          </Link>
+                          
+                          <div className="pt-2 pb-1">
+                            <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Tools</p>
+                          </div>
+                          
+                          <Link 
+                            to="/" 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="p-1.5 bg-violet-100 rounded-lg">
+                              <Sparkles className="w-4 h-4 text-violet-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-slate-900">Brand Evaluation</div>
+                              <div className="text-xs text-slate-500">For New Brands</div>
+                            </div>
+                          </Link>
+                          
+                          <Link 
+                            to="/brand-audit" 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-600 bg-emerald-50 transition-colors"
+                          >
+                            <div className="p-1.5 bg-emerald-100 rounded-lg">
+                              <BarChart3 className="w-4 h-4 text-emerald-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-slate-900">Brand Audit</div>
+                              <div className="text-xs text-slate-500">For Existing Brands</div>
+                            </div>
+                          </Link>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Hero Section */}
                 <section className="py-16 px-6">
