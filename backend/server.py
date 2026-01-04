@@ -2120,37 +2120,48 @@ async def brand_audit(request: BrandAuditRequest):
             
             user_message = UserMessage(text=user_prompt)
             response = await llm_chat.send_message(user_message)
-        
-        content = ""
-        if hasattr(response, 'text'):
-            content = response.text
-        elif isinstance(response, str):
-            content = response
-        else:
-            content = str(response)
-        
-        # Extract JSON
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0]
-        elif "```" in content:
-            parts = content.split("```")
-            if len(parts) >= 2:
-                content = parts[1]
-                if content.startswith("json"):
-                    content = content[4:]
-        
-        content = content.strip()
-        
-        # Parse JSON
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError:
-            # Try repair
-            from json_repair import repair_json
-            content = repair_json(content)
-            data = json.loads(content)
-        
-        logging.info(f"Brand Audit LLM response parsed successfully")
+            
+            if hasattr(response, 'text'):
+                content = response.text
+            elif isinstance(response, str):
+                content = response
+            else:
+                content = str(response)
+            
+            # Extract JSON
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                parts = content.split("```")
+                if len(parts) >= 2:
+                    content = parts[1]
+                    if content.startswith("json"):
+                        content = content[4:]
+            
+            content = content.strip()
+            
+            # Parse JSON
+            try:
+                data = json.loads(content)
+            except json.JSONDecodeError:
+                from json_repair import repair_json
+                content = repair_json(content)
+                data = json.loads(content)
+            
+            logging.info(f"Brand Audit: {provider}/{model} succeeded!")
+            break  # Success, exit the retry loop
+            
+        except Exception as e:
+            last_error = e
+            logging.warning(f"Brand Audit: {provider}/{model} failed: {e}")
+            continue  # Try next model
+    
+    # If all models failed
+    if not content or content == "":
+        logging.error(f"Brand Audit: All models failed. Last error: {last_error}")
+        raise HTTPException(status_code=500, detail=f"All LLM models failed. Please try again later.")
+    
+    logging.info(f"Brand Audit LLM response parsed successfully")
         
         # Build response
         report_id = f"audit_{uuid.uuid4().hex[:16]}"
