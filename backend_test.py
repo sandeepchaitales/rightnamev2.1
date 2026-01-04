@@ -4396,11 +4396,11 @@ def main():
     tester = BrandEvaluationTester()
     
     # Run Brand Audit test as per review request
-    print("🔍 BRAND AUDIT API TEST: Testing /api/brand-audit endpoint after Claude timeout fix")
+    print("🔍 BRAND AUDIT API TEST: Testing /api/brand-audit endpoint after improved error handling")
     print("=" * 80)
-    print("🎯 TESTING: Brand Audit API with Tea Villa test case")
-    print("🔧 FIXED: Removed Claude from fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1")
-    print("🔧 FIXED: Added 120-second timeout per model to prevent hanging")
+    print("🎯 TESTING: Brand Audit API with Bikanervala test case")
+    print("🔧 IMPROVED: Added empty response checks")
+    print("🔧 IMPROVED: Changed model priority: gpt-4o first (more stable), then gpt-4o-mini, then gpt-4.1")
     print("=" * 80)
     
     # Test API health first
@@ -4409,45 +4409,47 @@ def main():
         return 1
     
     # PRIORITY: Run Brand Audit test as per review request
-    print("\n🔍 BRAND AUDIT TEST:")
-    print("Testing Brand Audit API with Tea Villa (simple Indian cafe) after Claude timeout fix...")
+    print("\n🔍 FINAL BRAND AUDIT TEST:")
+    print("Testing Brand Audit API with Bikanervala (Indian sweets brand) after improved error handling...")
+    print("Expected: Status 200 with report_id, overall_score, verdict, executive_summary, dimensions")
+    print("Allow 180 seconds. If valid JSON response = SUCCESS.")
     
     # Run the specific test requested
-    success = tester.test_brand_audit_tea_villa_claude_fix()
+    success = tester.test_brand_audit_bikanervala_final()
     
     # Print summary
     print(f"\n📊 Brand Audit Test Summary:")
     print(f"Tests Run: {tester.tests_run}")
     print(f"Tests Passed: {tester.tests_passed}")
-    print(f"Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    print(f"Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%" if tester.tests_run > 0 else "0%")
     
     # Save detailed results
     with open('/app/backend_test_results.json', 'w') as f:
         json.dump({
-            "test_focus": "Brand Audit API Test - Claude Timeout Fix",
-            "description": "Re-test the Brand Audit API /api/brand-audit after fixing the Claude timeout issue",
-            "fix_details": {
-                "issue": "Claude model was hanging/timing out in fallback chain",
-                "solution": "Removed Claude from fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1",
-                "timeout_fix": "Added 120-second timeout per model to prevent hanging"
+            "test_focus": "Brand Audit API Test - Bikanervala Final Test",
+            "description": "Final test of Brand Audit API /api/brand-audit with improved error handling",
+            "improvement_details": {
+                "issue": "Previous issues with empty responses and model stability",
+                "solution": "Added empty response checks, changed model priority: gpt-4o first (more stable), then gpt-4o-mini, then gpt-4.1",
+                "timeout": "Allow 180 seconds for processing"
             },
             "test_case": {
-                "brand_name": "Tea Villa",
-                "brand_website": "https://teavilla.in",
+                "brand_name": "Bikanervala",
+                "brand_website": "https://bfresco.com",
                 "category": "Food & Beverage",
                 "geography": "India",
-                "competitor_1": "Chai Point",
-                "competitor_2": "Chaayos"
+                "competitor_1": "Haldiram",
+                "competitor_2": "Bikano"
             },
             "verification_points": [
-                "API returns successful response (200 OK, not timeout)",
+                "API returns successful response (200 OK)",
                 "Response contains report_id (string)",
                 "Response contains overall_score (number 0-100)",
-                "Response contains verdict (STRONG/MODERATE/WEAK/CRITICAL)",
-                "Response contains executive_summary (text)",
-                "Response contains dimensions (array of 8 brand dimensions)",
-                "Processing completes within 180 seconds total",
-                "Backend logs show OpenAI model usage without Claude hanging"
+                "Response contains verdict (valid verdict string)",
+                "Response contains executive_summary (substantial text)",
+                "Response contains dimensions (array with proper structure)",
+                "Processing completes within 180 seconds",
+                "Valid JSON response = SUCCESS"
             ],
             "summary": {
                 "tests_run": tester.tests_run,
@@ -4459,7 +4461,12 @@ def main():
             "timestamp": datetime.now().isoformat()
         }, f, indent=2)
     
-    return 0 if success else 1
+    if success:
+        print("🎉 BRAND AUDIT TEST PASSED!")
+        return 0
+    else:
+        print("❌ BRAND AUDIT TEST FAILED!")
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main())
