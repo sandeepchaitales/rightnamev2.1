@@ -2162,20 +2162,20 @@ async def brand_audit(request: BrandAuditRequest):
         raise HTTPException(status_code=500, detail=f"All LLM models failed. Please try again later.")
     
     logging.info(f"Brand Audit LLM response parsed successfully")
-        
-        # Build response
-        report_id = f"audit_{uuid.uuid4().hex[:16]}"
-        
-        # Parse dimensions
-        dimensions = []
-        for dim in data.get('dimensions', []):
-            dimensions.append(BrandAuditDimension(
-                name=dim.get('name', ''),
-                score=float(dim.get('score', 0)),
-                reasoning=dim.get('reasoning', ''),
-                data_sources=dim.get('data_sources', []),
-                confidence=dim.get('confidence', 'MEDIUM')
-            ))
+    
+    # Build response
+    report_id = f"audit_{uuid.uuid4().hex[:16]}"
+    
+    # Parse dimensions
+    dimensions = []
+    for dim in data.get('dimensions', []):
+        dimensions.append(BrandAuditDimension(
+            name=dim.get('name', ''),
+            score=float(dim.get('score', 0)),
+            reasoning=dim.get('reasoning', ''),
+            data_sources=dim.get('data_sources', []),
+            confidence=dim.get('confidence', 'MEDIUM')
+        ))
         
         # Ensure we have 8 dimensions
         dimension_names = ["Heritage & Authenticity", "Customer Satisfaction", "Market Positioning", 
