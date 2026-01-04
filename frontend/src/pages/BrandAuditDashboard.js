@@ -4,6 +4,10 @@ import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
+    RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
+    ResponsiveContainer, Tooltip
+} from 'recharts';
+import { 
     ArrowLeft, 
     Printer,
     Building2,
@@ -20,7 +24,8 @@ import {
     Clock,
     Calendar,
     Star,
-    Zap
+    Zap,
+    Activity
 } from 'lucide-react';
 
 // Logo URL
