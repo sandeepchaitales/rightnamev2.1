@@ -1,42 +1,42 @@
 {
-  "test_focus": "QuickTest Smoke Test for RIGHTNAME API",
-  "description": "Quick smoke test to verify RIGHTNAME brand evaluation API is working after schema fix",
+  "test_focus": "Brand Audit API Test",
+  "description": "Test the Brand Audit API endpoint /api/brand-audit which was failing with 502 errors",
   "test_case": {
-    "brand_names": [
-      "QuickTest"
-    ],
-    "category": "Technology",
-    "positioning": "Premium",
-    "market_scope": "Single Country",
-    "countries": [
-      "USA"
-    ]
+    "brand_name": "Haldiram",
+    "brand_website": "https://haldirams.com",
+    "category": "Food & Beverage",
+    "geography": "India",
+    "competitor_1": "Bikaji",
+    "competitor_2": "Balaji"
   },
   "verification_points": [
-    "API returns successful response (200 OK)",
-    "Response contains brand_scores with namescore and verdict",
-    "No validation errors (especially for score_impact field)",
-    "Legal precedents contain USA cases (like Polaroid Corp.)"
+    "API returns successful response (200 OK, not 502)",
+    "Response contains report_id (string)",
+    "Response contains overall_score (number 0-100)",
+    "Response contains verdict (STRONG/MODERATE/WEAK/CRITICAL)",
+    "Response contains executive_summary (text)",
+    "Response contains dimensions (array of 8 brand dimensions)",
+    "Model fallback working: gpt-4o-mini \u2192 claude-sonnet-4-20250514 \u2192 gpt-4o"
   ],
   "summary": {
     "tests_run": 2,
-    "tests_passed": 2,
-    "success_rate": 100.0,
-    "overall_success": true
+    "tests_passed": 1,
+    "success_rate": 50.0,
+    "overall_success": false
   },
   "results": [
     {
       "test": "API Health Check",
       "success": true,
       "details": "Status: 200, Response: {\"message\":\"RightName API is running\"}",
-      "timestamp": "2025-12-27T12:22:37.347480"
+      "timestamp": "2026-01-04T06:16:12.932277"
     },
     {
-      "test": "QuickTest Smoke Test",
-      "success": true,
-      "details": "All core checks passed. NameScore: 30.0/100, Verdict: REJECT, Legal precedents: 1",
-      "timestamp": "2025-12-27T12:23:07.012141"
+      "test": "Brand Audit - Haldiram Timeout",
+      "success": false,
+      "details": "Request timed out after 180 seconds",
+      "timestamp": "2026-01-04T06:19:13.057520"
     }
   ],
-  "timestamp": "2025-12-27T12:23:07.012303"
+  "timestamp": "2026-01-04T06:19:13.057673"
 }
