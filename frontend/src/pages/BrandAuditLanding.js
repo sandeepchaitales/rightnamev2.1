@@ -31,7 +31,13 @@ import {
     Loader2,
     CheckCircle2,
     ChevronDown,
-    Sparkles
+    Sparkles,
+    Menu,
+    X,
+    FileText,
+    MessageSquare,
+    Star,
+    LogOut
 } from 'lucide-react';
 
 // Logo URL - same as main tool
