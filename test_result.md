@@ -205,6 +205,9 @@ user_problem_statement: Build a consulting-grade brand name evaluation system na
     status_history:
       - working: false
         agent: "testing"
+        comment: "✅ CLAUDE TIMEOUT FIX VERIFIED: Tested /api/brand-audit endpoint with Tea Villa test case after Claude timeout fix. RESULTS: ✅ Claude Removal Successful: Backend logs confirm Claude is no longer in fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1. ✅ Research Phase Working: All 4 research phases complete successfully (foundational, competitive, benchmarking, validation). ✅ LLM Processing Working: OpenAI models are responding (no more hanging/timeout). ❌ NEW ISSUE - Schema Validation Error: API returns 500 Internal Server Error due to Pydantic validation error - sources[].id field expects string but LLM returns integer. CLAUDE TIMEOUT ISSUE IS FIXED, but new schema validation issue prevents successful response. Backend logs show: 'sources.0.id Input should be a valid string [type=string_type, input_value=1, input_type=int]'"
+      - working: false
+        agent: "testing"
         comment: "❌ BRAND AUDIT API TESTING COMPLETED: Tested /api/brand-audit endpoint with Haldiram test case. RESULTS: ❌ API Timeout: Request timed out after 180 seconds. ✅ Research Phase Working: Backend logs show successful web research gathering (4 phases completed). ✅ Fallback Mechanism Partially Working: Correctly tries gpt-4o-mini first, detects 502 BadGateway error, moves to claude-sonnet-4-20250514. ❌ Claude Model Hanging: The anthropic/claude-sonnet-4-20250514 model appears to hang/timeout and never proceeds to final gpt-4o fallback. ❌ Final Result: API returns timeout instead of proper brand audit response. ISSUE: The fallback chain gets stuck on Claude model, preventing completion. The 502 errors are being handled correctly, but Claude model timeout prevents full fallback execution."
 
 frontend:
