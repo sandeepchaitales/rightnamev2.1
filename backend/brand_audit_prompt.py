@@ -52,6 +52,44 @@ REPORT STRUCTURE (ALWAYS FOLLOW THIS EXACT FORMAT)
 - Perception gaps (brand promise vs delivery)
 - Key purchase drivers and barriers
 
+## 5.5. CUSTOMER PERCEPTION & BRAND HEALTH (CRITICAL SECTION)
+[300 words minimum - THIS IS A KEY DIFFERENTIATOR]
+
+### Platform Ratings Analysis
+Search for and report ACTUAL ratings from these platforms (based on geography):
+- **India**: Google Maps, Justdial, Zomato, Swiggy, MouthShut, Sulekha
+- **USA**: Google Maps, Yelp, TripAdvisor, BBB
+- **UK/Europe**: Google Maps, TripAdvisor, Trustpilot
+- **Global**: Google Maps, Facebook Reviews, Trustpilot
+
+For EACH platform found, report:
+- Platform name
+- Rating (X.X/5 stars)
+- Number of reviews
+- Direct URL if available
+
+### Rating Comparison
+- Compare brand's average rating vs competitors
+- Position: "Above market average" / "At par" / "Below market average"
+- Market average for category (typically 4.0-4.2 for F&B in India)
+
+### Detailed Customer Feedback Analysis
+**Positive Themes** (extract from actual reviews):
+- Theme 1: "Quote from review" - frequency (HIGH/MEDIUM/LOW)
+- Theme 2: "Quote from review" - frequency
+- Theme 3: "Quote from review" - frequency
+(Examples: "Authentic taste", "Great ambiance", "Value for money", "Friendly staff")
+
+**Negative Themes** (pain points from reviews):
+- Theme 1: "Quote from review" - frequency
+- Theme 2: "Quote from review" - frequency
+(Examples: "Slow service", "Inconsistent quality", "Limited menu", "Pricing concerns")
+
+### Key Insights
+- Customer-validated strengths (what customers love)
+- Customer pain points (what needs improvement)
+- Sentiment score (0-100)
+
 ## 6. COMPETITIVE POSITIONING & STRATEGIC RESPONSE
 [250 words minimum]
 - Competitive advantages (sustainable vs temporary)
