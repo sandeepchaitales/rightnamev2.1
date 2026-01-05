@@ -938,6 +938,11 @@ const BrandAuditDashboard = () => {
                         </section>
                     )}
                     
+                    {/* Customer Perception & Brand Health - NEW DETAILED SECTION */}
+                    {data.customer_perception_analysis && (
+                        <CustomerPerceptionSection data={data.customer_perception_analysis} />
+                    )}
+                    
                     {/* Valuation */}
                     {data.valuation && (
                         <section>
