@@ -2331,6 +2331,8 @@ async def brand_audit(request: BrandAuditRequest):
         competitive_positioning=data.get('competitive_positioning'),
         valuation=data.get('valuation'),
         conclusion=data.get('conclusion'),
+        # NEW: Customer Perception Analysis
+        customer_perception_analysis=parse_customer_perception(data.get('customer_perception_analysis')),
         # Existing fields
         dimensions=dimensions,
         competitors=competitors,
