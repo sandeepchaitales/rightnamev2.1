@@ -1970,20 +1970,55 @@ async def login_email(request: EmailLoginRequest, response: Response):
 # ==================== BRAND AUDIT ENDPOINTS ====================
 
 async def perform_web_search(query: str) -> str:
-    """Perform web search using DuckDuckGo"""
+    """Perform web search using multiple methods for reliability"""
+    import httpx
+    from bs4 import BeautifulSoup
+    
+    results = []
+    
+    # Method 1: Try DuckDuckGo first
     try:
         from duckduckgo_search import DDGS
         with DDGS() as ddgs:
-            results = list(ddgs.text(query, max_results=5))
-            if results:
-                formatted = []
-                for i, r in enumerate(results, 1):
-                    formatted.append(f"[{i}] {r.get('title', 'No title')}\n{r.get('body', 'No description')}\nURL: {r.get('href', 'No URL')}")
-                return "\n\n".join(formatted)
-            return "No results found"
+            ddg_results = list(ddgs.text(query, max_results=5))
+            if ddg_results:
+                for i, r in enumerate(ddg_results, 1):
+                    results.append(f"[{i}] {r.get('title', 'No title')}\n{r.get('body', 'No description')}\nURL: {r.get('href', 'No URL')}")
     except Exception as e:
-        logging.error(f"Web search error for '{query}': {e}")
-        return f"Search failed: {str(e)}"
+        logging.warning(f"DuckDuckGo search failed: {e}")
+    
+    # Method 2: If DuckDuckGo fails, try Bing scraping
+    if not results:
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                encoded_query = query.replace(' ', '+')
+                response = await client.get(
+                    f"https://www.bing.com/search?q={encoded_query}",
+                    headers={
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
+                )
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    # Extract search results
+                    for i, result in enumerate(soup.select('.b_algo')[:5], 1):
+                        title_elem = result.select_one('h2')
+                        desc_elem = result.select_one('.b_caption p')
+                        link_elem = result.select_one('a')
+                        
+                        title = title_elem.get_text(strip=True) if title_elem else 'No title'
+                        desc = desc_elem.get_text(strip=True) if desc_elem else 'No description'
+                        url = link_elem.get('href', 'No URL') if link_elem else 'No URL'
+                        
+                        results.append(f"[{i}] {title}\n{desc}\nURL: {url}")
+                        
+                    logging.info(f"Bing search returned {len(results)} results for: {query[:50]}...")
+        except Exception as e:
+            logging.warning(f"Bing search failed: {e}")
+    
+    if results:
+        return "\n\n".join(results)
+    return "No results found"
 
 async def gather_brand_audit_research(brand_name: str, brand_website: str, competitor_1: str, 
                                        competitor_2: str, category: str, geography: str) -> dict:
