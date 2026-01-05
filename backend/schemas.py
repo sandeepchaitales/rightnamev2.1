@@ -527,6 +527,9 @@ class BrandAuditResponse(BaseModel):
     # NEW: Consumer Perception
     consumer_perception: Optional[Dict[str, Any]] = Field(default=None, description="Awareness, loyalty, perception gaps")
     
+    # NEW: Customer Perception & Brand Health (Detailed)
+    customer_perception_analysis: Optional[CustomerPerceptionAnalysis] = Field(default=None, description="Platform ratings, themes, sentiment")
+    
     # NEW: Competitive Positioning
     competitive_positioning: Optional[Dict[str, Any]] = Field(default=None, description="BCG matrix, market share")
     
