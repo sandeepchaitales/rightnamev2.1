@@ -2111,8 +2111,6 @@ async def gather_brand_audit_research(brand_name: str, brand_website: str, compe
     geo_platforms = rating_platforms.get(geography, rating_platforms["Global"])
     
     phase5_queries = [
-        f"{brand_name} Google Maps rating reviews stars",
-    phase5_queries = [
         f'"{brand_name}" Google Maps rating stars reviews',
         f'"{brand_name}" {geo_platforms[1] if len(geo_platforms) > 1 else "Justdial"} rating reviews',
         f'"{brand_name}" Zomato rating reviews {geography}' if geography == "India" else f'"{brand_name}" Yelp rating reviews',
