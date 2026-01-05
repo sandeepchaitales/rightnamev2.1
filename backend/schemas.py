@@ -423,6 +423,45 @@ class CompetitorData(BaseModel):
     key_strength: Optional[str] = None
     key_weakness: Optional[str] = None
 
+class PlatformRating(BaseModel):
+    """Rating from a specific platform"""
+    platform: str = Field(description="Platform name (Google Maps, Justdial, Zomato, etc.)")
+    rating: Optional[float] = Field(default=None, description="Rating out of 5")
+    review_count: Optional[str] = Field(default=None, description="Number of reviews")
+    url: Optional[str] = Field(default=None, description="Direct link to reviews")
+
+class CustomerTheme(BaseModel):
+    """Customer feedback theme extracted from reviews"""
+    theme: str = Field(description="Theme title (e.g., 'Great taste', 'Slow service')")
+    quote: Optional[str] = Field(default=None, description="Example quote from review")
+    frequency: Optional[str] = Field(default="MEDIUM", description="How often mentioned: HIGH/MEDIUM/LOW")
+    sentiment: Optional[str] = Field(default="POSITIVE", description="POSITIVE/NEGATIVE/NEUTRAL")
+
+class CustomerPerceptionAnalysis(BaseModel):
+    """Comprehensive customer perception analysis"""
+    overall_sentiment: Optional[str] = Field(default="NEUTRAL", description="POSITIVE/NEUTRAL/NEGATIVE")
+    sentiment_score: Optional[float] = Field(default=None, description="0-100 sentiment score")
+    
+    # Platform-specific ratings
+    platform_ratings: List[PlatformRating] = Field(default=[], description="Ratings from various platforms")
+    average_rating: Optional[float] = Field(default=None, description="Average across platforms")
+    total_reviews: Optional[str] = Field(default=None, description="Total review count")
+    
+    # Rating comparison with competitors
+    rating_vs_competitors: Optional[str] = Field(default=None, description="Above/At par/Below market average")
+    competitor_ratings: Optional[Dict[str, float]] = Field(default={}, description="Competitor name -> rating")
+    
+    # Thematic analysis
+    positive_themes: List[CustomerTheme] = Field(default=[], description="Positive feedback themes")
+    negative_themes: List[CustomerTheme] = Field(default=[], description="Negative feedback themes")
+    
+    # Key insights
+    key_strengths: List[str] = Field(default=[], description="Customer-validated strengths")
+    key_concerns: List[str] = Field(default=[], description="Customer pain points")
+    
+    # Analysis narrative
+    analysis: Optional[str] = Field(default=None, description="Detailed narrative analysis")
+
 class MarketData(BaseModel):
     """Market intelligence data"""
     market_size: Optional[str] = None
