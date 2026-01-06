@@ -2047,97 +2047,42 @@ async def gather_brand_audit_research(brand_name: str, brand_website: str, compe
     year_range = "2023 2024 2025"
     
     # PHASE 1: Foundational Brand Research
-    logging.info(f"Brand Audit Phase 1: Foundational research for {brand_name}")
-    phase1_queries = [
-        f"{brand_name} franchise {category} {geography}",
-        f"{brand_name} expansion growth {year_range}",
-        f"{brand_name} reviews ratings customer sentiment"
+    # CONSOLIDATED SEARCH - 5 comprehensive queries instead of 17
+    logging.info(f"Brand Audit: Starting consolidated research for {brand_name}")
+    
+    all_queries = [
+        # Query 1: Core brand info (founding, stores, locations)
+        f"{brand_name} {category} India founding year total stores outlets locations states presence 2024",
+        
+        # Query 2: Ratings and customer perception
+        f"{brand_name} Google Maps rating Justdial rating Zomato rating customer reviews",
+        
+        # Query 3: Competitive analysis
+        f"{brand_name} vs {comp1_name} vs {comp2_name} comparison market share {category} {geography}",
+        
+        # Query 4: Financial and growth metrics
+        f"{brand_name} revenue franchise investment cost growth expansion {year_range}",
+        
+        # Query 5: Market context
+        f"{category} {geography} market size CAGR trends 2024 2025"
     ]
-    all_queries.extend(phase1_queries)
     
-    phase1_results = []
-    for q in phase1_queries:
+    research_results = []
+    for i, q in enumerate(all_queries, 1):
+        logging.info(f"Brand Audit: Search {i}/5 - {q[:50]}...")
         result = await perform_web_search(q)
-        phase1_results.append(f"Query: {q}\n{result}")
-    research_data['phase1_data'] = "\n\n---\n\n".join(phase1_results)
+        research_results.append(result)
     
-    # PHASE 2: Competitive Landscape & Market Sizing
-    logging.info(f"Brand Audit Phase 2: Competitive landscape for {brand_name}")
-    phase2_queries = [
-        f"{brand_name} Instagram followers engagement social media",
-        f"{category} {geography} market size growth CAGR {year_range}",
-        f"{comp1_name} {comp2_name} {category} comparison {geography}"
-    ]
-    all_queries.extend(phase2_queries)
+    # Combine all results
+    combined_research = "\n\n" + "="*80 + "\n\n".join(research_results)
     
-    phase2_results = []
-    for q in phase2_queries:
-        result = await perform_web_search(q)
-        phase2_results.append(f"Query: {q}\n{result}")
-    research_data['phase2_data'] = "\n\n---\n\n".join(phase2_results)
-    
-    # PHASE 3: Benchmarking & Unit Economics
-    logging.info(f"Brand Audit Phase 3: Benchmarking for {brand_name}")
-    phase3_queries = [
-        f"{comp1_name} {comp2_name} market share {geography} revenue",
-        f"{category} franchise investment cost ROI break-even {geography}",
-        f"{brand_name} revenue profitability unit economics"
-    ]
-    all_queries.extend(phase3_queries)
-    
-    phase3_results = []
-    for q in phase3_queries:
-        result = await perform_web_search(q)
-        phase3_results.append(f"Query: {q}\n{result}")
-    research_data['phase3_data'] = "\n\n---\n\n".join(phase3_results)
-    
-    # PHASE 4: Deep Validation & Key Facts
-    logging.info(f"Brand Audit Phase 4: Deep validation for {brand_name}")
-    phase4_queries = [
-        f'"{brand_name}" founded year founder CEO owner',
-        f'"{brand_name}" total stores outlets locations count {year_range}',
-        f'"{brand_name}" states cities presence expansion',
-        f"{brand_name} franchise model investment cost"
-    ]
-    all_queries.extend(phase4_queries)
-    
-    phase4_results = []
-    for q in phase4_queries:
-        result = await perform_web_search(q)
-        phase4_results.append(f"Query: {q}\n{result}")
-    research_data['phase4_data'] = "\n\n---\n\n".join(phase4_results)
-    
-    # PHASE 5: Customer Perception & Platform Ratings
-    logging.info(f"Brand Audit Phase 5: Customer perception research for {brand_name}")
-    
-    # Geography-specific rating platforms
-    rating_platforms = {
-        "India": ["Google Maps", "Justdial", "Zomato", "Swiggy", "MouthShut"],
-        "USA": ["Google Maps", "Yelp", "TripAdvisor", "BBB"],
-        "UK": ["Google Maps", "TripAdvisor", "Trustpilot"],
-        "Global": ["Google Maps", "Facebook", "Trustpilot"]
-    }
-    
-    geo_platforms = rating_platforms.get(geography, rating_platforms["Global"])
-    
-    phase5_queries = [
-        f'"{brand_name}" Google Maps rating stars reviews',
-        f'"{brand_name}" {geo_platforms[1] if len(geo_platforms) > 1 else "Justdial"} rating reviews',
-        f'"{brand_name}" Zomato rating reviews {geography}' if geography == "India" else f'"{brand_name}" Yelp rating reviews',
-        f'"{brand_name}" customer reviews positive negative feedback {year_range}',
-        f'{brand_name} {comp1_name} {comp2_name} rating comparison'
-    ]
-    all_queries.extend(phase5_queries)
-    
-    phase5_results = []
-    for q in phase5_queries:
-        result = await perform_web_search(q)
-        phase5_results.append(f"Query: {q}\n{result}")
-    research_data['phase5_data'] = "\n\n---\n\n".join(phase5_results)
-    
-    # Store geography-specific platforms info
-    research_data['rating_platforms'] = geo_platforms
+    research_data['phase1_data'] = combined_research
+    research_data['phase2_data'] = ""
+    research_data['phase3_data'] = ""
+    research_data['phase4_data'] = ""
+    research_data['phase5_data'] = ""
     research_data['all_queries'] = all_queries
+    research_data['rating_platforms'] = ["Google Maps", "Justdial", "Zomato", "Swiggy"]
     
     return research_data
 
