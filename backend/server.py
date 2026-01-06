@@ -2177,10 +2177,9 @@ async def brand_audit(request: BrandAuditRequest):
     
     # Models to try in order - with Claude fallback for reliability
     models_to_try = [
+        ("anthropic", "claude-sonnet-4-20250514"),  # Claude first - currently working
         ("openai", "gpt-4o"),
         ("openai", "gpt-4o-mini"),
-        ("anthropic", "claude-sonnet-4-20250514"),
-        ("openai", "gpt-4.1"),
     ]
     
     content = ""
