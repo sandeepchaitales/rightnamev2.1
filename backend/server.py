@@ -1970,63 +1970,61 @@ async def login_email(request: EmailLoginRequest, response: Response):
 # ==================== BRAND AUDIT ENDPOINTS ====================
 
 async def perform_web_search(query: str) -> str:
-    """Perform web search using DuckDuckGo HTML (most reliable method)"""
-    import aiohttp
-    from bs4 import BeautifulSoup
+    """Perform web search using Perplexity Sonar (via Emergent LLM) for real-time data"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
     
-    results = []
+    results_text = ""
     
-    # Use DuckDuckGo HTML version - works reliably without JavaScript
     try:
-        search_url = f"https://html.duckduckgo.com/html/?q={query.replace(' ', '+')}"
-        logging.info(f"Searching DuckDuckGo HTML: {query[:50]}...")
-        async with aiohttp.ClientSession() as session:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-            async with session.get(search_url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as response:
-                if response.status == 200:
-                    html = await response.text()
-                    soup = BeautifulSoup(html, 'html.parser')
-                    
-                    # DuckDuckGo HTML uses .result class
-                    result_elements = soup.select('.result')
-                    logging.info(f"Found {len(result_elements)} result elements")
-                    
-                    for i, r in enumerate(result_elements[:5], 1):
-                        title_elem = r.select_one('.result__title')
-                        snippet_elem = r.select_one('.result__snippet')
-                        url_elem = r.select_one('.result__url')
-                        
-                        title = title_elem.get_text(strip=True) if title_elem else 'No title'
-                        snippet = snippet_elem.get_text(strip=True) if snippet_elem else 'No description'
-                        url = url_elem.get('href', '') if url_elem else ''
-                        
-                        results.append(f"[{i}] {title}\n{snippet}\nURL: {url}")
-                    
-                    if results:
-                        logging.info(f"DuckDuckGo HTML returned {len(results)} results for: {query[:50]}...")
-                else:
-                    logging.warning(f"DuckDuckGo HTML returned status {response.status}")
+        # Use Perplexity Sonar via Emergent for web search
+        llm_chat = LlmChat(
+            api_key=EMERGENT_KEY,
+            session_id=f"search_{uuid.uuid4()}",
+            system_message="You are a research assistant. Provide factual, specific information from web search results. Include exact numbers, dates, and ratings when available. Be concise but comprehensive."
+        ).with_model("perplexity", "sonar")
+        
+        search_prompt = f"""Search the web and provide factual information for: {query}
+
+Focus on finding:
+- Exact numbers (store counts, ratings, revenue)
+- Specific dates (founding year, milestones)
+- Current data (2024-2025)
+- Platform ratings (Google Maps, Justdial, Zomato)
+
+Return ONLY factual information found. If data is not found, say "Not found"."""
+
+        user_message = UserMessage(text=search_prompt)
+        response = await llm_chat.send_message(user_message)
+        
+        if hasattr(response, 'text'):
+            results_text = response.text
+        elif isinstance(response, str):
+            results_text = response
+        else:
+            results_text = str(response)
+        
+        logging.info(f"Perplexity Sonar search completed for: {query[:50]}...")
+        return f"Query: {query}\n\nSearch Results:\n{results_text}"
+        
     except Exception as e:
-        logging.warning(f"DuckDuckGo HTML search failed: {e}")
-    
-    # Fallback: Try DuckDuckGo Python library
-    if not results:
+        logging.warning(f"Perplexity search failed: {e}")
+        
+        # Fallback to DuckDuckGo
         try:
             from duckduckgo_search import DDGS
             with DDGS() as ddgs:
                 ddg_results = list(ddgs.text(query, max_results=5))
                 if ddg_results:
+                    formatted = []
                     for i, r in enumerate(ddg_results, 1):
-                        results.append(f"[{i}] {r.get('title', 'No title')}\n{r.get('body', 'No description')}\nURL: {r.get('href', 'No URL')}")
-                    logging.info(f"DuckDuckGo API fallback returned {len(results)} results")
-        except Exception as e:
-            logging.warning(f"DuckDuckGo API also failed: {e}")
+                        formatted.append(f"[{i}] {r.get('title', 'No title')}\n{r.get('body', 'No description')}")
+                    results_text = "\n\n".join(formatted)
+                    logging.info(f"DuckDuckGo fallback returned {len(ddg_results)} results")
+                    return f"Query: {query}\n\nSearch Results:\n{results_text}"
+        except Exception as ddg_error:
+            logging.warning(f"DuckDuckGo fallback also failed: {ddg_error}")
     
-    if results:
-        return "\n\n".join(results)
-    return "No search results found for this query"
+    return f"Query: {query}\n\nNo search results found"
 
 async def gather_brand_audit_research(brand_name: str, brand_website: str, competitor_1: str, 
                                        competitor_2: str, category: str, geography: str) -> dict:
