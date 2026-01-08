@@ -2120,7 +2120,7 @@ async def crawl_brand_website(brand_website: str, brand_name: str) -> str:
 
 async def gather_brand_audit_research(brand_name: str, brand_website: str, competitor_1: str, 
                                        competitor_2: str, category: str, geography: str) -> dict:
-    """Execute 4-phase research workflow for brand audit"""
+    """Execute comprehensive research workflow for brand audit with website crawling"""
     
     research_data = {}
     all_queries = []
@@ -2134,16 +2134,26 @@ async def gather_brand_audit_research(brand_name: str, brand_website: str, compe
     
     year_range = "2023 2024 2025"
     
-    # PHASE 1: Foundational Brand Research
-    # CONSOLIDATED SEARCH - 5 comprehensive queries instead of 17
-    logging.info(f"Brand Audit: Starting consolidated research for {brand_name}")
+    # ========================================================================
+    # PHASE 0: CRAWL BRAND WEBSITE (PRIMARY SOURCE - Most Accurate!)
+    # ========================================================================
+    logging.info(f"Brand Audit: PHASE 0 - Crawling brand website: {brand_website}")
+    
+    website_content = await crawl_brand_website(brand_website, brand_name)
+    
+    logging.info(f"Brand Audit: Website crawl complete - {len(website_content)} chars")
+    
+    # ========================================================================
+    # PHASE 1: WEB SEARCH FOR ADDITIONAL DATA
+    # ========================================================================
+    logging.info(f"Brand Audit: PHASE 1 - Starting web search research for {brand_name}")
     
     all_queries = [
         # Query 1: Core brand info (founding, stores, locations)
-        f"{brand_name} {category} India founding year total stores outlets locations states presence 2024",
+        f"{brand_name} {category} {geography} founding year total stores outlets locations states presence 2024",
         
         # Query 2: Ratings and customer perception
-        f"{brand_name} Google Maps rating Justdial rating Zomato rating customer reviews",
+        f"{brand_name} Google Maps rating Justdial rating Zomato rating customer reviews {geography}",
         
         # Query 3: Competitive analysis
         f"{brand_name} vs {comp1_name} vs {comp2_name} comparison market share {category} {geography}",
@@ -2161,16 +2171,36 @@ async def gather_brand_audit_research(brand_name: str, brand_website: str, compe
         result = await perform_web_search(q)
         research_results.append(result)
     
-    # Combine all results
-    combined_research = "\n\n" + "="*80 + "\n\n".join(research_results)
+    # Combine web search results
+    web_search_data = "\n\n" + "="*80 + "\n\n".join(research_results)
     
-    research_data['phase1_data'] = combined_research
+    # ========================================================================
+    # COMBINE ALL RESEARCH DATA
+    # ========================================================================
+    # Website content is PRIMARY source - put it first!
+    research_data['phase1_data'] = f"""
+================================================================================
+PRIMARY SOURCE: BRAND WEBSITE CONTENT
+================================================================================
+⚠️ USE THIS AS YOUR PRIMARY SOURCE OF TRUTH FOR COMPANY INFORMATION ⚠️
+
+{website_content}
+
+================================================================================
+SECONDARY SOURCE: WEB SEARCH RESULTS
+================================================================================
+Use web search for additional context, ratings, market data, and competitive info.
+
+{web_search_data}
+"""
+    
     research_data['phase2_data'] = ""
     research_data['phase3_data'] = ""
     research_data['phase4_data'] = ""
     research_data['phase5_data'] = ""
-    research_data['all_queries'] = all_queries
+    research_data['all_queries'] = ["Website crawl: " + brand_website] + all_queries
     research_data['rating_platforms'] = ["Google Maps", "Justdial", "Zomato", "Swiggy"]
+    research_data['website_crawled'] = bool(website_content and len(website_content) > 200)
     
     return research_data
 
