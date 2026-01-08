@@ -113,9 +113,23 @@ const BrandAuditLanding = () => {
                 body: JSON.stringify(formData)
             });
 
+            // Clone response before reading to avoid "body stream already read" error
+            const responseClone = response.clone();
+            
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Audit failed');
+                let errorMessage = 'Audit failed';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.detail || errorMessage;
+                } catch {
+                    // Response wasn't JSON, try text
+                    try {
+                        errorMessage = await responseClone.text();
+                    } catch {
+                        errorMessage = `Server error: ${response.status}`;
+                    }
+                }
+                throw new Error(errorMessage);
             }
 
             const result = await response.json();
