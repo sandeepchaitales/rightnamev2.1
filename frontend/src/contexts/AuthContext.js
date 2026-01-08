@@ -197,13 +197,21 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ session_id: sessionId })
             });
             
+            // Read response text first to avoid body stream issues
+            const responseText = await response.text();
+            
             if (response.ok) {
-                const userData = await response.json();
-                // Save auth status to localStorage for persistence
-                localStorage.setItem('user_authenticated', 'true');
-                localStorage.setItem('user_data', JSON.stringify(userData));
-                setUser(userData);
-                return userData;
+                try {
+                    const userData = JSON.parse(responseText);
+                    // Save auth status to localStorage for persistence
+                    localStorage.setItem('user_authenticated', 'true');
+                    localStorage.setItem('user_data', JSON.stringify(userData));
+                    setUser(userData);
+                    return userData;
+                } catch (parseError) {
+                    console.error('Failed to parse session response:', parseError);
+                    return null;
+                }
             }
             return null;
         } catch (error) {
