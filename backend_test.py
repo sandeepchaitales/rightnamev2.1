@@ -4304,6 +4304,156 @@ class BrandEvaluationTester:
             self.log_test("Brand Audit - Chaayos Exception", False, str(e))
             return False
 
+    def test_brand_audit_chai_bunk_improvements(self):
+        """Test Brand Audit API with Chai Bunk to verify recent improvements"""
+        payload = {
+            "brand_name": "Chai Bunk",
+            "brand_website": "https://www.chaibunk.com",
+            "competitor_1": "https://www.chaayos.com",
+            "competitor_2": "https://www.chaipoint.com",
+            "category": "Cafe/QSR",
+            "geography": "India"
+        }
+        
+        try:
+            print(f"\n🔍 Testing Brand Audit API with Chai Bunk to verify recent improvements...")
+            print(f"Payload: {json.dumps(payload, indent=2)}")
+            print(f"Expected: Website crawling works, API returns valid JSON with report_id, overall_score, executive_summary")
+            print(f"Expected: Data accuracy from website (120+ outlets, Sandeep Bandari, 2021)")
+            print(f"Expected: All required sections present (dimensions array with 8 items, swot, recommendations)")
+            print(f"Timeout: 180 seconds due to website crawling + web searches + LLM processing")
+            
+            start_time = time.time()
+            response = requests.post(
+                f"{self.api_url}/brand-audit", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180  # 180 second timeout as requested
+            )
+            
+            processing_time = time.time() - start_time
+            print(f"Response Status: {response.status_code}")
+            print(f"Processing Time: {processing_time:.2f} seconds")
+            
+            # Test 1: API should return 200 OK
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:500]}"
+                if response.status_code in [502, 500, 503]:
+                    self.log_test("Brand Audit - Chai Bunk Server Error", False, f"Server error (expected 200 OK): {error_msg}")
+                elif response.status_code == 408:
+                    self.log_test("Brand Audit - Chai Bunk Timeout", False, f"Request timeout: {error_msg}")
+                else:
+                    self.log_test("Brand Audit - Chai Bunk HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                print(f"✅ Response received successfully, checking structure...")
+                
+                # Test 2: Check required top-level fields
+                required_fields = ["report_id", "overall_score", "executive_summary"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Brand Audit - Chai Bunk Required Fields", False, f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Test 3: Check report_id is valid string
+                report_id = data.get("report_id")
+                if not isinstance(report_id, str) or len(report_id) == 0:
+                    self.log_test("Brand Audit - Chai Bunk Report ID", False, f"Invalid report_id: {report_id}")
+                    return False
+                
+                # Test 4: Check overall_score is number 0-100
+                overall_score = data.get("overall_score")
+                if not isinstance(overall_score, (int, float)) or not (0 <= overall_score <= 100):
+                    self.log_test("Brand Audit - Chai Bunk Overall Score", False, f"Invalid overall_score: {overall_score} (should be 0-100)")
+                    return False
+                
+                # Test 5: Check executive_summary is substantial
+                executive_summary = data.get("executive_summary", "")
+                if len(executive_summary) < 100:
+                    self.log_test("Brand Audit - Chai Bunk Executive Summary", False, f"Executive summary too short: {len(executive_summary)} chars (expected 100+)")
+                    return False
+                
+                # Test 6: Check dimensions array with 8 items
+                dimensions = data.get("dimensions", [])
+                if not isinstance(dimensions, list) or len(dimensions) != 8:
+                    self.log_test("Brand Audit - Chai Bunk Dimensions", False, f"Expected dimensions array with 8 items, got {len(dimensions) if isinstance(dimensions, list) else type(dimensions)}")
+                    return False
+                
+                # Test 7: Check SWOT analysis present
+                swot = data.get("swot")
+                if not swot or not isinstance(swot, dict):
+                    self.log_test("Brand Audit - Chai Bunk SWOT", False, f"Missing or invalid SWOT analysis: {type(swot)}")
+                    return False
+                
+                swot_sections = ["strengths", "weaknesses", "opportunities", "threats"]
+                missing_swot = [section for section in swot_sections if section not in swot]
+                if missing_swot:
+                    self.log_test("Brand Audit - Chai Bunk SWOT Sections", False, f"Missing SWOT sections: {missing_swot}")
+                    return False
+                
+                # Test 8: Check recommendations present
+                recommendations = data.get("recommendations")
+                if not recommendations or not isinstance(recommendations, dict):
+                    self.log_test("Brand Audit - Chai Bunk Recommendations", False, f"Missing or invalid recommendations: {type(recommendations)}")
+                    return False
+                
+                rec_sections = ["immediate", "medium_term", "long_term"]
+                missing_rec = [section for section in rec_sections if section not in recommendations]
+                if missing_rec:
+                    self.log_test("Brand Audit - Chai Bunk Recommendation Sections", False, f"Missing recommendation sections: {missing_rec}")
+                    return False
+                
+                # Test 9: Check for data accuracy from website (brand_overview section)
+                brand_overview = data.get("brand_overview", {})
+                if brand_overview:
+                    outlets_count = str(brand_overview.get("outlets_count", "")).lower()
+                    founded = str(brand_overview.get("founded", "")).lower()
+                    
+                    # Check for 120+ outlets
+                    if "120" not in outlets_count and "100+" not in outlets_count:
+                        print(f"⚠️  Warning: Expected '120+' outlets in brand_overview.outlets_count, got: {outlets_count}")
+                    
+                    # Check for 2021 founding year
+                    if "2021" not in founded:
+                        print(f"⚠️  Warning: Expected '2021' in brand_overview.founded, got: {founded}")
+                    
+                    # Check executive summary for founder info
+                    if "sandeep" not in executive_summary.lower() and "bandari" not in executive_summary.lower():
+                        print(f"⚠️  Warning: Expected founder info (Sandeep Bandari) in executive summary")
+                
+                # Test 10: Check that LLM did not refuse with "insufficient data"
+                response_text = json.dumps(data).lower()
+                if "insufficient data" in response_text or "not enough information" in response_text:
+                    self.log_test("Brand Audit - Chai Bunk LLM Refusal", False, "LLM refused with 'insufficient data' message")
+                    return False
+                
+                print(f"✅ Chai Bunk Brand Audit completed successfully:")
+                print(f"   - Report ID: {report_id}")
+                print(f"   - Overall Score: {overall_score}/100")
+                print(f"   - Executive Summary: {len(executive_summary)} characters")
+                print(f"   - Dimensions: {len(dimensions)} items")
+                print(f"   - SWOT: {len(swot)} sections")
+                print(f"   - Recommendations: {len(recommendations)} sections")
+                print(f"   - Processing Time: {processing_time:.2f} seconds")
+                
+                self.log_test("Brand Audit - Chai Bunk Improvements", True, 
+                            f"All checks passed. Score: {overall_score}/100, Dimensions: {len(dimensions)}, Processing: {processing_time:.2f}s")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Brand Audit - Chai Bunk JSON Parse", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Brand Audit - Chai Bunk Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Brand Audit - Chai Bunk Exception", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
