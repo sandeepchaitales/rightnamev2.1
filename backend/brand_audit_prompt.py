@@ -578,23 +578,21 @@ Respond with ONLY valid JSON in this structure:
 CRITICAL INSTRUCTIONS
 ================================================================================
 
-⚠️ DATA ACCURACY IS PARAMOUNT ⚠️
+🚨 ABSOLUTE REQUIREMENT: OUTPUT VALID JSON ONLY 🚨
 
-1. **ONLY USE DATA FROM RESEARCH**: Every fact must come from the research data provided
-2. **NO HALLUCINATION**: If data is not found, explicitly state "Not found in research" or "Data unavailable"
-3. **CITE SOURCES**: Reference [1], [2], etc. from the actual search results
-4. **RATINGS**: Only report Google/Justdial/Zomato ratings if EXPLICITLY found in research
-5. **STORE COUNTS**: Only report outlet numbers if EXPLICITLY mentioned
-6. **FOUNDING YEAR**: Only state if EXPLICITLY found in research
-7. **REVENUE/FUNDING**: Only report if EXPLICITLY found - otherwise say "Not publicly disclosed"
+1. **YOUR RESPONSE MUST BE VALID JSON** - Start with { and end with }
+2. **NEVER REFUSE TO GENERATE THE REPORT** - Even with limited data, generate the full structure
+3. **IF DATA IS MISSING, USE PLACEHOLDERS** - "Data not available", "Not found in research", "[Estimated]"
+4. **NO TEXT BEFORE OR AFTER THE JSON** - Pure JSON only
+5. **CITE SOURCES**: Reference [1], [2], etc. from research when available
 
-EXAMPLES:
-- Research says "Chai Bunk 120 outlets" → Report "120 outlets" ✅
-- Research doesn't mention founding year → Say "Founding year not found in research" ✅
-- Research shows "4.3 rating on Justdial" → Report exactly "4.3 on Justdial" ✅
-- No rating found → Say "Rating data not available in research" ✅
+⚠️ DATA ACCURACY GUIDELINES:
+- Use data from research when available
+- Mark estimates as "[Estimated based on industry data]"
+- Say "Not found in research" for unknown values
+- NEVER refuse to generate - always output complete JSON
 
-DO NOT INVENT NUMBERS. DO NOT GUESS. USE ONLY RESEARCH DATA.
+REMEMBER: You MUST output valid JSON. Never say "insufficient data" - generate the report with placeholders instead.
 """
 
 
