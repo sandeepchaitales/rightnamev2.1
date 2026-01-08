@@ -2374,14 +2374,27 @@ async def brand_audit(request: BrandAuditRequest):
             logging.info(f"Brand Audit: {provider}/{model} succeeded!")
             break  # Success, exit the retry loop
             
-        except asyncio.TimeoutError:
-            last_error = f"Timeout after 120s"
-            logging.warning(f"Brand Audit: {provider}/{model} timed out")
-            continue
-        except Exception as e:
-            last_error = e
-            logging.warning(f"Brand Audit: {provider}/{model} failed: {e}")
-            continue  # Try next model
+            except asyncio.TimeoutError:
+                last_error = f"Timeout after 120s"
+                logging.warning(f"Brand Audit: {provider}/{model} timed out (attempt {retry + 1})")
+                continue  # Try same model again
+            except Exception as e:
+                error_str = str(e)
+                last_error = e
+                logging.warning(f"Brand Audit: {provider}/{model} failed (attempt {retry + 1}): {e}")
+                
+                # If 502 error, wait before retrying same model
+                if "502" in error_str or "BadGateway" in error_str:
+                    wait_time = (retry + 1) * 5  # 5s, 10s, 15s
+                    logging.info(f"Brand Audit: 502 error, waiting {wait_time}s before retry...")
+                    await asyncio.sleep(wait_time)
+                    continue  # Retry same model
+                else:
+                    break  # Move to next model for non-502 errors
+        
+        # Check if we got data (break outer loop if successful)
+        if data:
+            break
     
     # If all models failed
     if not data:
