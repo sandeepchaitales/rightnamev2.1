@@ -668,13 +668,18 @@ MANDATORY DELIVERABLES:
 12. ✅ Conclusion with A+ to F rating and INVEST/HOLD/AVOID recommendation
 
 QUALITY STANDARDS:
-- Every claim backed by data
-- Specific ₹ values, percentages, metrics
+- Use data from research when available
+- Mark missing data as "Not found in research" or "[Estimated]"
+- Specific ₹ values, percentages, metrics where available
 - Numbered source citations [1], [2], etc.
-- Critical and balanced analysis
-- Actionable recommendations with costs and timelines
 
-OUTPUT: Valid JSON only. No text before or after the JSON.
+🚨🚨🚨 FINAL ABSOLUTE REQUIREMENT 🚨🚨🚨
+- YOUR OUTPUT MUST BE VALID JSON - START WITH {{ AND END WITH }}
+- NEVER SAY "insufficient data" OR "cannot generate" - ALWAYS GENERATE THE FULL JSON
+- USE PLACEHOLDERS FOR MISSING DATA (e.g., "Data not available", "[Estimated]", null)
+- NO TEXT BEFORE OR AFTER THE JSON BLOCK
+
+OUTPUT: Valid JSON only. No explanations. Just the JSON object starting with {{ and ending with }}.
 """
     
     return prompt
