@@ -2030,6 +2030,94 @@ Be specific and factual. Do not make assumptions."""
     
     return f"Query: {query}\n\nNo search results found"
 
+
+async def crawl_website_page(url: str) -> str:
+    """Crawl a specific website page and extract text content"""
+    import aiohttp
+    from bs4 import BeautifulSoup
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = BeautifulSoup(html, 'html.parser')
+                    
+                    # Remove script and style elements
+                    for script in soup(["script", "style", "nav", "footer", "header"]):
+                        script.decompose()
+                    
+                    # Get text content
+                    text = soup.get_text(separator='\n', strip=True)
+                    
+                    # Clean up excessive whitespace
+                    lines = [line.strip() for line in text.splitlines() if line.strip()]
+                    text = '\n'.join(lines)
+                    
+                    # Limit length
+                    if len(text) > 5000:
+                        text = text[:5000] + "... [truncated]"
+                    
+                    logging.info(f"Successfully crawled {url} - {len(text)} chars")
+                    return text
+                else:
+                    logging.warning(f"Failed to crawl {url} - Status {response.status}")
+                    return ""
+    except Exception as e:
+        logging.warning(f"Error crawling {url}: {e}")
+        return ""
+
+
+async def crawl_brand_website(brand_website: str, brand_name: str) -> str:
+    """Crawl brand website for About Us, Our Story, and homepage content"""
+    import aiohttp
+    
+    # Normalize URL
+    if not brand_website.startswith(('http://', 'https://')):
+        brand_website = 'https://' + brand_website
+    
+    base_url = brand_website.rstrip('/')
+    
+    # Pages to try crawling (in order of importance)
+    pages_to_crawl = [
+        (f"{base_url}/about", "About Page"),
+        (f"{base_url}/about-us", "About Us Page"),
+        (f"{base_url}/our-story", "Our Story Page"),
+        (f"{base_url}/story", "Story Page"),
+        (f"{base_url}/who-we-are", "Who We Are Page"),
+        (base_url, "Homepage"),
+        (f"{base_url}/franchise", "Franchise Page"),
+        (f"{base_url}/contact", "Contact Page"),
+    ]
+    
+    all_content = []
+    all_content.append(f"=== WEBSITE CONTENT FOR {brand_name.upper()} ===\n")
+    all_content.append(f"Website: {brand_website}\n")
+    
+    crawled_count = 0
+    max_pages = 4  # Limit to avoid timeout
+    
+    for url, page_name in pages_to_crawl:
+        if crawled_count >= max_pages:
+            break
+            
+        logging.info(f"Brand Audit: Crawling {page_name}: {url}")
+        content = await crawl_website_page(url)
+        
+        if content and len(content) > 100:
+            all_content.append(f"\n--- {page_name.upper()} ({url}) ---\n")
+            all_content.append(content)
+            crawled_count += 1
+    
+    if crawled_count == 0:
+        all_content.append("\n[Unable to crawl website - may be blocked or unavailable]\n")
+    
+    return "\n".join(all_content)
+
+
 async def gather_brand_audit_research(brand_name: str, brand_website: str, competitor_1: str, 
                                        competitor_2: str, category: str, geography: str) -> dict:
     """Execute 4-phase research workflow for brand audit"""
