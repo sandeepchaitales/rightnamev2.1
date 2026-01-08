@@ -2293,31 +2293,35 @@ async def brand_audit(request: BrandAuditRequest):
         research_data=research_data
     )
     
-    # Models to try in order - with Claude fallback for reliability
+    # Models to try in order - GPT-4o-mini first (most reliable), then others
     models_to_try = [
-        ("anthropic", "claude-sonnet-4-20250514"),  # Claude first - currently working
-        ("openai", "gpt-4o"),
-        ("openai", "gpt-4o-mini"),
+        ("openai", "gpt-4o-mini"),    # Most reliable, fastest
+        ("openai", "gpt-4o"),         # Higher quality
+        ("anthropic", "claude-sonnet-4-20250514"),  # Claude backup
     ]
     
     content = ""
     data = None
     last_error = None
     
+    # Retry logic with exponential backoff for 502 errors
+    max_retries_per_model = 3
+    
     for provider, model in models_to_try:
-        try:
-            logging.info(f"Brand Audit: Trying {provider}/{model}...")
-            llm_chat = LlmChat(
-                api_key=EMERGENT_KEY,
-                session_id=f"brand_audit_{uuid.uuid4()}",
-                system_message=BRAND_AUDIT_SYSTEM_PROMPT
-            ).with_model(provider, model)
-            
-            user_message = UserMessage(text=user_prompt)
-            response = await asyncio.wait_for(
-                llm_chat.send_message(user_message),
-                timeout=120.0  # 2 minute timeout per model
-            )
+        for retry in range(max_retries_per_model):
+            try:
+                logging.info(f"Brand Audit: Trying {provider}/{model} (attempt {retry + 1}/{max_retries_per_model})...")
+                llm_chat = LlmChat(
+                    api_key=EMERGENT_KEY,
+                    session_id=f"brand_audit_{uuid.uuid4()}",
+                    system_message=BRAND_AUDIT_SYSTEM_PROMPT
+                ).with_model(provider, model)
+                
+                user_message = UserMessage(text=user_prompt)
+                response = await asyncio.wait_for(
+                    llm_chat.send_message(user_message),
+                    timeout=120.0  # 2 minute timeout per model
+                )
             
             if hasattr(response, 'text'):
                 content = response.text
