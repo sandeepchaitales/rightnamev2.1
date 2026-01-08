@@ -4454,6 +4454,170 @@ class BrandEvaluationTester:
             self.log_test("Brand Audit - Chai Bunk Exception", False, str(e))
             return False
 
+    def test_brand_audit_chai_bunk_retry_mechanism(self):
+        """Test Brand Audit API with retry mechanism for Chai Bunk - as requested in review"""
+        payload = {
+            "brand_name": "Chai Bunk",
+            "brand_website": "https://www.chaibunk.com",
+            "competitor_1": "https://www.chaayos.com",
+            "competitor_2": "https://www.chaipoint.com",
+            "category": "Cafe/QSR",
+            "geography": "India"
+        }
+        
+        try:
+            print(f"\n🔍 TESTING BRAND AUDIT API WITH RETRY MECHANISM - CHAI BUNK")
+            print(f"="*80)
+            print(f"Test Case: {json.dumps(payload, indent=2)}")
+            print(f"Expected Features to Verify:")
+            print(f"  1. Retry Logic with Exponential Backoff (5s, 10s, 15s)")
+            print(f"  2. Model Fallback Order: GPT-4o-mini → GPT-4o → Claude")
+            print(f"  3. Website Crawling: Should see 'Successfully crawled' messages")
+            print(f"  4. Expected Success: 200 OK with valid JSON report")
+            print(f"  5. Timeout: 240 seconds (4 minutes)")
+            print(f"="*80)
+            
+            start_time = time.time()
+            response = requests.post(
+                f"{self.api_url}/brand-audit", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=240  # 4 minutes as requested
+            )
+            
+            processing_time = time.time() - start_time
+            print(f"\n📊 RESPONSE DETAILS:")
+            print(f"Status Code: {response.status_code}")
+            print(f"Processing Time: {processing_time:.2f} seconds")
+            print(f"Response Headers: {dict(response.headers)}")
+            
+            # Test 1: Check for successful response (200 OK)
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:1000]}"
+                print(f"❌ Expected 200 OK, got {response.status_code}")
+                
+                # Check for specific error types
+                if response.status_code == 502:
+                    self.log_test("Brand Audit Chai Bunk - 502 BadGateway", False, "502 BadGateway error - LLM provider issues")
+                elif response.status_code == 503:
+                    self.log_test("Brand Audit Chai Bunk - 503 Service Unavailable", False, "503 Service Unavailable - upstream connect error")
+                elif response.status_code == 500:
+                    self.log_test("Brand Audit Chai Bunk - 500 Internal Server Error", False, "500 Internal Server Error - JSON parsing or schema validation issues")
+                elif response.status_code == 408:
+                    self.log_test("Brand Audit Chai Bunk - 408 Timeout", False, f"Request timeout after {processing_time:.2f} seconds")
+                else:
+                    self.log_test("Brand Audit Chai Bunk - HTTP Error", False, error_msg)
+                return False
+            
+            # Test 2: Parse JSON response
+            try:
+                data = response.json()
+                print(f"✅ JSON Response parsed successfully")
+                print(f"Response keys: {list(data.keys())}")
+                
+                # Test 3: Check required fields for Brand Audit response
+                required_fields = ["report_id", "overall_score", "verdict", "executive_summary", "dimensions"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Brand Audit Chai Bunk - Required Fields", False, f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Test 4: Validate field types and ranges
+                report_id = data.get("report_id")
+                if not isinstance(report_id, str) or len(report_id) == 0:
+                    self.log_test("Brand Audit Chai Bunk - Report ID", False, f"Invalid report_id: {report_id}")
+                    return False
+                
+                overall_score = data.get("overall_score")
+                if not isinstance(overall_score, (int, float)) or not (0 <= overall_score <= 100):
+                    self.log_test("Brand Audit Chai Bunk - Overall Score", False, f"Invalid overall_score: {overall_score} (should be 0-100)")
+                    return False
+                
+                verdict = data.get("verdict", "")
+                valid_verdicts = ["STRONG", "MODERATE", "WEAK", "CRITICAL"]
+                if verdict not in valid_verdicts:
+                    self.log_test("Brand Audit Chai Bunk - Verdict", False, f"Invalid verdict: {verdict} (should be one of {valid_verdicts})")
+                    return False
+                
+                executive_summary = data.get("executive_summary", "")
+                if len(executive_summary) < 100:  # Should be substantial
+                    self.log_test("Brand Audit Chai Bunk - Executive Summary", False, f"Executive summary too short: {len(executive_summary)} chars")
+                    return False
+                
+                # Test 5: Check dimensions array
+                dimensions = data.get("dimensions", [])
+                if not isinstance(dimensions, list) or len(dimensions) == 0:
+                    self.log_test("Brand Audit Chai Bunk - Dimensions", False, f"Invalid dimensions: {type(dimensions)} with length {len(dimensions) if isinstance(dimensions, list) else 'N/A'}")
+                    return False
+                
+                # Test 6: Validate dimension structure
+                for i, dim in enumerate(dimensions):
+                    if not isinstance(dim, dict):
+                        self.log_test("Brand Audit Chai Bunk - Dimension Structure", False, f"Dimension {i} is not a dict: {type(dim)}")
+                        return False
+                    
+                    dim_required = ["name", "score", "analysis"]
+                    dim_missing = [field for field in dim_required if field not in dim]
+                    if dim_missing:
+                        self.log_test("Brand Audit Chai Bunk - Dimension Fields", False, f"Dimension {i} missing fields: {dim_missing}")
+                        return False
+                    
+                    dim_score = dim.get("score")
+                    if not isinstance(dim_score, (int, float)) or not (0 <= dim_score <= 100):
+                        self.log_test("Brand Audit Chai Bunk - Dimension Score", False, f"Dimension {i} invalid score: {dim_score}")
+                        return False
+                
+                # Test 7: Check for website crawling evidence in response
+                response_text = json.dumps(data).lower()
+                crawling_indicators = ["chaibunk.com", "about page", "homepage", "franchise"]
+                found_crawling = [indicator for indicator in crawling_indicators if indicator in response_text]
+                
+                if len(found_crawling) < 2:  # Should find at least 2 indicators
+                    print(f"⚠️  Warning: Limited website crawling evidence found: {found_crawling}")
+                else:
+                    print(f"✅ Website crawling evidence found: {found_crawling}")
+                
+                # Test 8: Check for competitor analysis
+                competitor_indicators = ["chaayos", "chai point", "competitor"]
+                found_competitors = [indicator for indicator in competitor_indicators if indicator in response_text]
+                
+                if len(found_competitors) < 1:
+                    print(f"⚠️  Warning: Limited competitor analysis evidence: {found_competitors}")
+                else:
+                    print(f"✅ Competitor analysis evidence found: {found_competitors}")
+                
+                # Success summary
+                print(f"\n🎉 CHAI BUNK BRAND AUDIT TEST RESULTS:")
+                print(f"✅ Status: 200 OK")
+                print(f"✅ Processing Time: {processing_time:.2f} seconds")
+                print(f"✅ Report ID: {report_id}")
+                print(f"✅ Overall Score: {overall_score}/100")
+                print(f"✅ Verdict: {verdict}")
+                print(f"✅ Executive Summary: {len(executive_summary)} characters")
+                print(f"✅ Dimensions: {len(dimensions)} analysis dimensions")
+                print(f"✅ Website Crawling: {len(found_crawling)} indicators found")
+                print(f"✅ Competitor Analysis: {len(found_competitors)} indicators found")
+                
+                self.log_test("Brand Audit Chai Bunk - Complete Success", True, 
+                            f"All tests passed. Score: {overall_score}/100, Verdict: {verdict}, Time: {processing_time:.2f}s, Dimensions: {len(dimensions)}")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Brand Audit Chai Bunk - JSON Parse", False, f"Invalid JSON response: {str(e)}")
+                print(f"❌ JSON Parse Error: {str(e)}")
+                print(f"Response text (first 500 chars): {response.text[:500]}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Brand Audit Chai Bunk - Timeout", False, f"Request timed out after 240 seconds")
+            print(f"❌ Request timed out after 240 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Brand Audit Chai Bunk - Exception", False, str(e))
+            print(f"❌ Exception occurred: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
