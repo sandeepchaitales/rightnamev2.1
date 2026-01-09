@@ -4836,13 +4836,6 @@ def main():
         print("❌ BRAND AUDIT TEST FAILED!")
         return 1
 
-if __name__ == "__main__":
-    # Check if we should run the Chai Bunk test specifically
-    if len(sys.argv) > 1 and sys.argv[1] == "chai_bunk":
-        sys.exit(main_chai_bunk_test())
-    else:
-        sys.exit(main())
-
 def main_chai_bunk_test():
     """Main function to run Chai Bunk Brand Audit test as requested in review"""
     print("🔍 CHAI BUNK BRAND AUDIT API TEST")
@@ -4908,3 +4901,10 @@ def main_chai_bunk_test():
     else:
         print("❌ CHAI BUNK BRAND AUDIT TEST FAILED!")
         return 1
+
+if __name__ == "__main__":
+    # Check if we should run the Chai Bunk test specifically
+    if len(sys.argv) > 1 and sys.argv[1] == "chai_bunk":
+        sys.exit(main_chai_bunk_test())
+    else:
+        sys.exit(main())
