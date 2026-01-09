@@ -99,7 +99,36 @@ const Card = ({ children, className = "" }) => (
 
 // ============ PERFORMANCE RADAR CHART ============
 const PerformanceRadar = ({ dimensions, brandName }) => {
-    if (!dimensions || dimensions.length === 0) return null;
+    // Debug logging
+    console.log('[PerformanceRadar] Received dimensions:', dimensions);
+    console.log('[PerformanceRadar] Dimensions length:', dimensions?.length);
+    
+    // Fallback UI for missing data
+    if (!dimensions || dimensions.length === 0) {
+        console.warn('[PerformanceRadar] No dimensions data available');
+        return (
+            <Card>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-fuchsia-100 flex items-center justify-center">
+                            <Target className="w-5 h-5 text-fuchsia-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Performance Radar</h3>
+                            <p className="text-xs text-slate-500">8-Dimension Analysis</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="h-72 flex items-center justify-center bg-slate-50 rounded-xl">
+                    <div className="text-center">
+                        <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-2" />
+                        <p className="text-slate-500 text-sm">Dimension data not available</p>
+                        <p className="text-slate-400 text-xs mt-1">Try refreshing the page</p>
+                    </div>
+                </div>
+            </Card>
+        );
+    }
     
     // Transform dimensions data for Recharts radar
     const radarData = dimensions.slice(0, 8).map(dim => ({
@@ -108,6 +137,8 @@ const PerformanceRadar = ({ dimensions, brandName }) => {
         score: dim.score || 0,
         fullMark: 10
     }));
+    
+    console.log('[PerformanceRadar] Transformed radarData:', radarData);
     
     const avgScore = dimensions.length > 0 
         ? (dimensions.reduce((acc, d) => acc + (d.score || 0), 0) / dimensions.length).toFixed(1)
