@@ -281,7 +281,36 @@ const ScoreCardRevamped = ({ score, verdict }) => {
 
 // ============ PERFORMANCE RADAR CHART ============
 const PerformanceRadar = ({ dimensions, brandName }) => {
-    if (!dimensions || dimensions.length === 0) return null;
+    // Debug logging
+    console.log('[EVAL Dashboard] PerformanceRadar dimensions:', dimensions);
+    console.log('[EVAL Dashboard] PerformanceRadar dimensions length:', dimensions?.length);
+    
+    // Fallback UI for missing data
+    if (!dimensions || dimensions.length === 0) {
+        console.warn('[EVAL Dashboard] PerformanceRadar: No dimensions data!');
+        return (
+            <PrintCard>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 print:p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-fuchsia-100 flex items-center justify-center">
+                            <Target className="w-4 h-4 text-fuchsia-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800">Performance Radar</h3>
+                            <p className="text-xs text-slate-500">Dimension Analysis</p>
+                        </div>
+                    </div>
+                    <div className="h-64 flex items-center justify-center bg-slate-50 rounded-xl">
+                        <div className="text-center">
+                            <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-2" />
+                            <p className="text-slate-500 text-sm">Dimension data not available</p>
+                            <p className="text-slate-400 text-xs mt-1">Try refreshing or run evaluation again</p>
+                        </div>
+                    </div>
+                </div>
+            </PrintCard>
+        );
+    }
     
     // Transform dimensions data for Recharts radar
     const radarData = dimensions.slice(0, 8).map(dim => ({
