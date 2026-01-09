@@ -4906,5 +4906,200 @@ if __name__ == "__main__":
     # Check if we should run the Chai Bunk test specifically
     if len(sys.argv) > 1 and sys.argv[1] == "chai_bunk":
         sys.exit(main_chai_bunk_test())
+    elif len(sys.argv) > 1 and sys.argv[1] == "schema_fix":
+        # Run the schema fix test
+        tester = BrandEvaluationTester()
+        
+        print("🔍 CHAI BUNK BRAND AUDIT API - SCHEMA FIX TEST")
+        print("="*80)
+        print("Testing Brand Audit API with Chai Bunk - StrategicRecommendation Schema Fix")
+        print("Expected: 200 OK response (not 500 error) with valid JSON structure")
+        print("Timeout: 180 seconds (3 minutes)")
+        print("="*80)
+        
+        # Add the schema fix test method
+        def test_brand_audit_chai_bunk_schema_fix():
+            """Test Brand Audit API with Chai Bunk - Schema Fix for StrategicRecommendation"""
+            payload = {
+                "brand_name": "Chai Bunk",
+                "brand_website": "https://www.chaibunk.com",
+                "competitor_1": "https://www.chaayos.com",
+                "competitor_2": "https://www.chaipoint.com",
+                "category": "Cafe/QSR",
+                "geography": "India"
+            }
+            
+            try:
+                print(f"\n🔍 Testing Brand Audit API - Chai Bunk Schema Fix...")
+                print(f"Testing the fix for StrategicRecommendation schema (optional fields + title<->recommended_action mapping)")
+                print(f"Payload: {json.dumps(payload, indent=2)}")
+                print(f"Expected: 200 OK response with valid JSON (report_id, overall_score, dimensions, recommendations, swot)")
+                
+                start_time = time.time()
+                response = requests.post(
+                    f"{tester.api_url}/brand-audit", 
+                    json=payload, 
+                    headers={'Content-Type': 'application/json'},
+                    timeout=180  # 3 minutes timeout as specified in review request
+                )
+                
+                processing_time = time.time() - start_time
+                print(f"Response Status: {response.status_code}")
+                print(f"Processing Time: {processing_time:.2f} seconds")
+                
+                # Test 1: API should return 200 OK (not 500 Internal Server Error)
+                if response.status_code != 200:
+                    error_msg = f"HTTP {response.status_code}: {response.text[:500]}"
+                    if response.status_code == 500:
+                        tester.log_test("Brand Audit Schema Fix - 500 Error", False, f"Still getting 500 Internal Server Error (expected 200 OK): {error_msg}")
+                    elif response.status_code in [502, 503]:
+                        tester.log_test("Brand Audit Schema Fix - Server Error", False, f"Server error: {error_msg}")
+                    elif response.status_code == 408:
+                        tester.log_test("Brand Audit Schema Fix - Timeout", False, f"Request timeout: {error_msg}")
+                    else:
+                        tester.log_test("Brand Audit Schema Fix - HTTP Error", False, error_msg)
+                    return False
+                
+                try:
+                    data = response.json()
+                    print(f"✅ Response received successfully (200 OK), checking structure...")
+                    
+                    # Test 2: Check required top-level fields as specified in review request
+                    required_fields = ["report_id", "overall_score", "dimensions", "recommendations", "swot"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if missing_fields:
+                        tester.log_test("Brand Audit Schema Fix - Required Fields", False, f"Missing required fields: {missing_fields}")
+                        return False
+                    
+                    # Test 3: Check report_id exists and is valid
+                    report_id = data.get("report_id")
+                    if not isinstance(report_id, str) or len(report_id) == 0:
+                        tester.log_test("Brand Audit Schema Fix - Report ID", False, f"Invalid report_id: {report_id}")
+                        return False
+                    
+                    # Test 4: Check overall_score is number
+                    overall_score = data.get("overall_score")
+                    if not isinstance(overall_score, (int, float)):
+                        tester.log_test("Brand Audit Schema Fix - Overall Score", False, f"overall_score is not a number: {overall_score}")
+                        return False
+                    
+                    # Test 5: Check dimensions array exists and has content
+                    dimensions = data.get("dimensions", [])
+                    if not isinstance(dimensions, list) or len(dimensions) == 0:
+                        tester.log_test("Brand Audit Schema Fix - Dimensions", False, f"dimensions should be non-empty array, got: {type(dimensions)} with length {len(dimensions) if isinstance(dimensions, list) else 'N/A'}")
+                        return False
+                    
+                    # Test 6: Check recommendations array exists (this was the problematic field)
+                    recommendations = data.get("recommendations", [])
+                    if not isinstance(recommendations, list):
+                        tester.log_test("Brand Audit Schema Fix - Recommendations Type", False, f"recommendations should be array, got: {type(recommendations)}")
+                        return False
+                    
+                    # Test 7: Check StrategicRecommendation schema fix - each recommendation should have title and/or recommended_action
+                    for i, rec in enumerate(recommendations):
+                        if not isinstance(rec, dict):
+                            tester.log_test("Brand Audit Schema Fix - Recommendation Structure", False, f"recommendations[{i}] should be object, got: {type(rec)}")
+                            return False
+                        
+                        # The fix should ensure either 'title' or 'recommended_action' is present (or both)
+                        has_title = "title" in rec and rec["title"]
+                        has_recommended_action = "recommended_action" in rec and rec["recommended_action"]
+                        
+                        if not (has_title or has_recommended_action):
+                            tester.log_test("Brand Audit Schema Fix - Recommendation Fields", False, f"recommendations[{i}] missing both 'title' and 'recommended_action': {rec}")
+                            return False
+                    
+                    # Test 8: Check swot analysis exists
+                    swot = data.get("swot", {})
+                    if not isinstance(swot, dict):
+                        tester.log_test("Brand Audit Schema Fix - SWOT Type", False, f"swot should be object, got: {type(swot)}")
+                        return False
+                    
+                    # Test 9: Verify no schema validation errors in response
+                    response_text = json.dumps(data).lower()
+                    schema_error_indicators = [
+                        "field required",
+                        "missing required field", 
+                        "validation error",
+                        "pydantic",
+                        "recommended_action",
+                        "strategicrecommendation"
+                    ]
+                    
+                    found_errors = [indicator for indicator in schema_error_indicators if indicator in response_text]
+                    if found_errors:
+                        tester.log_test("Brand Audit Schema Fix - Schema Errors", False, f"Found schema error indicators in response: {found_errors}")
+                        return False
+                    
+                    print(f"✅ Schema validation passed:")
+                    print(f"   - Report ID: {report_id}")
+                    print(f"   - Overall Score: {overall_score}")
+                    print(f"   - Dimensions: {len(dimensions)} items")
+                    print(f"   - Recommendations: {len(recommendations)} items")
+                    print(f"   - SWOT: Present")
+                    print(f"   - Processing Time: {processing_time:.2f}s")
+                    
+                    tester.log_test("Brand Audit Schema Fix - Chai Bunk", True, 
+                                f"✅ SCHEMA FIX VERIFIED: 200 OK response with valid JSON. Report ID: {report_id}, Score: {overall_score}, Dimensions: {len(dimensions)}, Recommendations: {len(recommendations)}, Time: {processing_time:.2f}s")
+                    return True
+                    
+                except json.JSONDecodeError as e:
+                    tester.log_test("Brand Audit Schema Fix - JSON Parse", False, f"Invalid JSON response: {str(e)}")
+                    return False
+                    
+            except requests.exceptions.Timeout:
+                tester.log_test("Brand Audit Schema Fix - Timeout", False, "Request timed out after 180 seconds")
+                return False
+            except Exception as e:
+                tester.log_test("Brand Audit Schema Fix - Exception", False, str(e))
+                return False
+        
+        # Run the schema fix test
+        success = test_brand_audit_chai_bunk_schema_fix()
+        
+        # Print summary
+        tester.print_summary()
+        
+        # Save detailed results
+        with open('/app/chai_bunk_schema_fix_results.json', 'w') as f:
+            json.dump({
+                "test_focus": "Chai Bunk Brand Audit API - Schema Fix Test",
+                "description": "Test Brand Audit API with Chai Bunk after StrategicRecommendation schema fix",
+                "test_case": {
+                    "brand_name": "Chai Bunk",
+                    "brand_website": "https://www.chaibunk.com",
+                    "competitor_1": "https://www.chaayos.com",
+                    "competitor_2": "https://www.chaipoint.com",
+                    "category": "Cafe/QSR",
+                    "geography": "India"
+                },
+                "schema_fix_details": [
+                    "StrategicRecommendation schema now has optional fields",
+                    "parse_recommendation() function maps title<->recommended_action"
+                ],
+                "expected_behavior": [
+                    "200 OK response (not 500 Internal Server Error)",
+                    "Valid JSON with report_id, overall_score, dimensions, recommendations, swot",
+                    "No Pydantic validation errors",
+                    "No 'Field required' errors for recommended_action"
+                ],
+                "timeout": "180 seconds (3 minutes)",
+                "summary": {
+                    "tests_run": tester.tests_run,
+                    "tests_passed": tester.tests_passed,
+                    "success_rate": (tester.tests_passed/tester.tests_run)*100 if tester.tests_run > 0 else 0,
+                    "overall_success": success
+                },
+                "results": tester.test_results,
+                "timestamp": datetime.now().isoformat()
+            }, f, indent=2)
+        
+        if success:
+            print("🎉 CHAI BUNK SCHEMA FIX TEST PASSED!")
+            sys.exit(0)
+        else:
+            print("❌ CHAI BUNK SCHEMA FIX TEST FAILED!")
+            sys.exit(1)
     else:
         sys.exit(main())
