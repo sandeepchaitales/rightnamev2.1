@@ -2484,12 +2484,21 @@ async def brand_audit(request: BrandAuditRequest):
     if not long_raw:
         long_raw = data.get('long_term_recommendations', [])
     
-    immediate_recs = [StrategicRecommendation(**r) if isinstance(r, dict) else StrategicRecommendation(title=str(r), recommended_action=str(r)) 
-                     for r in immediate_raw]
-    medium_recs = [StrategicRecommendation(**r) if isinstance(r, dict) else StrategicRecommendation(title=str(r), recommended_action=str(r)) 
-                  for r in medium_raw]
-    long_recs = [StrategicRecommendation(**r) if isinstance(r, dict) else StrategicRecommendation(title=str(r), recommended_action=str(r)) 
-                for r in long_raw]
+    def parse_recommendation(r):
+        """Parse recommendation ensuring title/recommended_action are present"""
+        if isinstance(r, dict):
+            # Ensure recommended_action exists (fallback to title)
+            if 'recommended_action' not in r and 'title' in r:
+                r['recommended_action'] = r['title']
+            elif 'title' not in r and 'recommended_action' in r:
+                r['title'] = r['recommended_action']
+            return StrategicRecommendation(**r)
+        else:
+            return StrategicRecommendation(title=str(r), recommended_action=str(r))
+    
+    immediate_recs = [parse_recommendation(r) for r in immediate_raw]
+    medium_recs = [parse_recommendation(r) for r in medium_raw]
+    long_recs = [parse_recommendation(r) for r in long_raw]
     
     logging.info(f"Brand Audit: Parsed {len(immediate_recs)} immediate, {len(medium_recs)} medium, {len(long_recs)} long-term recommendations")
     
