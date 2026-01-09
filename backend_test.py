@@ -1173,15 +1173,15 @@ class BrandEvaluationTester:
             self.log_test("ACTUAL USPTO Costs - Exception", False, str(e))
             return False
 
-    def test_brand_audit_tea_villa_claude_fix(self):
-        """Test Brand Audit API after fixing Claude timeout issue - Tea Villa test case"""
+    def test_brand_audit_chai_bunk_compact_prompt(self):
+        """Test Brand Audit API with Chai Bunk using compact prompt for faster processing"""
         payload = {
-            "brand_name": "Tea Villa",
-            "brand_website": "https://teavilla.in",
-            "category": "Food & Beverage",
-            "geography": "India",
-            "competitor_1": "Chai Point",
-            "competitor_2": "Chaayos"
+            "brand_name": "Chai Bunk",
+            "brand_website": "https://www.chaibunk.com",
+            "competitor_1": "https://www.chaayos.com",
+            "competitor_2": "https://www.chaipoint.com",
+            "category": "Cafe/QSR",
+            "geography": "India"
         }
         
         try:
