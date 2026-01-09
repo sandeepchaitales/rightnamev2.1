@@ -401,29 +401,52 @@ const PerformanceRadar = ({ dimensions, brandName }) => {
 };
 
 // ============ QUICK DIMENSIONS GRID ============
-const QuickDimensionsGrid = ({ dimensions }) => (
-    <PrintCard>
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 print:p-4">
-            <SubSectionHeader icon={BarChart3} title="Quick Dimensions" />
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:gap-3">
-                {dimensions?.slice(0, 6).map((dim, i) => (
-                    <div key={i} className="p-3 bg-slate-50 rounded-xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-slate-600 truncate max-w-[100px]">{dim.name}</span>
-                            <span className="text-sm font-black text-slate-800">{dim.score}/10</span>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full ${dim.score >= 8 ? 'bg-emerald-500' : dim.score >= 6 ? 'bg-violet-500' : 'bg-amber-500'}`}
-                                style={{ width: `${dim.score * 10}%` }}
-                            />
+const QuickDimensionsGrid = ({ dimensions }) => {
+    // Debug logging
+    console.log('[EVAL Dashboard] QuickDimensionsGrid dimensions:', dimensions);
+    
+    // Fallback UI for missing data
+    if (!dimensions || dimensions.length === 0) {
+        console.warn('[EVAL Dashboard] QuickDimensionsGrid: No dimensions data!');
+        return (
+            <PrintCard>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 print:p-4">
+                    <SubSectionHeader icon={BarChart3} title="Quick Dimensions" />
+                    <div className="h-32 flex items-center justify-center bg-slate-50 rounded-xl">
+                        <div className="text-center">
+                            <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                            <p className="text-slate-500 text-sm">Score data not available</p>
                         </div>
                     </div>
-                ))}
+                </div>
+            </PrintCard>
+        );
+    }
+    
+    return (
+        <PrintCard>
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 print:p-4">
+                <SubSectionHeader icon={BarChart3} title="Quick Dimensions" />
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:gap-3">
+                    {dimensions.slice(0, 6).map((dim, i) => (
+                        <div key={i} className="p-3 bg-slate-50 rounded-xl">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-semibold text-slate-600 truncate max-w-[100px]">{dim.name}</span>
+                                <span className="text-sm font-black text-slate-800">{dim.score}/10</span>
+                            </div>
+                            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full ${dim.score >= 8 ? 'bg-emerald-500' : dim.score >= 6 ? 'bg-violet-500' : 'bg-amber-500'}`}
+                                    style={{ width: `${dim.score * 10}%` }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-    </PrintCard>
-);
+        </PrintCard>
+    );
+};
 
 // ============ FINAL ASSESSMENT (FULL) ============
 const FinalAssessmentFull = ({ assessment, verdict, score }) => {
