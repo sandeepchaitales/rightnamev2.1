@@ -1185,18 +1185,26 @@ class BrandEvaluationTester:
         }
         
         try:
-            print(f"\n🔍 Testing Brand Audit API after Claude timeout fix with Tea Villa...")
+            print(f"\n🔍 Testing Brand Audit API with Chai Bunk using compact prompt...")
             print(f"Payload: {json.dumps(payload, indent=2)}")
-            print(f"Expected: API should return proper response with report_id, overall_score, verdict, executive_summary, dimensions")
-            print(f"Fixed: Removed Claude from fallback chain, now using OpenAI only: gpt-4o-mini → gpt-4o → gpt-4.1")
-            print(f"Fixed: Added 120-second timeout per model to prevent hanging")
+            print(f"Expected Behavior:")
+            print(f"  1. Website crawling completes (look for 'Successfully crawled' in logs)")
+            print(f"  2. Web searches complete (5 searches)")
+            print(f"  3. LLM generates JSON response (compact prompt ~3K chars)")
+            print(f"  4. Response returns 200 OK with valid JSON")
+            print(f"Expected in response:")
+            print(f"  - report_id exists")
+            print(f"  - overall_score is a number")
+            print(f"  - brand_overview.outlets_count mentions '120'")
+            print(f"  - dimensions array has 8 items")
+            print(f"  - swot has all 4 categories")
             
             start_time = time.time()
             response = requests.post(
                 f"{self.api_url}/brand-audit", 
                 json=payload, 
                 headers={'Content-Type': 'application/json'},
-                timeout=180  # Allow up to 180 seconds total as requested
+                timeout=180  # 3 minutes timeout as specified
             )
             
             processing_time = time.time() - start_time
