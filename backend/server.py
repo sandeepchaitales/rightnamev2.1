@@ -2283,8 +2283,8 @@ async def brand_audit(request: BrandAuditRequest):
             logging.warning(f"Error parsing customer perception analysis: {e}")
             return None
     
-    # Build prompt
-    user_prompt = build_brand_audit_prompt(
+    # Build prompt - USE COMPACT VERSION for reliability
+    user_prompt = build_brand_audit_prompt_compact(
         brand_name=request.brand_name,
         brand_website=request.brand_website,
         competitor_1=request.competitor_1,
@@ -2293,6 +2293,8 @@ async def brand_audit(request: BrandAuditRequest):
         geography=request.geography,
         research_data=research_data
     )
+    
+    logging.info(f"Brand Audit: User prompt length: {len(user_prompt)} chars")
     
     # Models to try in order - GPT-4o-mini first (most reliable), then others
     models_to_try = [
@@ -2306,7 +2308,7 @@ async def brand_audit(request: BrandAuditRequest):
     last_error = None
     
     # Retry logic with exponential backoff for 502 errors
-    max_retries_per_model = 3
+    max_retries_per_model = 2  # Reduced from 3 to speed up failover
     
     for provider, model in models_to_try:
         for retry in range(max_retries_per_model):
@@ -2315,7 +2317,7 @@ async def brand_audit(request: BrandAuditRequest):
                 llm_chat = LlmChat(
                     api_key=EMERGENT_KEY,
                     session_id=f"brand_audit_{uuid.uuid4()}",
-                    system_message=BRAND_AUDIT_SYSTEM_PROMPT
+                    system_message=BRAND_AUDIT_SYSTEM_PROMPT_COMPACT  # USE COMPACT PROMPT
                 ).with_model(provider, model)
                 
                 user_message = UserMessage(text=user_prompt)
