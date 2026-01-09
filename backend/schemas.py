@@ -471,10 +471,10 @@ class MarketData(BaseModel):
 
 class StrategicRecommendation(BaseModel):
     """Strategic recommendation with timeline"""
-    title: str
+    title: Optional[str] = None
     current_state: Optional[str] = None
     root_cause: Optional[str] = None
-    recommended_action: str
+    recommended_action: Optional[str] = None  # Made optional, can use title as fallback
     expected_outcome: Optional[str] = None
     success_metric: Optional[str] = None
     priority: Optional[str] = Field(default="MEDIUM", description="HIGH/MEDIUM/LOW")
