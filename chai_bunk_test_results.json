@@ -1,0 +1,41 @@
+{
+  "test_focus": "Chai Bunk Brand Audit API Test - Compact Prompt",
+  "description": "Test Brand Audit API with Chai Bunk using compact prompt for faster processing",
+  "test_case": {
+    "brand_name": "Chai Bunk",
+    "brand_website": "https://www.chaibunk.com",
+    "competitor_1": "https://www.chaayos.com",
+    "competitor_2": "https://www.chaipoint.com",
+    "category": "Cafe/QSR",
+    "geography": "India"
+  },
+  "expected_behavior": [
+    "Website crawling completes (look for 'Successfully crawled' in logs)",
+    "Web searches complete (5 searches)",
+    "LLM generates JSON response (compact prompt ~3K chars)",
+    "Response returns 200 OK with valid JSON"
+  ],
+  "verification_points": [
+    "report_id exists",
+    "overall_score is a number",
+    "brand_overview.outlets_count mentions '120'",
+    "dimensions array has 8 items",
+    "swot has all 4 categories (strengths, weaknesses, opportunities, threats)"
+  ],
+  "timeout": "180 seconds (3 minutes)",
+  "summary": {
+    "tests_run": 1,
+    "tests_passed": 0,
+    "success_rate": 0.0,
+    "overall_success": false
+  },
+  "results": [
+    {
+      "test": "Brand Audit - Chai Bunk HTTP Error",
+      "success": false,
+      "details": "HTTP 520: Internal Server Error",
+      "timestamp": "2026-01-09T09:05:48.104768"
+    }
+  ],
+  "timestamp": "2026-01-09T09:05:48.105048"
+}
