@@ -1297,7 +1297,7 @@ class BrandEvaluationTester:
                 
                 self.log_test("Brand Audit - Chai Bunk Compact Prompt", True, 
                             f"All checks passed. Report ID: {report_id}, Overall Score: {overall_score}, Processing Time: {processing_time:.2f}s")
-                return Truelse
+                return True
                 
                 # Test 6: Check executive_summary is substantial text
                 exec_summary = data.get("executive_summary", "")
