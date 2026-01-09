@@ -2440,11 +2440,16 @@ async def brand_audit(request: BrandAuditRequest):
             except (ValueError, TypeError):
                 rating_val = None
         
+        # Handle outlets - convert to string if it's a number
+        outlets_val = comp.get('outlets')
+        if isinstance(outlets_val, (int, float)):
+            outlets_val = str(outlets_val)
+        
         competitors.append(CompetitorData(
             name=comp.get('name', ''),
             website=comp.get('website', ''),
             founded=comp.get('founded'),
-            outlets=comp.get('outlets'),
+            outlets=outlets_val,
             rating=rating_val,
             social_followers=comp.get('social_followers'),
             key_strength=comp.get('key_strength'),
