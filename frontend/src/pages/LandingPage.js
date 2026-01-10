@@ -268,6 +268,8 @@ const LandingPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const [progressMessage, setProgressMessage] = useState('');
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.brand_names.trim()) {
@@ -275,12 +277,13 @@ const LandingPage = () => {
       return;
     }
     setLoading(true);
+    setProgressMessage('Starting analysis...');
     
     // Show loading toast with progress info
-    const loadingToast = toast.loading(
+    const loadingToastId = toast.loading(
       <div className="flex flex-col gap-1">
         <span className="font-bold">🔍 Analyzing your brand...</span>
-        <span className="text-xs">This may take 2-4 minutes for comprehensive analysis</span>
+        <span className="text-xs" id="progress-text">Starting analysis...</span>
       </div>,
       { duration: 300000 }
     );
@@ -306,15 +309,27 @@ const LandingPage = () => {
       
       console.log('[LandingPage] Sending payload:', payload);
 
-      const result = await api.evaluate(payload);
+      // Use async evaluation with progress callback
+      const result = await api.evaluate(payload, (progress) => {
+        setProgressMessage(progress);
+        // Update toast message
+        toast.loading(
+          <div className="flex flex-col gap-1">
+            <span className="font-bold">🔍 Analyzing your brand...</span>
+            <span className="text-xs">{progress}</span>
+          </div>,
+          { id: loadingToastId, duration: 300000 }
+        );
+      });
+      
       console.log('[LandingPage] Received result:', result);
       
-      toast.dismiss(loadingToast);
+      toast.dismiss(loadingToastId);
       toast.success("Analysis complete!");
       navigate('/dashboard', { state: { data: result, query: payload } });
     } catch (error) {
       console.error('[LandingPage] Error:', error);
-      toast.dismiss(loadingToast);
+      toast.dismiss(loadingToastId);
       
       let errorMsg = "Evaluation failed. Please try again.";
       
@@ -343,6 +358,7 @@ const LandingPage = () => {
       );
     } finally {
       setLoading(false);
+      setProgressMessage('');
     }
   };
 
