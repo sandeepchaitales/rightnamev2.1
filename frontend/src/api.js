@@ -7,16 +7,21 @@ const API_URL = isProduction ? '/api' : `${process.env.REACT_APP_BACKEND_URL || 
 
 // Create axios instance with extended timeout for LLM operations
 const axiosInstance = axios.create({
-    timeout: 180000, // 3 minutes timeout for LLM operations
+    timeout: 300000, // 5 minutes timeout for comprehensive LLM operations
 });
 
 export const api = {
     evaluate: async (data) => {
         try {
+            console.log('[API] Starting evaluation request to:', `${API_URL}/evaluate`);
+            console.log('[API] Request data:', data);
             const response = await axiosInstance.post(`${API_URL}/evaluate`, data);
+            console.log('[API] Evaluation successful, response:', response.data);
             return response.data;
         } catch (error) {
-            console.error("Evaluation API Error:", error);
+            console.error("[API] Evaluation API Error:", error);
+            console.error("[API] Error response:", error.response?.data);
+            console.error("[API] Error status:", error.response?.status);
             throw error;
         }
     },
