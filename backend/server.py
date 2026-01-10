@@ -1521,16 +1521,20 @@ async def evaluate_brands(request: BrandEvaluationRequest):
             similarity_data.append(f"Similarity check unavailable for {brand}")
     similarity_context = "\n\n".join(similarity_data)
     
-    # 3. Trademark research data
-    trademark_research_data = []
+    # 3. Trademark research data - Store as DICT for later use
+    trademark_research_data = {}  # Dict keyed by brand name
+    trademark_research_prompts = []  # For LLM context
     for brand in request.brand_names:
         tm_data = all_brand_data[brand]["trademark"]
         if tm_data and tm_data.get("success"):
-            trademark_research_data.append(tm_data.get("prompt_data", ""))
-            logging.info(f"Trademark research for '{brand}': Success")
+            trademark_research_prompts.append(tm_data.get("prompt_data", ""))
+            # Store the full data for later use
+            trademark_research_data[brand] = tm_data.get("structured_data", tm_data)
+            logging.info(f"Trademark research for '{brand}': Success - stored structured data")
         else:
-            trademark_research_data.append(tm_data.get("prompt_data", f"Trademark research unavailable for {brand}") if tm_data else f"Trademark research unavailable for {brand}")
-    trademark_research_context = "\n\n".join(trademark_research_data)
+            trademark_research_prompts.append(tm_data.get("prompt_data", f"Trademark research unavailable for {brand}") if tm_data else f"Trademark research unavailable for {brand}")
+            trademark_research_data[brand] = None
+    trademark_research_context = "\n\n".join(trademark_research_prompts)
     
     # 4. Visibility data
     visibility_data = []
