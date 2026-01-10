@@ -1052,6 +1052,205 @@ Return ONLY the JSON, no other text."""
     return result
 
 
+# ============ VERIFICATION LAYER FOR BRAND CONFLICTS ============
+async def verify_brand_conflict(brand_name: str, industry: str = "", category: str = "", 
+                                 country: str = "India", matched_brand: str = None) -> dict:
+    """
+    VERIFICATION LAYER: When LLM flags a potential conflict, verify with real evidence.
+    
+    Runs multiple targeted searches to find REAL proof:
+    - Official website
+    - LinkedIn company page
+    - Trademark records
+    - Business registrations
+    - News articles
+    
+    Returns verified=True only if real evidence is found.
+    """
+    import aiohttp
+    import re
+    
+    logging.info(f"🔍 VERIFICATION: Starting evidence search for '{brand_name}'")
+    
+    result = {
+        "verified": False,
+        "evidence_score": 0,
+        "evidence_found": [],
+        "evidence_details": [],
+        "searches_performed": [],
+        "recommendation": "ALLOW"
+    }
+    
+    # Generate verification search queries
+    brand_clean = brand_name.strip()
+    brand_lower = brand_clean.lower()
+    
+    verification_queries = [
+        # Direct brand searches
+        f'"{brand_clean}"',
+        f'"{brand_clean}" {country}' if country else f'"{brand_clean}"',
+        f'"{brand_clean}" {industry}' if industry else None,
+        f'"{brand_clean}" {category}' if category else None,
+        
+        # Business verification
+        f'"{brand_clean}" company official website',
+        f'"{brand_clean}" brand founded',
+        
+        # Trademark verification
+        f'"{brand_clean}" trademark registered',
+        f'"{brand_clean}" trademark {country}' if country else None,
+        
+        # Platform verification
+        f'site:linkedin.com/company "{brand_clean}"',
+        f'"{brand_clean}" crunchbase OR angellist',
+        
+        # Domain verification
+        f'{brand_lower}.com',
+    ]
+    
+    # Remove None values
+    verification_queries = [q for q in verification_queries if q]
+    
+    # Evidence scoring weights
+    EVIDENCE_WEIGHTS = {
+        "official_website": 50,
+        "linkedin_company": 35,
+        "crunchbase": 35,
+        "trademark_record": 50,
+        "news_coverage": 20,
+        "social_media": 15,
+        "domain_active": 40,
+        "multiple_results": 15,
+        "exact_match_results": 25,
+    }
+    
+    REJECTION_THRESHOLD = 50  # Need at least 50 points to confirm rejection
+    
+    evidence_score = 0
+    evidence_found = []
+    evidence_details = []
+    
+    async def search_and_analyze(query: str) -> dict:
+        """Run a single search and analyze results for evidence"""
+        try:
+            search_url = f"https://www.bing.com/search?q={query.replace(' ', '+')}"
+            
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+                
+                async with session.get(search_url, headers=headers, 
+                                       timeout=aiohttp.ClientTimeout(total=8)) as response:
+                    if response.status == 200:
+                        html = await response.text()
+                        html_lower = html.lower()
+                        
+                        findings = {
+                            "query": query,
+                            "found": [],
+                            "score": 0
+                        }
+                        
+                        # Check for official website
+                        domain_patterns = [f"{brand_lower}.com", f"{brand_lower}.in", 
+                                          f"{brand_lower}.co", f"www.{brand_lower}"]
+                        for domain in domain_patterns:
+                            if domain in html_lower:
+                                findings["found"].append(f"Domain: {domain}")
+                                findings["score"] += EVIDENCE_WEIGHTS["official_website"]
+                                break
+                        
+                        # Check for LinkedIn company page
+                        if "linkedin.com/company" in html_lower and brand_lower in html_lower:
+                            findings["found"].append("LinkedIn company page found")
+                            findings["score"] += EVIDENCE_WEIGHTS["linkedin_company"]
+                        
+                        # Check for Crunchbase/AngelList
+                        if ("crunchbase.com" in html_lower or "angellist.com" in html_lower) and brand_lower in html_lower:
+                            findings["found"].append("Crunchbase/AngelList profile found")
+                            findings["score"] += EVIDENCE_WEIGHTS["crunchbase"]
+                        
+                        # Check for trademark mentions
+                        trademark_signals = ["trademark", "®", "™", "registered", "USPTO", "IP India", "WIPO"]
+                        for signal in trademark_signals:
+                            if signal.lower() in html_lower and brand_lower in html_lower:
+                                findings["found"].append(f"Trademark signal: {signal}")
+                                findings["score"] += EVIDENCE_WEIGHTS["trademark_record"]
+                                break
+                        
+                        # Check for news coverage
+                        news_sites = ["news", "press release", "announced", "launches", "funding"]
+                        for signal in news_sites:
+                            if signal in html_lower and brand_lower in html_lower:
+                                findings["found"].append("News/press coverage found")
+                                findings["score"] += EVIDENCE_WEIGHTS["news_coverage"]
+                                break
+                        
+                        # Check for social media presence
+                        social_sites = ["instagram.com", "facebook.com", "twitter.com", "x.com"]
+                        for site in social_sites:
+                            if site in html_lower and brand_lower in html_lower:
+                                findings["found"].append(f"Social media: {site}")
+                                findings["score"] += EVIDENCE_WEIGHTS["social_media"]
+                                break
+                        
+                        # Count exact brand mentions (strong signal if many)
+                        exact_mentions = html_lower.count(brand_lower)
+                        if exact_mentions >= 10:
+                            findings["found"].append(f"High mention count: {exact_mentions}")
+                            findings["score"] += EVIDENCE_WEIGHTS["exact_match_results"]
+                        elif exact_mentions >= 5:
+                            findings["found"].append(f"Multiple mentions: {exact_mentions}")
+                            findings["score"] += EVIDENCE_WEIGHTS["multiple_results"]
+                        
+                        return findings
+                        
+        except asyncio.TimeoutError:
+            logging.warning(f"Verification search timeout: {query}")
+        except Exception as e:
+            logging.warning(f"Verification search error for '{query}': {e}")
+        
+        return {"query": query, "found": [], "score": 0}
+    
+    # Run verification searches (limit to 6 most important for speed)
+    priority_queries = verification_queries[:6]
+    
+    tasks = [search_and_analyze(q) for q in priority_queries]
+    search_results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Aggregate evidence
+    for res in search_results:
+        if isinstance(res, dict) and res.get("found"):
+            evidence_score += res["score"]
+            evidence_found.extend(res["found"])
+            evidence_details.append({
+                "query": res["query"],
+                "findings": res["found"],
+                "score": res["score"]
+            })
+            result["searches_performed"].append(res["query"])
+    
+    # Remove duplicates from evidence
+    evidence_found = list(set(evidence_found))
+    
+    # Make decision
+    result["evidence_score"] = evidence_score
+    result["evidence_found"] = evidence_found
+    result["evidence_details"] = evidence_details
+    
+    if evidence_score >= REJECTION_THRESHOLD:
+        result["verified"] = True
+        result["recommendation"] = "REJECT"
+        logging.warning(f"🚨 VERIFIED CONFLICT: '{brand_name}' - Score: {evidence_score} - Evidence: {evidence_found[:3]}")
+    else:
+        result["verified"] = False
+        result["recommendation"] = "ALLOW"
+        logging.info(f"✅ FALSE POSITIVE: '{brand_name}' - Score: {evidence_score} (below threshold {REJECTION_THRESHOLD})")
+    
+    return result
+
+
 def check_famous_brand(brand_name: str) -> dict:
     """
     Check if brand name matches a famous brand (case-insensitive).
