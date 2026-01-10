@@ -82,6 +82,16 @@ api_router = APIRouter(prefix="/api")
 # Note: Timeout handling is done at the frontend level (5 min timeout)
 # and individual API calls have their own timeouts (WHOIS: 10s, DuckDuckGo: 15s, LLM: 120s)
 
+# ============ JOB-BASED ASYNC PROCESSING ============
+# In-memory job storage (for production, use Redis)
+evaluation_jobs = {}
+
+class JobStatus:
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
 # Country-specific ACTUAL trademark costs (not just currency conversion)
 # These are real trademark office costs for each country
 COUNTRY_TRADEMARK_COSTS = {
