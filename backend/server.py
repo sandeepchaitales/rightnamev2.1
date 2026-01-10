@@ -1528,9 +1528,9 @@ async def evaluate_brands(request: BrandEvaluationRequest):
         tm_data = all_brand_data[brand]["trademark"]
         if tm_data and tm_data.get("success"):
             trademark_research_prompts.append(tm_data.get("prompt_data", ""))
-            # Store the full data for later use
-            trademark_research_data[brand] = tm_data.get("structured_data", tm_data)
-            logging.info(f"Trademark research for '{brand}': Success - stored structured data")
+            # Store the actual result object for later use
+            trademark_research_data[brand] = tm_data.get("result")  # This is the TrademarkResearchResult dataclass
+            logging.info(f"Trademark research for '{brand}': Success - stored result object")
         else:
             trademark_research_prompts.append(tm_data.get("prompt_data", f"Trademark research unavailable for {brand}") if tm_data else f"Trademark research unavailable for {brand}")
             trademark_research_data[brand] = None
