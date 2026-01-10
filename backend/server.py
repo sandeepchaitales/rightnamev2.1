@@ -1208,8 +1208,76 @@ def check_famous_brand(brand_name: str) -> dict:
 async def root():
     return {"message": "RightName API is running"}
 
+# ============ JOB-BASED ASYNC EVALUATION ============
+@api_router.post("/evaluate/start")
+async def start_evaluation(request: BrandEvaluationRequest):
+    """Start evaluation job and return job_id immediately (prevents 524 timeout)"""
+    job_id = f"job_{uuid.uuid4().hex[:16]}"
+    
+    # Store job in pending state
+    evaluation_jobs[job_id] = {
+        "status": JobStatus.PENDING,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "request": request.model_dump(),
+        "result": None,
+        "error": None
+    }
+    
+    # Start background task
+    asyncio.create_task(run_evaluation_job(job_id, request))
+    
+    return {"job_id": job_id, "status": "pending", "message": "Evaluation started. Poll /api/evaluate/status/{job_id} for results."}
+
+@api_router.get("/evaluate/status/{job_id}")
+async def get_evaluation_status(job_id: str):
+    """Check status of evaluation job"""
+    if job_id not in evaluation_jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    job = evaluation_jobs[job_id]
+    
+    if job["status"] == JobStatus.COMPLETED:
+        return {
+            "status": "completed",
+            "result": job["result"]
+        }
+    elif job["status"] == JobStatus.FAILED:
+        return {
+            "status": "failed",
+            "error": job["error"]
+        }
+    else:
+        return {
+            "status": job["status"],
+            "message": "Evaluation in progress..."
+        }
+
+async def run_evaluation_job(job_id: str, request: BrandEvaluationRequest):
+    """Background task to run evaluation"""
+    try:
+        evaluation_jobs[job_id]["status"] = JobStatus.PROCESSING
+        logging.info(f"Job {job_id}: Starting evaluation for {request.brand_names}")
+        
+        # Call the actual evaluation function
+        result = await evaluate_brands_internal(request)
+        
+        # Store result
+        evaluation_jobs[job_id]["status"] = JobStatus.COMPLETED
+        evaluation_jobs[job_id]["result"] = result.model_dump() if hasattr(result, 'model_dump') else result
+        logging.info(f"Job {job_id}: Completed successfully")
+        
+    except Exception as e:
+        logging.error(f"Job {job_id}: Failed with error: {str(e)}")
+        evaluation_jobs[job_id]["status"] = JobStatus.FAILED
+        evaluation_jobs[job_id]["error"] = str(e)
+
+# Original synchronous endpoint (kept for backward compatibility)
 @api_router.post("/evaluate", response_model=BrandEvaluationResponse)
 async def evaluate_brands(request: BrandEvaluationRequest):
+    """Synchronous evaluation - may timeout on long requests. Use /evaluate/start for async."""
+    return await evaluate_brands_internal(request)
+
+async def evaluate_brands_internal(request: BrandEvaluationRequest):
     import time as time_module
     start_time = time_module.time()
     
