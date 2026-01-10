@@ -2200,15 +2200,29 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest):
                             
                             logging.warning(f"OVERRIDING LLM verdict for '{brand_name}' - Conflict detected: {matched_brand}")
                             
+                            # Get evidence details if available
+                            evidence_list = dynamic_result.get("evidence", [])
+                            evidence_score = dynamic_result.get("evidence_score", 0)
+                            evidence_str = ""
+                            if evidence_list:
+                                evidence_str = "\n\n📋 EVIDENCE FOUND:\n• " + "\n• ".join(evidence_list[:5])
+                            
                             # Force REJECT verdict
                             evaluation.brand_scores[i].verdict = "REJECT"
                             evaluation.brand_scores[i].namescore = 5.0  # Near-zero score
-                            evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is too similar to existing brand '{matched_brand}'. Using this name would constitute trademark infringement. This name CANNOT be used for any business purpose."
+                            
+                            # Build detailed rejection message
+                            if dynamic_result.get("confidence") == "VERIFIED":
+                                evaluation.brand_scores[i].summary = f"⛔ VERIFIED CONFLICT: '{brand_name}' conflicts with existing brand '{matched_brand}'.\n\nVerification Score: {evidence_score}/100{evidence_str}\n\nThis name CANNOT be used - trademark conflict confirmed."
+                            else:
+                                evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is too similar to existing brand '{matched_brand}'. Using this name would constitute trademark infringement. This name CANNOT be used for any business purpose."
                             
                             # Update trademark risk
                             evaluation.brand_scores[i].trademark_risk = {
                                 "overall_risk": "CRITICAL",
-                                "reason": f"Similar to existing brand '{matched_brand}'. Trademark infringement likely."
+                                "reason": f"Similar to existing brand '{matched_brand}'. Trademark infringement likely.",
+                                "evidence": evidence_list[:5] if evidence_list else [],
+                                "evidence_score": evidence_score
                             }
                             
                             # Clear recommendations (no point recommending anything for a rejected name)
