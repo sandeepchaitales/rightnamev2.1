@@ -160,13 +160,22 @@ def get_social_platforms(countries: List[str]) -> List[str]:
 
 
 async def check_domain_availability(domain: str) -> Dict:
-    """Check if a domain is available using whois"""
+    """Check if a domain is available using whois with timeout protection"""
     try:
-        w = whois.whois(domain)
-        if w.domain_name or w.creation_date:
-            return {"domain": domain, "status": "TAKEN", "available": False}
-        else:
-            return {"domain": domain, "status": "AVAILABLE", "available": True}
+        # Run WHOIS in executor with timeout to prevent blocking
+        loop = asyncio.get_event_loop()
+        try:
+            w = await asyncio.wait_for(
+                loop.run_in_executor(None, whois.whois, domain),
+                timeout=10.0  # 10 second timeout for WHOIS
+            )
+            if w.domain_name or w.creation_date:
+                return {"domain": domain, "status": "TAKEN", "available": False}
+            else:
+                return {"domain": domain, "status": "AVAILABLE", "available": True}
+        except asyncio.TimeoutError:
+            logging.warning(f"WHOIS timeout for {domain}")
+            return {"domain": domain, "status": "TIMEOUT", "available": None, "error": "WHOIS timeout"}
     except Exception as e:
         error_str = str(e).lower()
         if "no match" in error_str or "not found" in error_str or "no entries" in error_str:
