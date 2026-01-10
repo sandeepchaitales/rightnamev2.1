@@ -1814,22 +1814,64 @@ async def evaluate_brands(request: BrandEvaluationRequest):
                     if not brand_score.trademark_research:
                         brand_name = brand_score.brand_name
                         logging.warning(f"TRADEMARK RESEARCH MISSING for '{brand_name}' - Adding from collected data")
-                        # Use the trademark research we collected earlier
-                        if brand_name in trademark_research_data:
-                            tr_data = trademark_research_data[brand_name]
+                        
+                        # Get stored trademark data
+                        tr_stored = trademark_research_data.get(brand_name)
+                        
+                        if tr_stored:
                             from schemas import TrademarkResearchData, TrademarkConflictInfo, CompanyConflictInfo
-                            brand_score.trademark_research = TrademarkResearchData(
-                                overall_risk_score=tr_data.get('overall_risk_score', 5),
-                                registration_success_probability=tr_data.get('registration_success_probability', 70),
-                                opposition_probability=tr_data.get('opposition_probability', 30),
-                                trademark_conflicts=[TrademarkConflictInfo(**c) if isinstance(c, dict) else c for c in tr_data.get('trademark_conflicts', tr_data.get('conflicts', []))],
-                                company_conflicts=[CompanyConflictInfo(**c) if isinstance(c, dict) else c for c in tr_data.get('company_conflicts', [])],
-                                common_law_conflicts=tr_data.get('common_law_conflicts', []),
-                                critical_conflicts_count=tr_data.get('critical_conflicts_count', 0),
-                                high_risk_conflicts_count=tr_data.get('high_risk_conflicts_count', 0),
-                                total_conflicts_found=tr_data.get('total_conflicts_found', 0)
-                            )
-                            logging.info(f"Added trademark_research for '{brand_name}' from collected data")
+                            from dataclasses import asdict
+                            
+                            # Check if it's a TrademarkResearchResult dataclass
+                            if hasattr(tr_stored, 'overall_risk_score'):
+                                # It's the dataclass - convert to dict
+                                tr_data = asdict(tr_stored) if hasattr(tr_stored, '__dataclass_fields__') else tr_stored
+                            elif isinstance(tr_stored, dict) and 'result' in tr_stored:
+                                # It's the wrapper dict with 'result' key
+                                result_obj = tr_stored['result']
+                                if result_obj and hasattr(result_obj, '__dataclass_fields__'):
+                                    tr_data = asdict(result_obj)
+                                elif isinstance(result_obj, dict):
+                                    tr_data = result_obj
+                                else:
+                                    tr_data = None
+                            elif isinstance(tr_stored, dict):
+                                tr_data = tr_stored
+                            else:
+                                tr_data = None
+                            
+                            if tr_data:
+                                # Convert trademark_conflicts from dataclass to dict if needed
+                                tm_conflicts = []
+                                for c in tr_data.get('trademark_conflicts', []):
+                                    if hasattr(c, '__dataclass_fields__'):
+                                        tm_conflicts.append(asdict(c))
+                                    elif isinstance(c, dict):
+                                        tm_conflicts.append(c)
+                                
+                                co_conflicts = []
+                                for c in tr_data.get('company_conflicts', []):
+                                    if hasattr(c, '__dataclass_fields__'):
+                                        co_conflicts.append(asdict(c))
+                                    elif isinstance(c, dict):
+                                        co_conflicts.append(c)
+                                
+                                brand_score.trademark_research = TrademarkResearchData(
+                                    overall_risk_score=tr_data.get('overall_risk_score', 5),
+                                    registration_success_probability=tr_data.get('registration_success_probability', 70),
+                                    opposition_probability=tr_data.get('opposition_probability', 30),
+                                    trademark_conflicts=[TrademarkConflictInfo(**c) for c in tm_conflicts[:10]],
+                                    company_conflicts=[CompanyConflictInfo(**c) for c in co_conflicts[:10]],
+                                    common_law_conflicts=tr_data.get('common_law_conflicts', [])[:5],
+                                    critical_conflicts_count=tr_data.get('critical_conflicts_count', 0),
+                                    high_risk_conflicts_count=tr_data.get('high_risk_conflicts_count', 0),
+                                    total_conflicts_found=tr_data.get('total_conflicts_found', 0)
+                                )
+                                logging.info(f"✅ Added trademark_research for '{brand_name}' - Risk: {tr_data.get('overall_risk_score')}/10")
+                            else:
+                                logging.warning(f"Could not extract trademark data for '{brand_name}'")
+                        else:
+                            logging.warning(f"No stored trademark data for '{brand_name}'")
                     
                     # Add dimensions if missing
                     if not brand_score.dimensions or len(brand_score.dimensions) == 0:
