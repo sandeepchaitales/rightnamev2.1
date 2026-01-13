@@ -371,8 +371,22 @@ const LandingPage = () => {
     }
   };
 
+  // Get first brand name for the loader
+  const firstBrandName = formData.brand_names.split(',')[0]?.trim() || 'your brand';
+
   return (
     <>
+      {/* Elegant Loading Overlay */}
+      {loading && (
+        <ElegantLoader
+          brandName={firstBrandName}
+          progress={loadingProgress.progress}
+          currentStep={loadingProgress.currentStep}
+          completedSteps={loadingProgress.completedSteps}
+          etaSeconds={loadingProgress.etaSeconds}
+        />
+      )}
+      
       <Helmet>
         <title>RIGHTNAME | AI-Powered Brand Name Evaluation & Trademark Check</title>
         <meta name="description" content="Evaluate brand names instantly with AI. Check trademark conflicts, domain availability, social handles & get a consulting-grade NameScore report in 60 seconds. First report FREE!" />
