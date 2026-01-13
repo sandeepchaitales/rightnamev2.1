@@ -2299,14 +2299,17 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest):
                     correct_nice = get_nice_classification(request.category)
                     logging.info(f"🔧 NICE CLASS FIX: Brand '{brand_score.brand_name}', Category: '{request.category}', Correct class: {correct_nice}")
                     
-                    if brand_score.trademark_research:
-                        # Override incorrect NICE class
-                        current_nice = brand_score.trademark_research.nice_classification
-                        logging.info(f"🔧 Current NICE class: {current_nice}, Type: {type(current_nice)}")
-                        
-                        # Always override to ensure correct classification
-                        brand_score.trademark_research.nice_classification = correct_nice
-                        logging.info(f"✅ NICE class fixed for '{brand_score.brand_name}': Class {correct_nice['class_number']} - {correct_nice['class_description']}")
+                    # Handle both dict and Pydantic model cases
+                    tr = brand_score.trademark_research
+                    if tr:
+                        if isinstance(tr, dict):
+                            # It's a dict - update directly
+                            tr['nice_classification'] = correct_nice
+                            logging.info(f"✅ NICE class fixed (dict) for '{brand_score.brand_name}': Class {correct_nice['class_number']}")
+                        elif hasattr(tr, 'nice_classification'):
+                            # It's a Pydantic model - update attribute
+                            tr.nice_classification = correct_nice
+                            logging.info(f"✅ NICE class fixed (model) for '{brand_score.brand_name}': Class {correct_nice['class_number']}")
                     
                     # Add trademark_research if missing
                     if not brand_score.trademark_research:
