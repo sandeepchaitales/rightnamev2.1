@@ -91,13 +91,8 @@ export const api = {
         } catch (error) {
             console.error("[API] Evaluation API Error:", error);
             
-            // Fallback to synchronous endpoint if async fails
-            if (error.response?.status === 404 || error.code === 'ECONNABORTED') {
-                console.log('[API] Falling back to sync endpoint...');
-                const response = await axiosInstance.post(`${API_URL}/evaluate`, data);
-                return response.data;
-            }
-            
+            // Don't fallback to sync endpoint - it causes 524 timeouts
+            // Just re-throw the error for proper handling
             throw error;
         }
     },
