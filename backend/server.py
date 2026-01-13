@@ -2259,7 +2259,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     # Update progress - starting LLM analysis (the longest step)
     update_progress("analysis", 30)
     
-    max_retries = 2  # Fast failover to next model
+    max_retries = 3  # Increased retries per model
     last_error = None
     
     # Try each model with retries
