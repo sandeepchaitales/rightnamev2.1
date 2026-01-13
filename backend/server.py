@@ -1641,19 +1641,30 @@ async def start_evaluation(request: BrandEvaluationRequest):
     """Start evaluation job and return job_id immediately (prevents 524 timeout)"""
     job_id = f"job_{uuid.uuid4().hex[:16]}"
     
-    # Store job in pending state
+    # Store job in pending state with progress tracking
     evaluation_jobs[job_id] = {
         "status": JobStatus.PENDING,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "request": request.model_dump(),
         "result": None,
-        "error": None
+        "error": None,
+        # Progress tracking for elegant loading
+        "progress": 0,
+        "current_step": "starting",
+        "current_step_label": "Initializing analysis...",
+        "completed_steps": [],
+        "eta_seconds": 90
     }
     
     # Start background task
     asyncio.create_task(run_evaluation_job(job_id, request))
     
-    return {"job_id": job_id, "status": "pending", "message": "Evaluation started. Poll /api/evaluate/status/{job_id} for results."}
+    return {
+        "job_id": job_id, 
+        "status": "pending", 
+        "message": "Evaluation started. Poll /api/evaluate/status/{job_id} for results.",
+        "steps": EVALUATION_STEPS
+    }
 
 @api_router.get("/evaluate/status/{job_id}")
 async def get_evaluation_status(job_id: str):
