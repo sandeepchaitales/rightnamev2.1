@@ -290,14 +290,14 @@ const LandingPage = () => {
     setLoading(true);
     setProgressMessage('Starting analysis...');
     
-    // Show loading toast with progress info
-    const loadingToastId = toast.loading(
-      <div className="flex flex-col gap-1">
-        <span className="font-bold">🔍 Analyzing your brand...</span>
-        <span className="text-xs" id="progress-text">Starting analysis...</span>
-      </div>,
-      { duration: 300000 }
-    );
+    // Reset loading progress for elegant loader
+    setLoadingProgress({
+      progress: 5,
+      currentStep: 'starting',
+      currentStepLabel: 'Initializing analysis...',
+      completedSteps: [],
+      etaSeconds: 90
+    });
     
     try {
       const brandNames = formData.brand_names.split(',').map(n => n.trim()).filter(n => n);
@@ -320,27 +320,25 @@ const LandingPage = () => {
       
       console.log('[LandingPage] Sending payload:', payload);
 
-      // Use async evaluation with progress callback
-      const result = await api.evaluate(payload, (progress) => {
-        setProgressMessage(progress);
-        // Update toast message
-        toast.loading(
-          <div className="flex flex-col gap-1">
-            <span className="font-bold">🔍 Analyzing your brand...</span>
-            <span className="text-xs">{progress}</span>
-          </div>,
-          { id: loadingToastId, duration: 300000 }
-        );
+      // Use async evaluation with progress callback for elegant loader
+      const result = await api.evaluate(payload, (progressData) => {
+        // Update elegant loader state
+        setLoadingProgress({
+          progress: progressData.progress || 0,
+          currentStep: progressData.currentStep || 'processing',
+          currentStepLabel: progressData.currentStepLabel || 'Analyzing...',
+          completedSteps: progressData.completedSteps || [],
+          etaSeconds: progressData.etaSeconds || 60
+        });
+        setProgressMessage(progressData.currentStepLabel || 'Analyzing...');
       });
       
       console.log('[LandingPage] Received result:', result);
       
-      toast.dismiss(loadingToastId);
-      toast.success("Analysis complete!");
+      toast.success("Analysis complete! 🎉");
       navigate('/dashboard', { state: { data: result, query: payload } });
     } catch (error) {
       console.error('[LandingPage] Error:', error);
-      toast.dismiss(loadingToastId);
       
       let errorMsg = "Evaluation failed. Please try again.";
       
