@@ -2297,12 +2297,16 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest):
                     # ALWAYS fix NICE classification to match the category
                     # The LLM often returns Class 25 (Fashion) as default
                     correct_nice = get_nice_classification(request.category)
+                    logging.info(f"🔧 NICE CLASS FIX: Brand '{brand_score.brand_name}', Category: '{request.category}', Correct class: {correct_nice}")
+                    
                     if brand_score.trademark_research:
                         # Override incorrect NICE class
                         current_nice = brand_score.trademark_research.nice_classification
-                        if not current_nice or current_nice.get('class_number') != correct_nice['class_number']:
-                            logging.info(f"Fixing NICE class for '{brand_score.brand_name}': {current_nice} -> {correct_nice}")
-                            brand_score.trademark_research.nice_classification = correct_nice
+                        logging.info(f"🔧 Current NICE class: {current_nice}, Type: {type(current_nice)}")
+                        
+                        # Always override to ensure correct classification
+                        brand_score.trademark_research.nice_classification = correct_nice
+                        logging.info(f"✅ NICE class fixed for '{brand_score.brand_name}': Class {correct_nice['class_number']} - {correct_nice['class_description']}")
                     
                     # Add trademark_research if missing
                     if not brand_score.trademark_research:
