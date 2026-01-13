@@ -2594,7 +2594,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                 
                 # Retry on 502/Gateway/Service errors AND JSON/Validation errors
                 if any(x in error_msg for x in ["502", "BadGateway", "ServiceUnavailable", "Expecting", "JSON", "validation error", "control character"]):
-                    wait_time = 0.5 + random.uniform(0, 0.5)
+                    wait_time = (1.5 ** attempt) + random.uniform(0, 1)  # Exponential backoff: 1.5s, 2.25s, 3.4s
                     logging.warning(f"LLM Error ({model_provider}/{model_name}, Attempt {attempt+1}/{max_retries}): {error_msg[:100]}. Retrying in {wait_time:.2f}s...")
                     await asyncio.sleep(wait_time)
                     continue  # Continue to next retry attempt
@@ -2605,6 +2605,8 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         
         # After all retries exhausted for this model, log and continue to next model
         logging.warning(f"Moving to next model after {model_provider}/{model_name} failed...")
+        # Wait before trying next model
+        await asyncio.sleep(1)
             
     raise HTTPException(status_code=500, detail=f"Analysis failed: {str(last_error)}")
 
