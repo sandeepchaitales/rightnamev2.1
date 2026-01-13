@@ -952,6 +952,127 @@ def check_inappropriate_name(brand_name: str) -> dict:
     return {"is_inappropriate": False}
 
 
+async def google_search(query: str, num_results: int = 10) -> dict:
+    """
+    Search using Google Custom Search API.
+    Returns structured results with title, link, snippet.
+    Falls back to empty results on error.
+    """
+    if not GOOGLE_API_KEY or not GOOGLE_SEARCH_ENGINE_ID:
+        logging.warning("Google Search API not configured")
+        return {"items": [], "totalResults": "0", "error": "Not configured"}
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://www.googleapis.com/customsearch/v1",
+                params={
+                    "q": query,
+                    "cx": GOOGLE_SEARCH_ENGINE_ID,
+                    "key": GOOGLE_API_KEY,
+                    "num": min(num_results, 10)  # Google limits to 10 per request
+                },
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    total = data.get('searchInformation', {}).get('totalResults', '0')
+                    items = data.get('items', [])
+                    logging.info(f"🔍 Google Search '{query}': {len(items)} results, {total} total")
+                    return {
+                        "items": items,
+                        "totalResults": total,
+                        "error": None
+                    }
+                else:
+                    error_text = await response.text()
+                    logging.error(f"Google Search API error: {response.status} - {error_text[:200]}")
+                    return {"items": [], "totalResults": "0", "error": f"API error: {response.status}"}
+    except Exception as e:
+        logging.error(f"Google Search failed: {e}")
+        return {"items": [], "totalResults": "0", "error": str(e)}
+
+
+async def check_brand_exists_google(brand_name: str, category: str = "") -> dict:
+    """
+    Use Google Search API to check if a brand exists.
+    Returns evidence of brand existence with confidence score.
+    """
+    evidence = []
+    confidence = "LOW"
+    brand_found = False
+    
+    # Search queries to try
+    queries = [
+        f'"{brand_name}" brand',
+        f'"{brand_name}" {category}' if category else None,
+        f'"{brand_name}" official website',
+    ]
+    queries = [q for q in queries if q]
+    
+    total_signals = 0
+    brand_lower = brand_name.lower().replace(" ", "")
+    
+    for query in queries[:2]:  # Limit to 2 queries to save API quota
+        result = await google_search(query, num_results=5)
+        
+        if result.get("error"):
+            continue
+        
+        items = result.get("items", [])
+        total_results = int(result.get("totalResults", "0"))
+        
+        for item in items:
+            title = item.get("title", "").lower()
+            link = item.get("link", "").lower()
+            snippet = item.get("snippet", "").lower()
+            
+            # Check for strong signals
+            # 1. Official website (brand.com or getbrand.com)
+            if f"{brand_lower}.com" in link or f"get{brand_lower}.com" in link or f"{brand_lower}.in" in link:
+                evidence.append(f"Official website: {item.get('link')}")
+                total_signals += 3
+                brand_found = True
+            
+            # 2. E-commerce presence (Amazon, Flipkart, etc.)
+            if any(platform in link for platform in ["amazon.", "flipkart.", "jiomart.", "bigbasket.", "myntra."]):
+                if brand_lower in title or brand_lower in link:
+                    evidence.append(f"E-commerce: {item.get('link')}")
+                    total_signals += 2
+                    brand_found = True
+            
+            # 3. Social media presence
+            if any(platform in link for platform in ["facebook.com", "instagram.com", "twitter.com", "linkedin.com"]):
+                if brand_lower in link:
+                    evidence.append(f"Social media: {item.get('link')}")
+                    total_signals += 2
+                    brand_found = True
+            
+            # 4. Brand mentioned in title
+            if brand_lower in title.replace(" ", ""):
+                if "buy" in title or "shop" in title or "official" in title:
+                    evidence.append(f"Brand mention: {item.get('title')[:50]}")
+                    total_signals += 1
+                    brand_found = True
+    
+    # Determine confidence based on signals
+    if total_signals >= 5:
+        confidence = "HIGH"
+    elif total_signals >= 3:
+        confidence = "MEDIUM"
+    elif total_signals >= 1:
+        confidence = "LOW"
+    
+    logging.info(f"🔍 Google Brand Check '{brand_name}': found={brand_found}, signals={total_signals}, confidence={confidence}")
+    
+    return {
+        "exists": brand_found,
+        "confidence": confidence,
+        "evidence": evidence[:5],
+        "signals": total_signals
+    }
+
+
 async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     """
     LLM-FIRST BRAND CONFLICT DETECTION + WEB VERIFICATION
