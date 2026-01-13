@@ -829,8 +829,8 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
         "reason": ""
     }
     
-    # ========== SIMPLIFIED & RELIABLE BRAND DETECTION ==========
-    # PRINCIPLE: If web search finds the brand with category context, it's likely real
+    # ========== ENHANCED BRAND DETECTION WITH CATEGORY CONTEXT ==========
+    # PRINCIPLE: Search brand name WITH category to find existing businesses
     web_evidence = []
     brand_found_online = False
     web_confidence = "LOW"
@@ -840,9 +840,21 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
         brand_lower = brand_name.lower().replace(" ", "")
         brand_with_space = brand_name.lower()
         
-        # Simple search: exact brand name in quotes
-        search_query = f'"{brand_name}"'
-        search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
+        # ENHANCED: Search with category context for better detection
+        # E.g., "Cleevo" + "cleaning" will find Cleevo cleaning products
+        category_terms = category.lower() if category else ""
+        
+        # Multiple search queries for comprehensive detection
+        search_queries = [
+            f'"{brand_name}"',  # Basic exact match
+            f'"{brand_name}" {category_terms}' if category_terms else None,  # Brand + category
+            f'"{brand_name}" brand India' if category_terms else None,  # Brand in India
+            f'"{brand_name}" products' if category_terms else None,  # Brand products
+        ]
+        search_queries = [q for q in search_queries if q]
+        
+        combined_mentions = 0
+        combined_signals = []
         
         async with aiohttp.ClientSession() as session:
             headers = {
