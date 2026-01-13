@@ -1899,6 +1899,9 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     logging.info(f"Starting PARALLEL data gathering for {len(request.brand_names)} brand(s)...")
     parallel_start = time_module.time()
     
+    # Update progress - starting parallel checks
+    update_progress("domain", 70)
+    
     async def gather_domain_data(brand):
         """Check primary domain availability - wrapped for async"""
         try:
