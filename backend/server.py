@@ -888,19 +888,26 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
                             if "justdial" in html_lower and mentions >= 1:
                                 if "justdial" not in combined_signals:
                                     combined_signals.append("justdial")
-                            # E-commerce platforms (important for products like cleaning solutions)
-                            if "amazon" in html_lower and mentions >= 1:
-                                if "amazon" not in combined_signals:
-                                    combined_signals.append("amazon")
-                            if "flipkart" in html_lower and mentions >= 1:
-                                if "flipkart" not in combined_signals:
-                                    combined_signals.append("flipkart")
-                            if "jiomart" in html_lower and mentions >= 1:
-                                if "jiomart" not in combined_signals:
-                                    combined_signals.append("jiomart")
-                            if "bigbasket" in html_lower and mentions >= 1:
-                                if "bigbasket" not in combined_signals:
-                                    combined_signals.append("bigbasket")
+                            # E-commerce platforms - only count if brand appears in URL or result title
+                            # Avoid false positives from generic platform mentions on search results pages
+                            # Check for brand name in Amazon/Flipkart product URLs or result snippets
+                            brand_with_platform_patterns = [
+                                f"amazon.in/.*{brand_lower}",
+                                f"amazon.com/.*{brand_lower}",
+                                f"{brand_lower}.*amazon",
+                                f"flipkart.com/.*{brand_lower}",
+                                f"{brand_lower}.*flipkart",
+                                f"jiomart.com/.*{brand_lower}",
+                                f"{brand_lower}.*jiomart",
+                                f"bigbasket.com/.*{brand_lower}",
+                                f"{brand_lower}.*bigbasket",
+                            ]
+                            
+                            for pattern in brand_with_platform_patterns:
+                                if re.search(pattern, html_lower):
+                                    if "ecommerce" not in combined_signals:
+                                        combined_signals.append("ecommerce")
+                                    break
                                     
                             print(f"🔎 WEB QUERY '{search_query}': '{brand_name}' mentions={mentions}", flush=True)
                 except Exception as e:
