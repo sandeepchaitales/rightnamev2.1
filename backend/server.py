@@ -2123,6 +2123,14 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest):
     - Use the risk scores to inform your overall verdict
     - If Critical/High conflicts exist, strongly consider REJECT or CAUTION verdict
     - Include specific conflict names in your trademark_risk section
+    
+    ⚠️ NICE CLASSIFICATION (MANDATORY - USE THIS EXACT CLASS):
+    Based on category "{request.category}", the correct NICE classification is:
+    - Class Number: {get_nice_classification(request.category)['class_number']}
+    - Description: {get_nice_classification(request.category)['class_description']}
+    - Matched Term: {get_nice_classification(request.category)['matched_term']}
+    
+    IMPORTANT: In trademark_research.nice_classification, you MUST use this exact class. Do NOT use Class 25 (fashion) unless the category is actually clothing/apparel.
 
     ⚠️ CRITICAL: STRING SIMILARITY ANALYSIS (PRE-COMPUTED - DO NOT IGNORE!) ⚠️
     {similarity_context}
