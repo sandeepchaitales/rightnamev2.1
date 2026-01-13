@@ -1075,16 +1075,17 @@ async def check_brand_exists_google(brand_name: str, category: str = "") -> dict
 
 async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     """
-    LLM-FIRST BRAND CONFLICT DETECTION + WEB VERIFICATION
+    ENHANCED BRAND CONFLICT DETECTION using Google Search API + LLM verification
     
-    1. First do a quick web search to check if brand exists
-    2. Then use GPT-4o to analyze conflicts
+    1. First use Google Search API to check if brand exists (most reliable)
+    2. Fall back to Bing scraping if Google fails
+    3. Use LLM to verify and analyze conflicts
     """
     import re
     import aiohttp
     
-    print(f"🔍 LLM BRAND CHECK: '{brand_name}' in category '{category}'", flush=True)
-    logging.warning(f"🔍 LLM BRAND CHECK: '{brand_name}' in category '{category}'")
+    print(f"🔍 BRAND CHECK: '{brand_name}' in category '{category}'", flush=True)
+    logging.info(f"🔍 BRAND CHECK: '{brand_name}' in category '{category}'")
     
     result = {
         "exists": False,
@@ -1094,19 +1095,35 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
         "reason": ""
     }
     
-    # ========== ENHANCED BRAND DETECTION WITH CATEGORY CONTEXT ==========
-    # PRINCIPLE: Search brand name WITH category to find existing businesses
+    # ========== STEP 1: GOOGLE SEARCH API (Primary - Most Reliable) ==========
+    google_result = None
+    if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
+        print(f"🔍 Using Google Search API for '{brand_name}'...", flush=True)
+        google_result = await check_brand_exists_google(brand_name, category)
+        
+        if google_result["exists"] and google_result["confidence"] in ["HIGH", "MEDIUM"]:
+            print(f"✅ Google found '{brand_name}' with {google_result['confidence']} confidence!", flush=True)
+            result["exists"] = True
+            result["confidence"] = google_result["confidence"]
+            result["matched_brand"] = brand_name
+            result["evidence"] = google_result["evidence"]
+            result["reason"] = f"Brand '{brand_name}' found via Google Search: {', '.join(google_result['evidence'][:2])}"
+            
+            # If HIGH confidence from Google, skip further checks
+            if google_result["confidence"] == "HIGH":
+                logging.warning(f"🚨 GOOGLE HIGH CONFIDENCE: '{brand_name}' exists!")
+                return result
+    
+    # ========== STEP 2: BING FALLBACK (If Google not available or inconclusive) ==========
     web_evidence = []
     brand_found_online = False
     web_confidence = "LOW"
     
     try:
-        import re
         brand_lower = brand_name.lower().replace(" ", "")
         brand_with_space = brand_name.lower()
         
         # ENHANCED: Search with category context for better detection
-        # E.g., "Cleevo" + "cleaning" will find Cleevo cleaning products
         category_terms = category.lower() if category else ""
         
         # Multiple search queries for comprehensive detection
