@@ -19,6 +19,7 @@ import { Loader2, Sparkles, ShieldCheck, Globe2, BrainCircuit, Search, ArrowRigh
 import { toast } from "sonner";
 import { ReportCarousel } from '../components/ReportPreview';
 import Footer from '../components/Footer';
+import ElegantLoader from '../components/ElegantLoader';
 
 // Dynamic Cycling "Trusted By" Component
 const TrustedByCycler = () => {
