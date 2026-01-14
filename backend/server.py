@@ -110,10 +110,10 @@ EVALUATION_STEPS = [
     {"id": "analysis", "label": "Generating strategic report", "progress": 90},
 ]
 
-def get_job(job_id: str) -> dict:
-    """Get job from MongoDB (synchronous)"""
+async def get_job(job_id: str) -> dict:
+    """Get job from MongoDB (async)"""
     try:
-        job = db.evaluation_jobs.find_one({"job_id": job_id})
+        job = await db.evaluation_jobs.find_one({"job_id": job_id})
         if job:
             # Remove MongoDB _id field for JSON serialization
             job.pop('_id', None)
@@ -122,12 +122,12 @@ def get_job(job_id: str) -> dict:
         logging.error(f"Error getting job {job_id}: {e}")
         return None
 
-def save_job(job_id: str, job_data: dict):
-    """Save or update job in MongoDB (synchronous)"""
+async def save_job(job_id: str, job_data: dict):
+    """Save or update job in MongoDB (async)"""
     try:
         job_data["job_id"] = job_id
         job_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-        db.evaluation_jobs.update_one(
+        await db.evaluation_jobs.update_one(
             {"job_id": job_id},
             {"$set": job_data},
             upsert=True
