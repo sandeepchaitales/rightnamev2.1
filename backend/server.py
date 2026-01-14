@@ -91,8 +91,8 @@ api_router = APIRouter(prefix="/api")
 # and individual API calls have their own timeouts (WHOIS: 10s, DuckDuckGo: 15s, LLM: 120s)
 
 # ============ JOB-BASED ASYNC PROCESSING ============
-# In-memory job storage (for production, use Redis)
-evaluation_jobs = {}
+# Use MongoDB for persistent job storage (survives restarts)
+# Jobs collection: db.evaluation_jobs
 
 class JobStatus:
     PENDING = "pending"
@@ -110,24 +110,43 @@ EVALUATION_STEPS = [
     {"id": "analysis", "label": "Generating strategic report", "progress": 90},
 ]
 
+def get_job(job_id: str) -> dict:
+    """Get job from MongoDB"""
+    job = db.evaluation_jobs.find_one({"job_id": job_id})
+    return job
+
+def save_job(job_id: str, job_data: dict):
+    """Save or update job in MongoDB"""
+    job_data["job_id"] = job_id
+    job_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    db.evaluation_jobs.update_one(
+        {"job_id": job_id},
+        {"$set": job_data},
+        upsert=True
+    )
+
 def update_job_progress(job_id: str, step_id: str, eta_seconds: int = None):
-    """Update job progress with current step"""
-    if job_id in evaluation_jobs:
-        step = next((s for s in EVALUATION_STEPS if s["id"] == step_id), None)
-        if step:
-            evaluation_jobs[job_id]["current_step"] = step_id
-            evaluation_jobs[job_id]["current_step_label"] = step["label"]
-            evaluation_jobs[job_id]["progress"] = step["progress"]
-            evaluation_jobs[job_id]["eta_seconds"] = eta_seconds
-            
-            # Mark completed steps
-            completed = []
-            for s in EVALUATION_STEPS:
-                if s["progress"] <= step["progress"]:
-                    completed.append(s["id"])
-                else:
-                    break
-            evaluation_jobs[job_id]["completed_steps"] = completed
+    """Update job progress in MongoDB"""
+    step = next((s for s in EVALUATION_STEPS if s["id"] == step_id), None)
+    if step:
+        completed = []
+        for s in EVALUATION_STEPS:
+            if s["progress"] <= step["progress"]:
+                completed.append(s["id"])
+            else:
+                break
+        
+        db.evaluation_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {
+                "current_step": step_id,
+                "current_step_label": step["label"],
+                "progress": step["progress"],
+                "eta_seconds": eta_seconds,
+                "completed_steps": completed,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
 
 # Country-specific ACTUAL trademark costs (not just currency conversion)
 # These are real trademark office costs for each country
