@@ -1934,14 +1934,14 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     import time as time_module
     start_time = time_module.time()
     
-    # Helper function to update progress
-    def update_progress(step_id: str, eta: int = None):
+    # Helper function to update progress (async)
+    async def update_progress(step_id: str, eta: int = None):
         if job_id:
-            update_job_progress(job_id, step_id, eta)
+            await update_job_progress(job_id, step_id, eta)
     
     # ==================== FIRST CHECK: INAPPROPRIATE/OFFENSIVE NAMES ====================
     # Check for vulgar, offensive, or phonetically inappropriate names FIRST
-    update_progress("domain", 80)  # Start with domain check step
+    await update_progress("domain", 80)  # Start with domain check step
     
     inappropriate_rejections = {}
     for brand in request.brand_names:
