@@ -320,6 +320,64 @@ class FinalAssessment(BaseModel):
     recommendations: List[Recommendation]
     alternative_path: str
 
+# ============ McKINSEY THREE-QUESTION FRAMEWORK ============
+class BenefitMapItem(BaseModel):
+    """Maps name traits to user perceptions"""
+    name_trait: str = Field(description="Specific trait of the name (phonetic, linguistic, etc.)")
+    user_perception: str = Field(description="What users perceive from this trait")
+    benefit_type: str = Field(description="Functional or Emotional")
+
+class BenefitsExperiences(BaseModel):
+    """Module 1: Semantic Audit - Benefits & Experiences"""
+    linguistic_roots: str = Field(description="Analysis of linguistic origins and roots")
+    phonetic_analysis: str = Field(description="How the name sounds and feels")
+    emotional_promises: List[str] = Field(default=[], description="Emotional benefits communicated")
+    functional_benefits: List[str] = Field(default=[], description="Functional benefits implied")
+    benefit_map: List[BenefitMapItem] = Field(default=[], description="Mapping of name traits to perceptions")
+    target_persona_fit: str = Field(description="How well name fits target audience")
+
+class CompetitorNaming(BaseModel):
+    """Competitor with similar naming style"""
+    name: str
+    similarity_aspect: str = Field(description="What aspect is similar")
+    risk_level: str = Field(description="HIGH, MEDIUM, LOW")
+
+class Distinctiveness(BaseModel):
+    """Module 2: Market Comparison - Distinctiveness"""
+    distinctiveness_score: int = Field(ge=1, le=10, description="Score from 1-10")
+    category_noise_level: str = Field(description="HIGH, MEDIUM, LOW - how crowded the naming space is")
+    industry_comparison: str = Field(description="Comparison against industry leaders")
+    naming_tropes_analysis: str = Field(description="Analysis of common naming patterns in industry")
+    similar_competitors: List[CompetitorNaming] = Field(default=[], description="3 competitors with similar naming")
+    differentiation_opportunities: List[str] = Field(default=[], description="How to stand out more")
+
+class BrandArchitecture(BaseModel):
+    """Module 3: Strategic Fit - Brand Architecture"""
+    elasticity_score: int = Field(ge=1, le=10, description="Can it grow from product to portfolio?")
+    elasticity_analysis: str = Field(description="Detailed elasticity assessment")
+    recommended_architecture: str = Field(description="Standalone House Brand or Sub-brand")
+    architecture_rationale: str = Field(description="Why this architecture fits")
+    memorability_index: int = Field(ge=1, le=10, description="How memorable is the name?")
+    memorability_factors: List[str] = Field(default=[], description="What makes it memorable/forgettable")
+    global_scalability: str = Field(description="Can it work globally?")
+
+class AlternativeDirection(BaseModel):
+    """Alternative naming direction based on McKinsey principles"""
+    direction_name: str = Field(description="Name of the direction, e.g., 'Descriptive Approach'")
+    example_names: List[str] = Field(description="2-3 example names in this direction")
+    rationale: str = Field(description="Why this direction could work better")
+    mckinsey_principle: str = Field(description="Which McKinsey principle this follows")
+
+class McKinseyFrameworkAnalysis(BaseModel):
+    """Complete McKinsey Three-Question Framework Analysis"""
+    benefits_experiences: BenefitsExperiences = Field(description="Module 1: Semantic Audit")
+    distinctiveness: Distinctiveness = Field(description="Module 2: Market Comparison")
+    brand_architecture: BrandArchitecture = Field(description="Module 3: Strategic Fit")
+    executive_recommendation: str = Field(description="PROCEED, REFINE, or PIVOT")
+    recommendation_rationale: str = Field(description="Detailed explanation of recommendation")
+    critical_assessment: str = Field(description="Honest, critical assessment - no generic praise")
+    alternative_directions: List[AlternativeDirection] = Field(default=[], description="3 alternative directions if name is weak")
+
 class AlternativeNameSuggestion(BaseModel):
     name: str
     rationale: str
