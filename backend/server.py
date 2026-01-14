@@ -111,19 +111,29 @@ EVALUATION_STEPS = [
 ]
 
 def get_job(job_id: str) -> dict:
-    """Get job from MongoDB"""
-    job = db.evaluation_jobs.find_one({"job_id": job_id})
-    return job
+    """Get job from MongoDB (synchronous)"""
+    try:
+        job = db.evaluation_jobs.find_one({"job_id": job_id})
+        if job:
+            # Remove MongoDB _id field for JSON serialization
+            job.pop('_id', None)
+        return job
+    except Exception as e:
+        logging.error(f"Error getting job {job_id}: {e}")
+        return None
 
 def save_job(job_id: str, job_data: dict):
-    """Save or update job in MongoDB"""
-    job_data["job_id"] = job_id
-    job_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    db.evaluation_jobs.update_one(
-        {"job_id": job_id},
-        {"$set": job_data},
-        upsert=True
-    )
+    """Save or update job in MongoDB (synchronous)"""
+    try:
+        job_data["job_id"] = job_id
+        job_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        db.evaluation_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": job_data},
+            upsert=True
+        )
+    except Exception as e:
+        logging.error(f"Error saving job {job_id}: {e}")
 
 def update_job_progress(job_id: str, step_id: str, eta_seconds: int = None):
     """Update job progress in MongoDB"""
