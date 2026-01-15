@@ -3413,11 +3413,11 @@ async def brand_audit(request: BrandAuditRequest):
     
     logging.info(f"Brand Audit: User prompt length: {len(user_prompt)} chars")
     
-    # Models to try in order - GPT-4o-mini first (most reliable), then others
+    # Models to try - Claude first (most stable), then OpenAI
     models_to_try = [
-        ("openai", "gpt-4o-mini"),    # Most reliable, fastest
-        ("openai", "gpt-4o"),         # Higher quality
-        ("anthropic", "claude-sonnet-4-20250514"),  # Claude backup
+        ("anthropic", "claude-sonnet-4-20250514"),  # Primary - Most stable
+        ("openai", "gpt-4o-mini"),    # Fallback 1
+        ("openai", "gpt-4o"),         # Fallback 2
     ]
     
     content = ""
