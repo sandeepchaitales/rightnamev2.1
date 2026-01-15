@@ -1807,7 +1807,7 @@ const McKinseyAnalysisSection = ({ mckinsey }) => {
                 <div className={`rounded-2xl p-6 border-2 ${getRecommendationColor(executive_recommendation)}`}>
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
-                            <div className="text-sm font-medium opacity-80">McKinsey Framework Verdict</div>
+                            <div className="text-sm font-medium opacity-80">Three-Pillar Assessment Verdict</div>
                             <div className="text-3xl font-black">{executive_recommendation || 'ANALYZING'}</div>
                         </div>
                         <div className="flex-1 max-w-xl">
@@ -2051,7 +2051,7 @@ const McKinseyAnalysisSection = ({ mckinsey }) => {
                             </div>
                             <div>
                                 <h4 className="font-bold text-slate-800">Alternative Naming Directions</h4>
-                                <p className="text-xs text-slate-500">Based on McKinsey principles</p>
+                                <p className="text-xs text-slate-500">Based on Three-Pillar principles</p>
                             </div>
                         </div>
                         
@@ -2429,7 +2429,7 @@ const Dashboard = () => {
                     <section className="print-new-page">
                         <SectionHeader 
                             icon={Briefcase} 
-                            title="McKinsey Brand Framework" 
+                            title="Three-Pillar Brand Assessment" 
                             subtitle="Three-Question strategic analysis" 
                             color="violet" 
                             badge={brand.mckinsey_analysis?.executive_recommendation}
@@ -2437,7 +2437,7 @@ const Dashboard = () => {
                         {isAuthenticated ? (
                             <McKinseyAnalysisSection mckinsey={brand.mckinsey_analysis} />
                         ) : (
-                            <LockedSection title="McKinsey Brand Framework Analysis" onUnlock={handleRegister} />
+                            <LockedSection title="Three-Pillar Brand Assessment Analysis" onUnlock={handleRegister} />
                         )}
                     </section>
                 )}
