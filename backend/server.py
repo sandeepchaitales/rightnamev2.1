@@ -2744,9 +2744,42 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
             
             return {"model": "FALLBACK/no-llm", "data": fallback_data}
     
-    # Execute the race
+    # Execute the race with HARD 35 second timeout wrapper
     gc.collect()  # Clean up before heavy operation
-    race_result = await race_with_fallback()
+    
+    try:
+        # Wrap ENTIRE race in asyncio.wait_for - this WILL cancel after 35s
+        race_result = await asyncio.wait_for(race_with_fallback(), timeout=35.0)
+    except asyncio.TimeoutError:
+        # HARD TIMEOUT - Generate fallback report
+        logging.warning(f"⏰ HARD TIMEOUT: 35s limit reached. Generating fallback report.")
+        brand_name = request.brand_names[0] if request.brand_names else "Brand"
+        
+        # Get collected data
+        domain_data = domain_results.get(brand_name)
+        social_data = social_results.get(brand_name)
+        trademark_data_dict = None
+        
+        if brand_name in trademark_research_data:
+            tr = trademark_research_data[brand_name]
+            if hasattr(tr, '__dataclass_fields__'):
+                from dataclasses import asdict
+                trademark_data_dict = asdict(tr)
+            elif isinstance(tr, dict):
+                trademark_data_dict = tr.get('result', tr) if 'result' in tr else tr
+        
+        race_result = {
+            "model": "FALLBACK/timeout",
+            "data": generate_fallback_report(
+                brand_name=brand_name,
+                category=request.category,
+                domain_data=domain_data,
+                social_data=social_data,
+                trademark_data=trademark_data_dict,
+                visibility_data=visibility_results.get(brand_name)
+            )
+        }
+    
     winning_model = race_result["model"]
     data = race_result["data"]
     
