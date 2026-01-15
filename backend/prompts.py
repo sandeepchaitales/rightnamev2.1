@@ -885,8 +885,11 @@ Return ONLY valid JSON.
       ],
       
       "final_assessment": {
-          "verdict_statement": "A definitive, partner-level final judgment.",
-          "suitability_score": 8.5,
+          "_CRITICAL_RULE": "MUST BE CONSISTENT WITH MAIN VERDICT - If verdict is GO, suitability_score MUST be 70+. If verdict is REJECT, suitability_score MUST be below 30.",
+          "_CONFLICT_FILTER_RULE": "IGNORE any conflicts marked as 'Different Intent', 'NAME TWIN', 'Different Class', or 'False Positive' in trademark_research. Only cite conflicts that are SAME CLASS + SAME INTENT as risks.",
+          "_NICE_CLASS_RULE": "A conflict is ONLY relevant if it's in the SAME NICE Class as the user's category. Class 9 (Software) conflicts are IRRELEVANT to Class 3 (Cosmetics). Do NOT cite cross-class conflicts as risks.",
+          "verdict_statement": "MUST MATCH the main verdict. If main verdict is GO, this must be positive. If REJECT, this must explain why.",
+          "suitability_score": "1-10 scale. GO verdict = 7-10. CAUTION = 4-6. REJECT = 1-3. NEVER contradict main verdict.",
           "dimension_breakdown": [
               {"Linguistic Foundation": 9.0},
               {"Market Viability": 8.0}
@@ -896,7 +899,7 @@ Return ONLY valid JSON.
               {"title": "Brand Narrative", "content": "Detailed storytelling strategy..."},
               {"title": "Launch Tactics", "content": "Detailed GTM steps..."}
           ],
-          "alternative_path": "A fully developed 'Plan B' strategy."
+          "alternative_path": "A fully developed 'Plan B' strategy. Only include if verdict is CAUTION or REJECT."
       },
       
       "mckinsey_analysis": {
