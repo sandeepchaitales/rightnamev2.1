@@ -2745,109 +2745,107 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
             logging.info(f"Added {len(brand_score.dimensions)} dimensions for '{brand_score.brand_name}'")
         else:
             logging.info(f"Dimensions OK for '{brand_score.brand_name}': {len(brand_score.dimensions)} dimensions")
+    
+    # OVERRIDE: Force REJECT verdict for brands caught by dynamic search
+    if all_rejections:
+        for i, brand_score in enumerate(evaluation.brand_scores):
+            brand_name = brand_score.brand_name
+            if brand_name in all_rejections or brand_name.lower() in [b.lower() for b in all_rejections.keys()]:
+                rejection_info = all_rejections.get(brand_name) or all_rejections.get(brand_name.upper()) or list(all_rejections.values())[0]
+                matched_brand = rejection_info.get('matched_brand', 'Unknown')
                 
-                # OVERRIDE: Force REJECT verdict for brands caught by dynamic search
-                if all_rejections:
-                    for i, brand_score in enumerate(evaluation.brand_scores):
-                        brand_name = brand_score.brand_name
-                        if brand_name in all_rejections or brand_name.lower() in [b.lower() for b in all_rejections.keys()]:
-                            rejection_info = all_rejections.get(brand_name) or all_rejections.get(brand_name.upper()) or list(all_rejections.values())[0]
-                            matched_brand = rejection_info.get('matched_brand', 'Unknown')
-                            
-                            logging.warning(f"OVERRIDING LLM verdict for '{brand_name}' - Conflict detected: {matched_brand}")
-                            
-                            # Get evidence details if available
-                            evidence_list = dynamic_result.get("evidence", [])
-                            evidence_score = dynamic_result.get("evidence_score", 0)
-                            evidence_str = ""
-                            if evidence_list:
-                                evidence_str = "\n\n📋 EVIDENCE FOUND:\n• " + "\n• ".join(evidence_list[:5])
-                            
-                            # Force REJECT verdict
-                            evaluation.brand_scores[i].verdict = "REJECT"
-                            evaluation.brand_scores[i].namescore = 5.0  # Near-zero score
-                            
-                            # Build detailed rejection message
-                            if dynamic_result.get("confidence") == "VERIFIED":
-                                evaluation.brand_scores[i].summary = f"⛔ VERIFIED CONFLICT: '{brand_name}' conflicts with existing brand '{matched_brand}'.\n\nVerification Score: {evidence_score}/100{evidence_str}\n\nThis name CANNOT be used - trademark conflict confirmed."
-                            else:
-                                evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is too similar to existing brand '{matched_brand}'. Using this name would constitute trademark infringement. This name CANNOT be used for any business purpose."
-                            
-                            # Update trademark risk
-                            evaluation.brand_scores[i].trademark_risk = {
-                                "overall_risk": "CRITICAL",
-                                "reason": f"Similar to existing brand '{matched_brand}'. Trademark infringement likely.",
-                                "evidence": evidence_list[:5] if evidence_list else [],
-                                "evidence_score": evidence_score
-                            }
-                            
-                            # ============ FIX: UPDATE TRADEMARK RESEARCH TO REFLECT REJECTION ============
-                            # The trademark_research section should match the rejection verdict
-                            from schemas import TrademarkResearchData, TrademarkConflictInfo
-                            evaluation.brand_scores[i].trademark_research = TrademarkResearchData(
-                                overall_risk_score=9,  # HIGH RISK
-                                registration_success_probability=10,  # LOW SUCCESS
-                                opposition_probability=90,  # HIGH OPPOSITION RISK
-                                trademark_conflicts=[
-                                    TrademarkConflictInfo(
-                                        name=matched_brand,
-                                        similarity=95,
-                                        status="ACTIVE",
-                                        owner=f"{matched_brand} (Existing Brand)",
-                                        risk_level="CRITICAL",
-                                        jurisdiction="Global"
-                                    )
-                                ],
-                                company_conflicts=[],
-                                common_law_conflicts=[f"Conflict with {matched_brand}"],
-                                critical_conflicts_count=1,
-                                high_risk_conflicts_count=1,
-                                total_conflicts_found=1
-                            )
-                            
-                            # ============ FIX: UPDATE DIMENSIONS TO REFLECT REJECTION ============
-                            # Trademark & Legal Sensitivity should be 0-1, not 7+
-                            if evaluation.brand_scores[i].dimensions:
-                                for dim in evaluation.brand_scores[i].dimensions:
-                                    if "trademark" in dim.name.lower() or "legal" in dim.name.lower():
-                                        dim.score = 1.0
-                                        dim.reasoning = f"**CRITICAL CONFLICT:**\nBrand name conflicts with existing trademark '{matched_brand}'. Registration would be rejected or opposed.\n\n**LEGAL RISK:**\nHigh risk of trademark infringement lawsuit if used."
-                            
-                            # Clear recommendations (no point recommending anything for a rejected name)
-                            if evaluation.brand_scores[i].domain_analysis:
-                                evaluation.brand_scores[i].domain_analysis.alternatives = []
-                                evaluation.brand_scores[i].domain_analysis.strategy_note = "N/A - Name rejected due to brand conflict"
-                            if evaluation.brand_scores[i].multi_domain_availability:
-                                evaluation.brand_scores[i].multi_domain_availability.recommended_domain = "N/A - Name rejected"
-                                evaluation.brand_scores[i].multi_domain_availability.acquisition_strategy = "N/A - Name rejected"
-                            if evaluation.brand_scores[i].social_availability:
-                                evaluation.brand_scores[i].social_availability.recommendation = "N/A - Name rejected due to brand conflict"
-                            if evaluation.brand_scores[i].competitor_analysis:
-                                evaluation.brand_scores[i].competitor_analysis.suggested_pricing = "N/A - Name rejected"
-                            evaluation.brand_scores[i].positioning_fit = "N/A - Name rejected due to famous brand trademark conflict"
+                logging.warning(f"OVERRIDING LLM verdict for '{brand_name}' - Conflict detected: {matched_brand}")
                 
-                # Generate report_id and save to database
-                report_id = f"report_{uuid.uuid4().hex[:16]}"
-                doc = evaluation.model_dump()
-                doc['report_id'] = report_id
-                doc['created_at'] = datetime.now(timezone.utc).isoformat()
-                doc['request'] = request.model_dump()
-                await db.evaluations.insert_one(doc)
+                # Get evidence details if available
+                evidence_list = dynamic_result.get("evidence", [])
+                evidence_score = dynamic_result.get("evidence_score", 0)
+                evidence_str = ""
+                if evidence_list:
+                    evidence_str = "\n\n📋 EVIDENCE FOUND:\n• " + "\n• ".join(evidence_list[:5])
                 
-                # Set report_id in the evaluation object
-                evaluation.report_id = report_id
+                # Force REJECT verdict
+                evaluation.brand_scores[i].verdict = "REJECT"
+                evaluation.brand_scores[i].namescore = 5.0
                 
-                # ============ FINAL FALLBACK: Ensure trademark_research is NEVER null ============
-                for brand_score in evaluation.brand_scores:
-                    if not brand_score.trademark_research:
-                        logging.warning(f"⚠️ trademark_research is null for '{brand_score.brand_name}' - Adding default values")
-                        brand_score.trademark_research = TrademarkResearchData(
-                            nice_classification=get_nice_classification(request.category),
-                            overall_risk_score=3,  # Low risk for unique names
-                            registration_success_probability=85,
-                            opposition_probability=15,
-                            trademark_conflicts=[],
-                            company_conflicts=[],
+                # Build detailed rejection message
+                if dynamic_result.get("confidence") == "VERIFIED":
+                    evaluation.brand_scores[i].summary = f"⛔ VERIFIED CONFLICT: '{brand_name}' conflicts with existing brand '{matched_brand}'.\n\nVerification Score: {evidence_score}/100{evidence_str}\n\nThis name CANNOT be used - trademark conflict confirmed."
+                else:
+                    evaluation.brand_scores[i].summary = f"⛔ FATAL CONFLICT: '{brand_name}' is too similar to existing brand '{matched_brand}'. Using this name would constitute trademark infringement. This name CANNOT be used for any business purpose."
+                
+                # Update trademark risk
+                evaluation.brand_scores[i].trademark_risk = {
+                    "overall_risk": "CRITICAL",
+                    "reason": f"Similar to existing brand '{matched_brand}'. Trademark infringement likely.",
+                    "evidence": evidence_list[:5] if evidence_list else [],
+                    "evidence_score": evidence_score
+                }
+                
+                # Update trademark research to reflect rejection
+                from schemas import TrademarkResearchData, TrademarkConflictInfo
+                evaluation.brand_scores[i].trademark_research = TrademarkResearchData(
+                    overall_risk_score=9,
+                    registration_success_probability=10,
+                    opposition_probability=90,
+                    trademark_conflicts=[
+                        TrademarkConflictInfo(
+                            name=matched_brand,
+                            similarity=95,
+                            status="ACTIVE",
+                            owner=f"{matched_brand} (Existing Brand)",
+                            risk_level="CRITICAL",
+                            jurisdiction="Global"
+                        )
+                    ],
+                    company_conflicts=[],
+                    common_law_conflicts=[f"Conflict with {matched_brand}"],
+                    critical_conflicts_count=1,
+                    high_risk_conflicts_count=1,
+                    total_conflicts_found=1
+                )
+                
+                # Update dimensions to reflect rejection
+                if evaluation.brand_scores[i].dimensions:
+                    for dim in evaluation.brand_scores[i].dimensions:
+                        if "trademark" in dim.name.lower() or "legal" in dim.name.lower():
+                            dim.score = 1.0
+                            dim.reasoning = f"**CRITICAL CONFLICT:**\nBrand name conflicts with existing trademark '{matched_brand}'. Registration would be rejected or opposed.\n\n**LEGAL RISK:**\nHigh risk of trademark infringement lawsuit if used."
+                
+                # Clear recommendations
+                if evaluation.brand_scores[i].domain_analysis:
+                    evaluation.brand_scores[i].domain_analysis.alternatives = []
+                    evaluation.brand_scores[i].domain_analysis.strategy_note = "N/A - Name rejected due to brand conflict"
+                if evaluation.brand_scores[i].multi_domain_availability:
+                    evaluation.brand_scores[i].multi_domain_availability.recommended_domain = "N/A - Name rejected"
+                    evaluation.brand_scores[i].multi_domain_availability.acquisition_strategy = "N/A - Name rejected"
+                if evaluation.brand_scores[i].social_availability:
+                    evaluation.brand_scores[i].social_availability.recommendation = "N/A - Name rejected due to brand conflict"
+                if evaluation.brand_scores[i].competitor_analysis:
+                    evaluation.brand_scores[i].competitor_analysis.suggested_pricing = "N/A - Name rejected"
+                evaluation.brand_scores[i].positioning_fit = "N/A - Name rejected due to famous brand trademark conflict"
+    
+    # Generate report_id and save to database
+    report_id = f"report_{uuid.uuid4().hex[:16]}"
+    doc = evaluation.model_dump()
+    doc['report_id'] = report_id
+    doc['created_at'] = datetime.now(timezone.utc).isoformat()
+    doc['request'] = request.model_dump()
+    await db.evaluations.insert_one(doc)
+    
+    # Set report_id in the evaluation object
+    evaluation.report_id = report_id
+    
+    # Final fallback: Ensure trademark_research is NEVER null
+    for brand_score in evaluation.brand_scores:
+        if not brand_score.trademark_research:
+            logging.warning(f"⚠️ trademark_research is null for '{brand_score.brand_name}' - Adding default values")
+            brand_score.trademark_research = TrademarkResearchData(
+                nice_classification=get_nice_classification(request.category),
+                overall_risk_score=3,
+                registration_success_probability=85,
+                opposition_probability=15,
+                trademark_conflicts=[],
+                company_conflicts=[],
                             common_law_conflicts=[],
                             critical_conflicts_count=0,
                             high_risk_conflicts_count=0,
