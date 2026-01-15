@@ -2510,9 +2510,15 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     for model_provider, model_name in models_to_try:
         logging.info(f"Trying LLM model: {model_provider}/{model_name}")
         
+        # Force garbage collection before LLM call to free memory
+        gc.collect()
+        
+        # Use completely unique session ID for each attempt to avoid connection conflicts
+        unique_session = f"rn_{uuid.uuid4().hex[:12]}_{model_name.replace('-', '_')}"
+        
         llm_chat = LlmChat(
             api_key=EMERGENT_KEY,
-            session_id=f"rightname_{uuid.uuid4()}",
+            session_id=unique_session,
             system_message=SYSTEM_PROMPT
         ).with_model(model_provider, model_name)
         
