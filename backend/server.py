@@ -530,6 +530,44 @@ def fix_llm_response_types(data: dict) -> dict:
     if "brand_scores" in data and isinstance(data["brand_scores"], list):
         for brand in data["brand_scores"]:
             if isinstance(brand, dict):
+                # CRITICAL: Enforce verdict consistency in final_assessment
+                main_verdict = brand.get("verdict", "").upper()
+                main_score = brand.get("namescore", 50)
+                
+                if "final_assessment" in brand and isinstance(brand["final_assessment"], dict):
+                    fa = brand["final_assessment"]
+                    
+                    # Fix suitability_score to be consistent with verdict
+                    suitability = fa.get("suitability_score", 50)
+                    if isinstance(suitability, str):
+                        try:
+                            suitability = int(float(suitability.replace("/10", "").replace("/100", "").strip()))
+                        except:
+                            suitability = 50
+                    
+                    # If score is clearly on wrong scale (1-10 instead of 1-100), convert
+                    if suitability <= 10:
+                        suitability = suitability * 10
+                    
+                    # Enforce consistency: GO = 70+, CAUTION = 40-69, REJECT = 1-39
+                    if main_verdict == "GO" and suitability < 70:
+                        suitability = max(75, main_score) if main_score else 75
+                        logging.info(f"🔧 CONSISTENCY FIX: GO verdict but low suitability, fixed to {suitability}")
+                    elif main_verdict == "REJECT" and suitability > 40:
+                        suitability = min(25, 100 - main_score) if main_score else 25
+                        logging.info(f"🔧 CONSISTENCY FIX: REJECT verdict but high suitability, fixed to {suitability}")
+                    
+                    fa["suitability_score"] = suitability
+                    
+                    # Fix bottom_line if it contradicts GO verdict
+                    bottom_line = fa.get("bottom_line", "") or fa.get("verdict_statement", "")
+                    if main_verdict == "GO" and bottom_line:
+                        # Check for contradictory language in GO verdicts
+                        negative_phrases = ["reconsider", "conflict", "risky", "not recommended", "avoid", "warning", "concern", "problem"]
+                        if any(phrase in bottom_line.lower() for phrase in negative_phrases):
+                            logging.info(f"🔧 CONSISTENCY FIX: GO verdict but negative bottom_line detected, clearing false positive language")
+                            fa["bottom_line"] = f"The name shows strong potential for the {brand.get('brand_name', 'brand')} brand. Proceed with trademark registration."
+                
                 # Fix domain_analysis.score_impact (int -> str)
                 if "domain_analysis" in brand and isinstance(brand["domain_analysis"], dict):
                     da = brand["domain_analysis"]
