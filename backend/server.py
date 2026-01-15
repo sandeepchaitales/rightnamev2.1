@@ -1164,22 +1164,16 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     
     # ========== STEP 1: GOOGLE SEARCH API (Primary - Most Reliable) ==========
     google_result = None
+    google_evidence = []
     if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
         print(f"🔍 Using Google Search API for '{brand_name}'...", flush=True)
         google_result = await check_brand_exists_google(brand_name, category)
         
         if google_result["exists"] and google_result["confidence"] in ["HIGH", "MEDIUM"]:
-            print(f"✅ Google found '{brand_name}' with {google_result['confidence']} confidence!", flush=True)
-            result["exists"] = True
-            result["confidence"] = google_result["confidence"]
-            result["matched_brand"] = brand_name
-            result["evidence"] = google_result["evidence"]
-            result["reason"] = f"Brand '{brand_name}' found via Google Search: {', '.join(google_result['evidence'][:2])}"
-            
-            # If HIGH confidence from Google, skip further checks
-            if google_result["confidence"] == "HIGH":
-                logging.warning(f"🚨 GOOGLE HIGH CONFIDENCE: '{brand_name}' exists!")
-                return result
+            print(f"✅ Google found '{brand_name}' with {google_result['confidence']} confidence - will check NICE class via LLM", flush=True)
+            google_evidence = google_result.get("evidence", [])
+            # NOTE: Do NOT return here - we need to check NICE class via LLM
+            # The brand might exist in a DIFFERENT class which is NOT a conflict
     
     # ========== STEP 2: BING FALLBACK (If Google not available or inconclusive) ==========
     web_evidence = []
