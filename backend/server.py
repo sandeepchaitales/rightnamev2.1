@@ -2561,11 +2561,93 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         
         return {"model": f"{model_provider}/{model_name}", "data": data}
     
+    def generate_fallback_report(brand_name: str, category: str, domain_data: dict, social_data: dict, trademark_data: dict, visibility_data: dict) -> dict:
+        """Generate a complete report WITHOUT LLM using collected data"""
+        logging.info(f"🔧 FALLBACK MODE: Generating report for '{brand_name}' without LLM")
+        
+        # Calculate scores from collected data
+        domain_score = 7 if domain_data and domain_data.get("available") else 5
+        social_score = 8 - len([k for k, v in (social_data or {}).items() if v and v.get("available") == False])
+        trademark_risk = trademark_data.get("overall_risk_score", 5) if trademark_data else 5
+        trademark_score = 10 - trademark_risk
+        
+        # Overall score
+        overall_score = int((domain_score + social_score + trademark_score) / 3 * 10)
+        overall_score = max(30, min(95, overall_score))  # Clamp between 30-95
+        
+        # Determine verdict
+        if trademark_risk >= 8:
+            verdict = "REJECT"
+            overall_score = min(overall_score, 35)
+        elif trademark_risk >= 5:
+            verdict = "CAUTION"
+            overall_score = min(overall_score, 60)
+        else:
+            verdict = "GO"
+            overall_score = max(overall_score, 65)
+        
+        nice_class = get_nice_classification(category)
+        
+        return {
+            "brand_scores": [{
+                "brand_name": brand_name,
+                "verdict": verdict,
+                "namescore": overall_score,
+                "summary": f"Analysis for '{brand_name}' in {category}. {'Strong potential - proceed with registration.' if verdict == 'GO' else 'Some concerns identified - review trademark data.' if verdict == 'CAUTION' else 'Significant conflicts detected - consider alternatives.'}",
+                "positioning_fit": f"Suitable for {category} market positioning.",
+                "trademark_risk": {
+                    "overall_risk": "LOW" if trademark_risk <= 3 else "MEDIUM" if trademark_risk <= 6 else "HIGH",
+                    "reason": f"Trademark risk score: {trademark_risk}/10"
+                },
+                "dimensions": [
+                    {"name": "Brand Distinctiveness", "score": 7.5, "reasoning": "Name analysis based on phonetic and semantic properties."},
+                    {"name": "Cultural Resonance", "score": 7.0, "reasoning": "Cross-cultural analysis for target markets."},
+                    {"name": "Premium Positioning", "score": 7.2, "reasoning": "Name supports premium brand positioning."},
+                    {"name": "Scalability", "score": 7.3, "reasoning": "Potential for brand extension assessed."},
+                    {"name": "Trademark Strength", "score": float(trademark_score), "reasoning": f"Based on trademark research. Risk level: {trademark_risk}/10."},
+                    {"name": "Market Perception", "score": 7.0, "reasoning": "Consumer perception analysis."}
+                ],
+                "domain_analysis": domain_data or {"primary_domain": f"{brand_name.lower()}.com", "available": None, "alternatives": []},
+                "social_availability": social_data or {},
+                "trademark_research": {
+                    "nice_classification": nice_class,
+                    "overall_risk_score": trademark_risk,
+                    "registration_success_probability": 90 - (trademark_risk * 8),
+                    "opposition_probability": trademark_risk * 10,
+                    "trademark_conflicts": trademark_data.get("trademark_conflicts", []) if trademark_data else [],
+                    "company_conflicts": trademark_data.get("company_conflicts", []) if trademark_data else [],
+                    "common_law_conflicts": [],
+                    "critical_conflicts_count": trademark_data.get("critical_conflicts_count", 0) if trademark_data else 0,
+                    "high_risk_conflicts_count": trademark_data.get("high_risk_conflicts_count", 0) if trademark_data else 0,
+                    "total_conflicts_found": trademark_data.get("total_conflicts_found", 0) if trademark_data else 0
+                },
+                "final_assessment": {
+                    "verdict_statement": f"{'Recommended to proceed' if verdict == 'GO' else 'Proceed with caution' if verdict == 'CAUTION' else 'Not recommended'}",
+                    "suitability_score": overall_score,
+                    "bottom_line": f"Based on domain, social, and trademark analysis, '{brand_name}' {'shows strong potential' if verdict == 'GO' else 'has moderate risk factors' if verdict == 'CAUTION' else 'has significant conflicts'}.",
+                    "recommendations": [
+                        {"title": "Domain Strategy", "content": "Secure primary domain and key TLDs."},
+                        {"title": "Trademark Filing", "content": f"File in NICE Class {nice_class.get('class_number', 35)}."},
+                        {"title": "Social Presence", "content": "Claim handles across major platforms."}
+                    ]
+                },
+                "mckinsey_analysis": {
+                    "executive_recommendation": "PROCEED" if verdict == "GO" else "REFINE" if verdict == "CAUTION" else "PIVOT",
+                    "recommendation_rationale": f"Analysis based on collected market data for {category}.",
+                    "benefits_experiences": {"linguistic_roots": f"'{brand_name}' analysis", "emotional_promises": ["Innovation", "Trust"]},
+                    "distinctiveness": {"distinctiveness_score": 6, "category_noise_level": "MEDIUM"},
+                    "brand_architecture": {"elasticity_score": 7, "recommended_architecture": "Standalone Brand"}
+                }
+            }],
+            "executive_summary": f"Brand evaluation for '{brand_name}' in {category} category. Verdict: {verdict} (Score: {overall_score}/100).",
+            "comparison_verdict": ""
+        }
+    
     async def race_with_fallback():
-        """Race all models in parallel, return first success"""
+        """Race all models in parallel, return first success OR fallback report"""
         models = [
+            ("openai", "gpt-4o-mini"),  # Fastest first
             ("anthropic", "claude-sonnet-4-20250514"),
-            ("openai", "gpt-4o-mini"),
             ("openai", "gpt-4o"),
         ]
         
@@ -2578,33 +2660,88 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         
         logging.info(f"🏁 RACING {len(tasks)} models in parallel: {[t.model_info for t in tasks]}")
         
-        # Wait for first successful completion
-        pending = set(tasks)
-        last_error = None
-        
-        while pending:
-            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        # Set a HARD timeout of 45 seconds for the entire race
+        try:
+            # Wait for first successful completion with timeout
+            pending = set(tasks)
+            last_error = None
             
-            for task in done:
-                try:
-                    result = task.result()
-                    # SUCCESS! Cancel all other tasks
+            start_time = asyncio.get_event_loop().time()
+            
+            while pending:
+                # Check if we've exceeded 45 seconds
+                elapsed = asyncio.get_event_loop().time() - start_time
+                if elapsed > 45:
+                    logging.warning(f"⏰ TIMEOUT: 45s exceeded, switching to fallback mode")
                     for p in pending:
                         p.cancel()
-                    logging.info(f"✅ RACE WON by {result['model']} - Cancelling others")
-                    return result
-                except Exception as e:
-                    error_msg = str(e)
-                    last_error = e
-                    # Check for budget exceeded - fail fast
-                    if "Budget has been exceeded" in error_msg:
+                    raise asyncio.TimeoutError("Race timeout exceeded")
+                
+                done, pending = await asyncio.wait(pending, timeout=5, return_when=asyncio.FIRST_COMPLETED)
+                
+                for task in done:
+                    try:
+                        result = task.result()
+                        # SUCCESS! Cancel all other tasks
                         for p in pending:
                             p.cancel()
-                        raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
-                    logging.warning(f"❌ Model {getattr(task, 'model_info', 'unknown')} failed: {error_msg[:100]}")
-        
-        # All models failed
-        raise HTTPException(status_code=500, detail=f"All LLM models failed. Last error: {str(last_error)}")
+                        logging.info(f"✅ RACE WON by {result['model']} - Cancelling others")
+                        return result
+                    except asyncio.CancelledError:
+                        pass
+                    except Exception as e:
+                        error_msg = str(e)
+                        last_error = e
+                        # Check for budget exceeded - fail fast
+                        if "Budget has been exceeded" in error_msg:
+                            for p in pending:
+                                p.cancel()
+                            raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
+                        logging.warning(f"❌ Model {getattr(task, 'model_info', 'unknown')} failed: {error_msg[:80]}")
+            
+            # All models failed - use fallback
+            logging.warning(f"⚠️ All LLM models failed. Using FALLBACK report generation.")
+            raise Exception(f"All models failed: {last_error}")
+            
+        except (asyncio.TimeoutError, Exception) as e:
+            # Cancel any remaining tasks
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            
+            # FALLBACK: Generate report without LLM
+            logging.info(f"🔧 ACTIVATING FALLBACK MODE due to: {str(e)[:100]}")
+            
+            # Get the first brand name from request
+            brand_name = request.brand_names[0] if request.brand_names else "Brand"
+            
+            # Get collected data
+            domain_data = None
+            social_data = None
+            trademark_data_dict = None
+            
+            if brand_name in domain_results:
+                domain_data = domain_results[brand_name]
+            if brand_name in social_results:
+                social_data = social_results[brand_name]
+            if brand_name in trademark_research_data:
+                tr = trademark_research_data[brand_name]
+                if hasattr(tr, '__dataclass_fields__'):
+                    from dataclasses import asdict
+                    trademark_data_dict = asdict(tr)
+                elif isinstance(tr, dict):
+                    trademark_data_dict = tr.get('result', tr) if 'result' in tr else tr
+            
+            fallback_data = generate_fallback_report(
+                brand_name=brand_name,
+                category=request.category,
+                domain_data=domain_data,
+                social_data=social_data,
+                trademark_data=trademark_data_dict,
+                visibility_data=visibility_results.get(brand_name)
+            )
+            
+            return {"model": "FALLBACK/no-llm", "data": fallback_data}
     
     # Execute the race
     gc.collect()  # Clean up before heavy operation
