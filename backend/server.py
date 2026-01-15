@@ -2503,17 +2503,9 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     # Update progress - starting LLM analysis (the longest step)
     await update_progress("analysis", 30)
     
-    max_retries = 3  # Increased retries per model
-    last_error = None
-    
-    # Try each model with retries
-    for model_provider, model_name in models_to_try:
-        logging.info(f"Trying LLM model: {model_provider}/{model_name}")
-        
-        # Force garbage collection before LLM call to free memory
-        gc.collect()
-        
-        # Use completely unique session ID for each attempt to avoid connection conflicts
+    # ============ PARALLEL LLM RACE - First successful response wins ============
+    async def try_single_model(model_provider: str, model_name: str) -> dict:
+        """Try a single model and return result or raise exception"""
         unique_session = f"rn_{uuid.uuid4().hex[:12]}_{model_name.replace('-', '_')}"
         
         llm_chat = LlmChat(
@@ -2522,75 +2514,110 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
             system_message=SYSTEM_PROMPT
         ).with_model(model_provider, model_name)
         
-        for attempt in range(max_retries):
+        user_message = UserMessage(text=user_prompt)
+        response = await asyncio.wait_for(
+            llm_chat.send_message(user_message),
+            timeout=60.0  # 60 second timeout
+        )
+        
+        content = ""
+        if hasattr(response, 'text'):
+            content = response.text
+        elif isinstance(response, str):
+            content = response
+        else:
+            content = str(response)
+        
+        # Extract JSON from markdown code blocks
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0]
+        elif "```" in content:
+            parts = content.split("```")
+            if len(parts) >= 2:
+                content = parts[1]
+                if content.startswith("json"):
+                    content = content[4:]
+        
+        content = content.strip()
+        
+        # Parse JSON
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            content = clean_json_string(content)
+            content = repair_json(content)
             try:
-                user_message = UserMessage(text=user_prompt)
-                # Add timeout to prevent hanging on Claude or slow responses
-                response = await asyncio.wait_for(
-                    llm_chat.send_message(user_message),
-                    timeout=90.0  # 90 second timeout per attempt
-                )
-                
-                content = ""
-                if hasattr(response, 'text'):
-                    content = response.text
-                elif isinstance(response, str):
-                    content = response
-                else:
-                    content = str(response)
-                
-                # Extract JSON from markdown code blocks
-                if "```json" in content:
-                    content = content.split("```json")[1].split("```")[0]
-                elif "```" in content:
-                    parts = content.split("```")
-                    if len(parts) >= 2:
-                        content = parts[1]
-                        if content.startswith("json"):
-                            content = content[4:]
-                
-                # Sanitization
-                content = content.strip()
-                
-                # Try direct parsing first
+                data = json.loads(content)
+            except json.JSONDecodeError:
+                content = aggressive_json_repair(content)
+                data = json.loads(content)
+        
+        # Ensure data is a dict
+        if isinstance(data, list):
+            if len(data) > 0 and isinstance(data[0], dict):
+                data = {"brand_scores": data, "executive_summary": "Brand evaluation completed.", "comparison_verdict": ""}
+            else:
+                raise ValueError("Invalid response format from LLM")
+        
+        return {"model": f"{model_provider}/{model_name}", "data": data}
+    
+    async def race_with_fallback():
+        """Race all models in parallel, return first success"""
+        models = [
+            ("anthropic", "claude-sonnet-4-20250514"),
+            ("openai", "gpt-4o-mini"),
+            ("openai", "gpt-4o"),
+        ]
+        
+        # Create tasks for all models
+        tasks = []
+        for provider, model in models:
+            task = asyncio.create_task(try_single_model(provider, model))
+            task.model_info = f"{provider}/{model}"
+            tasks.append(task)
+        
+        logging.info(f"🏁 RACING {len(tasks)} models in parallel: {[t.model_info for t in tasks]}")
+        
+        # Wait for first successful completion
+        pending = set(tasks)
+        last_error = None
+        
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            
+            for task in done:
                 try:
-                    data = json.loads(content)
-                except json.JSONDecodeError:
-                    # Apply cleaning and repair
-                    logging.info("Direct JSON parsing failed, applying cleanup and repair...")
-                    content = clean_json_string(content)
-                    content = repair_json(content)
-                    try:
-                        data = json.loads(content)
-                    except json.JSONDecodeError as je:
-                        # Log the problematic content for debugging (context around error)
-                        error_pos = je.pos if hasattr(je, 'pos') else 0
-                        start = max(0, error_pos - 100)
-                        end = min(len(content), error_pos + 100)
-                        logging.error(f"JSON Parse Error at position {error_pos}: {je.msg}")
-                        logging.error(f"Context around error: ...{repr(content[start:end])}...")
-                        
-                        # Try aggressive repair
-                        logging.info("Trying aggressive JSON repair...")
-                        content = aggressive_json_repair(content)
-                        try:
-                            data = json.loads(content)
-                            logging.info("Aggressive repair succeeded!")
-                        except json.JSONDecodeError:
-                            raise
-                
-                # Ensure data is a dict, not a list
-                if isinstance(data, list):
-                    # If LLM returned a list, wrap it as brand_scores
-                    if len(data) > 0 and isinstance(data[0], dict):
-                        data = {"brand_scores": data, "executive_summary": "Brand evaluation completed.", "comparison_verdict": ""}
-                    else:
-                        raise ValueError("Invalid response format from LLM")
-                
-                # Pre-process data to fix common LLM output issues
-                data = fix_llm_response_types(data)
-                
-                evaluation = BrandEvaluationResponse(**data)
+                    result = task.result()
+                    # SUCCESS! Cancel all other tasks
+                    for p in pending:
+                        p.cancel()
+                    logging.info(f"✅ RACE WON by {result['model']} - Cancelling others")
+                    return result
+                except Exception as e:
+                    error_msg = str(e)
+                    last_error = e
+                    # Check for budget exceeded - fail fast
+                    if "Budget has been exceeded" in error_msg:
+                        for p in pending:
+                            p.cancel()
+                        raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
+                    logging.warning(f"❌ Model {getattr(task, 'model_info', 'unknown')} failed: {error_msg[:100]}")
+        
+        # All models failed
+        raise HTTPException(status_code=500, detail=f"All LLM models failed. Last error: {str(last_error)}")
+    
+    # Execute the race
+    gc.collect()  # Clean up before heavy operation
+    race_result = await race_with_fallback()
+    winning_model = race_result["model"]
+    data = race_result["data"]
+    
+    logging.info(f"Successfully generated report with model {winning_model}")
+    
+    # Pre-process data to fix common LLM output issues
+    data = fix_llm_response_types(data)
+    
+    evaluation = BrandEvaluationResponse(**data)
                 
                 # ============ ENSURE DIMENSIONS ARE ALWAYS POPULATED ============
                 DEFAULT_DIMENSIONS = [
