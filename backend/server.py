@@ -2900,6 +2900,11 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     logging.error(f"LLM Budget Exceeded: {error_msg}")
                     raise HTTPException(status_code=402, detail="Emergent Key Budget Exceeded. Please add credits.")
                 
+                # Handle timeout separately - move to next model immediately
+                if isinstance(e, asyncio.TimeoutError):
+                    logging.warning(f"LLM Timeout ({model_provider}/{model_name}, Attempt {attempt+1}/{max_retries}): Model took too long (>90s). Moving to next model...")
+                    break  # Don't retry same model on timeout, try next model
+                
                 # Retry on 502/Gateway/Service errors AND JSON/Validation errors
                 if any(x in error_msg for x in ["502", "BadGateway", "ServiceUnavailable", "Expecting", "JSON", "validation error", "control character"]):
                     wait_time = (1.5 ** attempt) + random.uniform(0, 1)  # Exponential backoff: 1.5s, 2.25s, 3.4s
