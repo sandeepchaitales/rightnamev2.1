@@ -473,7 +473,7 @@ const FinalAssessmentFull = ({ assessment, verdict, score }) => {
                         </div>
                         <div className="text-right">
                             <p className="text-xs opacity-80">Suitability Score</p>
-                            <p className="text-3xl font-black">{assessment.suitability_score || (score/10).toFixed(1)}/10</p>
+                            <p className="text-3xl font-black">{score || assessment.suitability_score || 'N/A'}/100</p>
                         </div>
                     </div>
                     {(assessment.bottom_line || assessment.verdict_statement) && (
