@@ -2585,14 +2585,30 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         
         return {"model": f"{model_provider}/{model_name}", "data": data}
     
-    def generate_fallback_report(brand_name: str, category: str, domain_data: dict, social_data: dict, trademark_data: dict, visibility_data: dict) -> dict:
+    def generate_fallback_report(brand_name: str, category: str, domain_data, social_data, trademark_data, visibility_data) -> dict:
         """Generate a complete report WITHOUT LLM using collected data"""
         logging.info(f"🔧 FALLBACK MODE: Generating report for '{brand_name}' without LLM")
         
+        # Handle domain_data - could be string or dict
+        domain_available = False
+        if isinstance(domain_data, str):
+            domain_available = "available" in domain_data.lower() or "✅" in domain_data
+        elif isinstance(domain_data, dict):
+            domain_available = domain_data.get("available", False)
+        
         # Calculate scores from collected data
-        domain_score = 7 if domain_data and domain_data.get("available") else 5
-        social_score = 8 - len([k for k, v in (social_data or {}).items() if v and v.get("available") == False])
-        trademark_risk = trademark_data.get("overall_risk_score", 5) if trademark_data else 5
+        domain_score = 7 if domain_available else 5
+        
+        # Handle social_data - could be dict with platform info
+        social_score = 7  # Default
+        if isinstance(social_data, dict):
+            unavailable_count = sum(1 for k, v in social_data.items() if isinstance(v, dict) and v.get("available") == False)
+            social_score = max(4, 8 - unavailable_count)
+        
+        # Handle trademark_data
+        trademark_risk = 5  # Default medium risk
+        if isinstance(trademark_data, dict):
+            trademark_risk = trademark_data.get("overall_risk_score", 5)
         trademark_score = 10 - trademark_risk
         
         # Overall score
