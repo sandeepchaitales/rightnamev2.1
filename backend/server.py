@@ -1384,12 +1384,33 @@ Return ONLY the JSON, no other text."""
             # Check if LLM says brand already exists OR has conflict
             brand_exists = llm_result.get("brand_already_exists", False)
             has_conflict = llm_result.get("has_conflict", False)
+            same_class_conflict = llm_result.get("same_class_conflict", True)  # Default to True for safety
+            conflicting_brand_class = llm_result.get("conflicting_brand_nice_class")
+            conflicting_brand_industry = llm_result.get("conflicting_brand_industry", "Unknown")
             
-            if (has_conflict or brand_exists) and llm_result.get("confidence") in ["HIGH", "MEDIUM"]:
+            # ============ NICE CLASS FILTER ============
+            # If LLM detected a brand but it's in a DIFFERENT NICE class, it's NOT a real conflict
+            if (has_conflict or brand_exists) and not same_class_conflict:
+                print(f"✅ CROSS-CLASS FALSE POSITIVE: '{brand_name}' exists as {conflicting_brand_industry} (Class {conflicting_brand_class}), but user wants Class {user_class_number}. ALLOWING.", flush=True)
+                logging.info(f"✅ CROSS-CLASS FALSE POSITIVE: '{brand_name}' - Existing brand in Class {conflicting_brand_class}, User wants Class {user_class_number}. DIFFERENT CLASSES = NO CONFLICT")
+                
+                result["exists"] = False
+                result["confidence"] = "LOW"
+                result["matched_brand"] = None
+                result["reason"] = f"Brand exists in different class (Class {conflicting_brand_class}: {conflicting_brand_industry}) - not a conflict for {category} (Class {user_class_number})"
+                result["cross_class_clear"] = True
+                result["existing_brand_info"] = {
+                    "name": llm_result.get("conflicting_brand"),
+                    "industry": conflicting_brand_industry,
+                    "nice_class": conflicting_brand_class
+                }
+                return result
+            
+            if (has_conflict or brand_exists) and llm_result.get("confidence") in ["HIGH", "MEDIUM"] and same_class_conflict:
                 # ============ VERIFICATION LAYER ============
-                # LLM flagged a conflict - now VERIFY with real evidence
-                print(f"⚠️ LLM flagged '{brand_name}' - Running verification layer...", flush=True)
-                logging.info(f"⚠️ LLM flagged '{brand_name}' - Running verification layer...")
+                # LLM flagged a SAME-CLASS conflict - now VERIFY with real evidence
+                print(f"⚠️ LLM flagged '{brand_name}' (SAME CLASS {conflicting_brand_class}) - Running verification layer...", flush=True)
+                logging.info(f"⚠️ LLM flagged '{brand_name}' (SAME CLASS conflict) - Running verification layer...")
                 
                 verification = await verify_brand_conflict(
                     brand_name=brand_name,
@@ -1408,11 +1429,13 @@ Return ONLY the JSON, no other text."""
                     result["evidence_score"] = verification["evidence_score"]
                     result["evidence_details"] = verification["evidence_details"]
                     result["reason"] = llm_result.get("reason", "Conflict detected and verified")
+                    result["same_class_conflict"] = True
+                    result["conflicting_brand_class"] = conflicting_brand_class
                     if brand_exists:
-                        result["reason"] = f"VERIFIED EXISTING BRAND: {result['reason']}"
+                        result["reason"] = f"VERIFIED EXISTING BRAND (SAME CLASS {conflicting_brand_class}): {result['reason']}"
                     
-                    print(f"🚨 VERIFIED CONFLICT: '{brand_name}' - Evidence Score: {verification['evidence_score']}", flush=True)
-                    logging.warning(f"🚨 VERIFIED CONFLICT: '{brand_name}' - Evidence: {verification['evidence_found'][:3]}")
+                    print(f"🚨 VERIFIED SAME-CLASS CONFLICT: '{brand_name}' - Evidence Score: {verification['evidence_score']}", flush=True)
+                    logging.warning(f"🚨 VERIFIED SAME-CLASS CONFLICT: '{brand_name}' - Evidence: {verification['evidence_found'][:3]}")
                 else:
                     # FALSE POSITIVE: LLM was wrong - no real evidence found
                     result["exists"] = False
