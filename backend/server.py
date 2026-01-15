@@ -1292,6 +1292,10 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
     
     # ========== STEP 2: LLM CHECK ==========
     # Use LLM to check for brand conflicts
+    # Get user's NICE class for comparison
+    user_nice_class = get_nice_classification(category)
+    user_class_number = user_nice_class.get("class_number", 35)
+    
     try:
         if not LlmChat or not EMERGENT_KEY:
             logging.warning("LLM not available, skipping brand check")
@@ -1299,71 +1303,63 @@ async def dynamic_brand_search(brand_name: str, category: str = "") -> dict:
         
         llm = LlmChat(EMERGENT_KEY, "openai", "gpt-4o-mini")  # Most reliable model
         
-        prompt = f"""You are a trademark and brand expert with STRICT conflict detection. Analyze this brand name for conflicts.
+        prompt = f"""You are a trademark and brand expert. Analyze this brand name for conflicts.
 
 BRAND NAME: {brand_name}
-CATEGORY: {category or 'General'}
+USER'S CATEGORY: {category or 'General'}
+USER'S NICE CLASS: Class {user_class_number} - {user_nice_class.get('class_description', 'General')}
 TARGET MARKET: India, USA, Global
 
-TASK: Determine if this brand name:
-1. IS ALREADY AN EXISTING BRAND/COMPANY (exact or near-exact name)
-2. OR is CONFUSINGLY SIMILAR to ANY existing brand, company, app, product, or trademark
+TASK: 
+1. Check if "{brand_name}" already exists as a brand/company
+2. If it exists, determine WHAT INDUSTRY/NICE CLASS the existing brand operates in
+3. Compare: Is the existing brand in the SAME class as the user's category?
 
-⚠️ CRITICAL - CHECK IF THIS EXACT BRAND EXISTS FIRST:
-- Search your knowledge for "{brand_name}" as an existing business
-- Check if there's a company, cafe chain, restaurant, app, product, or consumer brand called "{brand_name}"
-- Regional brands in India, USA, or globally count!
-- Even small D2C brands on Amazon, Flipkart, BigBasket should be flagged
-- Check ecommerce platforms: Amazon, Flipkart, JioMart, BigBasket
-- Check Zomato, Swiggy, Google Maps presence for food/cafe brands
+⚠️ NICE CLASS REFERENCE (Critical for determining conflicts):
+- Class 3: Cosmetics, skincare, cleaning products, soaps, perfumes
+- Class 5: Pharmaceuticals, medical preparations, dietary supplements
+- Class 9: Software, mobile apps, electronics, computers
+- Class 25: Clothing, footwear, fashion, apparel
+- Class 29: Processed foods, meat, dairy, snacks
+- Class 30: Coffee, tea, bakery, confectionery
+- Class 35: Advertising, business services, retail
+- Class 36: Finance, banking, insurance, real estate
+- Class 41: Education, entertainment, training, gaming
+- Class 42: SaaS, technology services, software services
+- Class 43: Restaurants, cafes, hotels, food services
 
-⚠️ INDIAN CAFE/CHAI BRANDS TO CHECK AGAINST:
-- Chai Duniya, Chai Point, Chaayos, Chai Sutta Bar, MBA Chai Wala, Chai Break
-- Chai Bunk, Chai Kings, Chai Waale, Chai Garam, Chai Time
-- Any brand with "Chai" + Hindi word combination
+⚠️ CRITICAL RULE - SAME CLASS = CONFLICT, DIFFERENT CLASS = NO CONFLICT:
+- "Deepstory" (Social App, Class 9) vs User's "Skincare" (Class 3) = DIFFERENT CLASS = NO CONFLICT
+- "Dove" (Soap, Class 3) vs User's "Skincare" (Class 3) = SAME CLASS = CONFLICT
+- The ONLY time there's a real conflict is when BOTH brands target the SAME NICE CLASS
 
-⚠️ INDIAN CONSUMER/CLEANING PRODUCT BRANDS TO CHECK AGAINST:
-- Cleevo (eco-friendly cleaning solutions on JioMart, BigBasket, Flipkart - getcleevo.com)
-- Vim, Harpic, Lizol, Colin, Dettol, Savlon, Surf Excel
-- Any D2C brand selling on Indian ecommerce platforms
-
-⚠️ STRICT CONFLICT RULES - Flag as conflict if ANY of these apply:
-1. EXACT BRAND EXISTS: A company/brand called "{brand_name}" already operates (even regionally)
-2. EXACT MATCH: Same name as another brand (case-insensitive)
-3. PLURALIZATION: Adding/removing 's' (MoneyControls = Moneycontrol)
-4. PHONETIC SIMILARITY: Sounds similar when spoken (BUMBELL ≈ Bumble)
-5. LETTER VARIATIONS: Extra/missing letters (Nikee = Nike)
-6. SPACING CHANGES: With/without spaces (FaceBook = Facebook)
-7. REGIONAL BRANDS: Indian cafes, restaurants, apps, newspapers, D2C products
-8. GLOBAL BRANDS: Tech companies, apps, products
-9. D2C/ECOMMERCE BRANDS: Brands selling on Amazon, Flipkart, BigBasket, JioMart
-
-IMPORTANT: 
-- When in doubt, FLAG AS CONFLICT - it's safer to reject
-- If "{brand_name}" sounds like it could be an existing brand/product - CHECK CAREFULLY
-- "Cleevo" IS an existing cleaning products brand in India - if asked, REJECT IT
-- "Chai Duniya" IS an existing chai cafe chain - if this exact name or similar is asked, REJECT IT
+⚠️ BRANDS TO CHECK AGAINST:
+- Chai Duniya, Chai Point, Chaayos, Chai Bunk (Class 43 - Cafes)
+- Cleevo (Class 3 - Cleaning products)
+- Moneycontrol (Class 36/42 - Finance/Tech)
 
 RESPOND IN THIS EXACT JSON FORMAT:
 {{
     "has_conflict": true or false,
     "confidence": "HIGH" or "MEDIUM" or "LOW",
     "conflicting_brand": "Name of existing brand" or null,
+    "conflicting_brand_industry": "Industry of the existing brand (e.g., Social App, Cafe, Cleaning Products)" or null,
+    "conflicting_brand_nice_class": <number 1-45 of existing brand's NICE class> or null,
+    "user_nice_class": {user_class_number},
+    "same_class_conflict": true or false,
     "similarity_percentage": 0-100,
-    "reason": "Brief explanation",
+    "reason": "Brief explanation including class comparison",
     "brand_info": "What is the conflicting brand (1 sentence)",
     "brand_already_exists": true or false
 }}
 
-Examples (BE STRICT LIKE THESE):
-- "Red Bucket Biryani" in "Restaurant" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Red Bucket Biryani", "similarity_percentage": 100, "reason": "Red Bucket Biryani is an existing biryani restaurant chain in India", "brand_info": "Red Bucket Biryani is a biryani delivery/restaurant chain in India", "brand_already_exists": true}}
-- "Chai Duniya" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chai Duniya", "similarity_percentage": 100, "reason": "Chai Duniya is an existing chai cafe chain in India", "brand_info": "Chai Duniya is a chai cafe brand operating in India", "brand_already_exists": true}}
-- "Chaibunk" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chai Bunk", "similarity_percentage": 100, "reason": "Chai Bunk is an existing chai cafe chain in India with 100+ stores", "brand_info": "Chai Bunk is a popular Indian chai cafe chain", "brand_already_exists": true}}
-- "Chaayos" in "Cafe" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chaayos", "similarity_percentage": 100, "reason": "Chaayos is a major chai cafe chain in India", "brand_info": "Chaayos is one of India's largest chai cafe chains", "brand_already_exists": true}}
-- "MoneyControls" in "Finance" → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Moneycontrol", "similarity_percentage": 98, "reason": "Pluralized version of Moneycontrol", "brand_info": "Moneycontrol is India's leading financial platform", "brand_already_exists": false}}
-- "Zyntrix2025" in "Finance" → {{"has_conflict": false, "confidence": "HIGH", "conflicting_brand": null, "similarity_percentage": 0, "reason": "Completely unique invented name", "brand_info": null, "brand_already_exists": false}}
+EXAMPLES WITH CLASS COMPARISON:
+- "Deepstory" in "Skincare" (Class 3) → {{"has_conflict": false, "confidence": "HIGH", "conflicting_brand": "Deepstory", "conflicting_brand_industry": "Social Media App", "conflicting_brand_nice_class": 9, "user_nice_class": 3, "same_class_conflict": false, "similarity_percentage": 100, "reason": "Deepstory exists as a social app (Class 9), but user wants skincare (Class 3). DIFFERENT CLASSES = NO CONFLICT", "brand_info": "Deepstory is a social storytelling app", "brand_already_exists": true}}
+- "Cleevo" in "Cleaning" (Class 3) → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Cleevo", "conflicting_brand_industry": "Cleaning Products", "conflicting_brand_nice_class": 3, "user_nice_class": 3, "same_class_conflict": true, "similarity_percentage": 100, "reason": "Cleevo is an existing cleaning brand (Class 3), same as user's category. SAME CLASS = CONFLICT", "brand_info": "Cleevo is an eco-friendly cleaning products brand in India", "brand_already_exists": true}}
+- "Chaayos" in "Cafe" (Class 43) → {{"has_conflict": true, "confidence": "HIGH", "conflicting_brand": "Chaayos", "conflicting_brand_industry": "Cafe Chain", "conflicting_brand_nice_class": 43, "user_nice_class": 43, "same_class_conflict": true, "similarity_percentage": 100, "reason": "Chaayos is a major chai cafe chain (Class 43), same as user's category. SAME CLASS = CONFLICT", "brand_info": "Chaayos is one of India's largest chai cafe chains", "brand_already_exists": true}}
+- "Zyntrix" in "Finance" (Class 36) → {{"has_conflict": false, "confidence": "HIGH", "conflicting_brand": null, "conflicting_brand_industry": null, "conflicting_brand_nice_class": null, "user_nice_class": 36, "same_class_conflict": false, "similarity_percentage": 0, "reason": "Unique invented name with no existing brand", "brand_info": null, "brand_already_exists": false}}
 
-NOW ANALYZE: "{brand_name}" in "{category or 'General'}"
+NOW ANALYZE: "{brand_name}" in "{category or 'General'}" (User's Class: {user_class_number})
 Return ONLY the JSON, no other text."""
 
         # send_message is async and expects UserMessage object
