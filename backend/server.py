@@ -742,20 +742,27 @@ def generate_country_competitor_analysis(countries: list, category: str, brand_n
     # Ensure we process up to 4 countries
     countries_to_process = countries[:4] if len(countries) > 4 else countries
     
+    # Case-insensitive flag lookup
+    flags_lower = {k.lower(): v for k, v in COUNTRY_FLAGS.items()}
+    
     for idx, country in enumerate(countries_to_process):
         # Get country name (handle dict or string)
         country_name = country.get('name') if isinstance(country, dict) else str(country)
         
-        # Get flag
-        flag = COUNTRY_FLAGS.get(country_name, "🌍")
+        # Get flag - CASE INSENSITIVE
+        country_lower = country_name.lower().strip() if country_name else ""
+        flag = flags_lower.get(country_lower, "🌍")
+        
+        # Normalize country name for display
+        display_name = country_name.title() if country_name else "Unknown"
         
         # Get CATEGORY-SPECIFIC market data for this country
         market_data = get_market_data_for_category_country(category, country_name)
-        logging.info(f"📊 Market data for {country_name} ({category_key}): {len(market_data.get('competitors', []))} competitors")
+        logging.info(f"📊 Market data for {display_name} {flag} ({category_key}): {len(market_data.get('competitors', []))} competitors")
         
         # Build the analysis
         result.append({
-            "country": country_name,
+            "country": display_name,
             "country_flag": flag,
             "x_axis_label": market_data.get("axis_x", "Price: Budget → Premium"),
             "y_axis_label": market_data.get("axis_y", "Positioning: Traditional → Modern"),
@@ -764,7 +771,7 @@ def generate_country_competitor_analysis(countries: list, category: str, brand_n
                 "x_coordinate": market_data["user_position"]["x"],
                 "y_coordinate": market_data["user_position"]["y"],
                 "quadrant": market_data["user_position"]["quadrant"],
-                "rationale": f"'{brand_name}' positioned in {market_data['user_position']['quadrant']} segment to maximize market opportunity in {country_name}"
+                "rationale": f"'{brand_name}' positioned in {market_data['user_position']['quadrant']} segment to maximize market opportunity in {display_name}"
             },
             "white_space_analysis": market_data["white_space"].replace("'", "'"),
             "strategic_advantage": market_data["strategic_advantage"].replace("'", "'"),
