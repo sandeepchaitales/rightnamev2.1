@@ -1792,11 +1792,16 @@ def generate_rich_executive_summary(
     
     # Morpheme analysis (if available)
     if morpheme_insights:
+        fuse_word = "fuses" if len(morphemes) > 1 else "employs"
+        combo_word = "combination" if len(morphemes) > 1 else "structure"
+        unique_word = "unique" if is_coined else "culturally grounded"
+        position_text = "differentiates from generic category descriptors" if verdict == "GO" else "requires cultural navigation in certain markets"
+        morpheme_join = " with ".join(morpheme_insights)
         summary_parts.append(
-            f'\n\n**Linguistic Structure:** The name strategically {'fuses' if len(morphemes) > 1 else 'employs'} '
-            f'{" with ".join(morpheme_insights)}. '
-            f'This {"combination" if len(morphemes) > 1 else "structure"} creates a {"unique" if is_coined else "culturally grounded"} '
-            f'positioning that {"differentiates from generic category descriptors" if verdict == "GO" else "requires cultural navigation in certain markets"}.'
+            f'\n\n**Linguistic Structure:** The name strategically {fuse_word} '
+            f'{morpheme_join}. '
+            f'This {combo_word} creates a {unique_word} '
+            f'positioning that {position_text}.'
         )
     
     # Industry fit insight
