@@ -5285,6 +5285,36 @@ class BrandEvaluationTester:
         # Test logout
         self.test_auth_logout()
         
+        # NEW: Admin Panel API Tests (as per review request)
+        print("\n🔐 ADMIN PANEL API TESTS")
+        print("=" * 80)
+        print("Testing Admin Panel endpoints with authentication...")
+        
+        # Test admin login with valid credentials
+        if self.test_admin_login_valid_credentials():
+            # Test admin login with invalid credentials
+            self.test_admin_login_invalid_credentials()
+            
+            # Test token verification
+            self.test_admin_verify_token()
+            
+            # Test token verification without token
+            self.test_admin_verify_no_token()
+            
+            # Test getting system prompt
+            self.test_admin_get_system_prompt()
+            
+            # Test getting early stopping prompt
+            self.test_admin_get_early_stopping_prompt()
+            
+            # Test getting model settings
+            self.test_admin_get_model_settings()
+            
+            # Test getting usage analytics
+            self.test_admin_get_usage_analytics()
+        else:
+            print("❌ Admin login failed, skipping admin-dependent tests")
+        
         # NEW: RIGHTNAME v2.0 Improvement Tests
         print("\n🆕 RIGHTNAME v2.0 IMPROVEMENT TESTS")
         print("=" * 80)
