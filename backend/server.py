@@ -2553,6 +2553,13 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     # Update progress - starting LLM analysis (the longest step)
     await update_progress("analysis", 30)
     
+    # ============ GET DYNAMIC PROMPT & SETTINGS ============
+    active_system_prompt = await get_active_system_prompt()
+    model_settings = await get_active_model_settings()
+    llm_timeout = model_settings.get("timeout_seconds", 35)
+    
+    logging.info(f"Using system prompt ({len(active_system_prompt)} chars), timeout={llm_timeout}s")
+    
     # ============ PARALLEL LLM RACE - First successful response wins ============
     async def try_single_model(model_provider: str, model_name: str) -> dict:
         """Try a single model and return result or raise exception"""
