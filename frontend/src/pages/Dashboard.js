@@ -2395,7 +2395,9 @@ const Dashboard = () => {
                                         <Star className="w-4 h-4 text-amber-500" />
                                         <span className="text-xs font-bold uppercase tracking-widest text-amber-600">Executive Summary</span>
                                     </div>
-                                    <p className="text-slate-700 leading-relaxed print:text-sm">{data.executive_summary}</p>
+                                    <p className="text-slate-700 leading-relaxed print:text-sm">
+                                        <MarkdownText text={data.executive_summary} />
+                                    </p>
                                 </div>
                             </PrintCard>
                         </div>
