@@ -1798,10 +1798,10 @@ const TrademarkResearchSection = ({ trademarkResearch, registrationTimeline, mit
                                         {precedent.year && <span> • {precedent.year}</span>}
                                     </div>
                                     {precedent.relevance && (
-                                        <p className="text-sm text-slate-700">{precedent.relevance}</p>
+                                        <p className="text-sm text-slate-700"><MarkdownText text={precedent.relevance} /></p>
                                     )}
                                     {precedent.key_principle && (
-                                        <p className="text-xs text-violet-600 mt-2 italic">Key Principle: {precedent.key_principle}</p>
+                                        <p className="text-xs text-violet-600 mt-2 italic">Key Principle: <MarkdownText text={precedent.key_principle} /></p>
                                     )}
                                 </div>
                             ))}
