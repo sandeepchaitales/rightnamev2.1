@@ -891,10 +891,16 @@ async def llm_first_country_analysis(
     countries: list, 
     category: str, 
     brand_name: str,
-    use_llm_research: bool = True
+    use_llm_research: bool = True,
+    positioning: str = "Mid-Range"
 ) -> tuple:
     """
-    LLM-First approach to country analysis.
+    LLM-First approach to country analysis with POSITIONING-AWARE search.
+    
+    KEY IMPROVEMENT: Includes positioning in search queries to get segment-specific competitors.
+    Example: "Premium Hotel Chain India" → Taj, ITC, Oberoi
+    Instead of: "Hotel Chain India" → mixed OYO to Taj
+    
     Uses real-time web search + LLM for accuracy, with hardcoded fallback if research fails.
     
     Returns: (country_competitor_analysis, cultural_analysis)
@@ -907,7 +913,7 @@ async def llm_first_country_analysis(
             generate_cultural_analysis(countries, brand_name)
         )
     
-    logging.info(f"🔬 LLM-FIRST RESEARCH: Starting real-time research for {len(countries)} countries...")
+    logging.info(f"🔬 LLM-FIRST RESEARCH: Starting {positioning} research for {len(countries)} countries...")
     
     try:
         # Prepare fallback data
@@ -919,13 +925,14 @@ async def llm_first_country_analysis(
             fallback_market[country_name] = get_market_data_for_category_country(category, country_name)
             fallback_cultural[country_name] = COUNTRY_CULTURAL_DATA.get(country_name, COUNTRY_CULTURAL_DATA["default"])
         
-        # Execute LLM-first research
+        # Execute LLM-first research WITH POSITIONING
         market_intelligence, cultural_intelligence = await research_all_countries(
             category=category,
             countries=countries,
             brand_name=brand_name,
             fallback_market_data=fallback_market,
-            fallback_cultural_data=fallback_cultural
+            fallback_cultural_data=fallback_cultural,
+            positioning=positioning
         )
         
         # Format results for API response
