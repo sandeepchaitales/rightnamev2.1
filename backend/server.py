@@ -4862,7 +4862,18 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     ]
                 }
             }],
-            "executive_summary": f"**RIGHTNAME BRAND EVALUATION REPORT**\n\n**Brand:** {brand_name}\n**Category:** {category}\n**Verdict:** {verdict}\n**Score:** {overall_score}/100\n\n{'This brand name demonstrates strong potential for trademark registration and market positioning. Recommended to proceed with brand development.' if verdict == 'GO' else 'This brand name shows promise but requires attention to identified concerns.' if verdict == 'CAUTION' else 'This brand name faces significant challenges. Alternative approaches recommended.'}",
+            "executive_summary": generate_rich_executive_summary(
+                brand_name=brand_name,
+                category=category,
+                verdict=verdict,
+                overall_score=overall_score,
+                countries=request.countries,
+                linguistic_analysis=None,  # Will be generated inside the function
+                trademark_risk=trademark_risk,
+                nice_class=nice_class,
+                domain_available=domain_available,
+                cultural_analysis=fallback_cultural
+            ),
             "comparison_verdict": f"Single brand evaluation for '{brand_name}' in {category} sector."
         }
     
