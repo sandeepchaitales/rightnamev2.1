@@ -469,7 +469,8 @@ async def llm_analyze_white_space(
             country=country,
             brand_name=brand_name,
             competitor_data=competitor_data,
-            market_research=market_research
+            market_research=market_research,
+            positioning=positioning
         )
         
         chat = LlmChat(
@@ -488,7 +489,7 @@ async def llm_analyze_white_space(
             response_text = re.sub(r'\s*```$', '', response_text)
         
         data = json.loads(response_text)
-        logger.info(f"✅ LLM generated white space analysis for {country}")
+        logger.info(f"✅ LLM generated {positioning} white space analysis for {country}")
         return data
         
     except Exception as e:
