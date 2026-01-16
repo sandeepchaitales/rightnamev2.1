@@ -5652,6 +5652,164 @@ class BrandEvaluationTester:
             self.log_test("Technology Category Comparison - TechNova Exception", False, str(e))
             return False
 
+    def test_legal_risk_matrix_fix(self):
+        """Test the Legal Risk Matrix fix - should generate SPECIFIC commentary instead of generic text"""
+        payload = {
+            "brand_names": ["TestMatrix2025"],
+            "category": "Technology",
+            "positioning": "Premium",
+            "market_scope": "Single Country",
+            "countries": ["USA"]
+        }
+        
+        try:
+            print(f"\n⚖️ Testing Legal Risk Matrix Fix...")
+            print(f"Expected: SPECIFIC commentary with class numbers, conflict counts, recommendations")
+            print(f"Should NOT contain: 'No specific risk identified'")
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=180  # Extended timeout for trademark research
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("Legal Risk Matrix Fix - HTTP Error", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("Legal Risk Matrix Fix - Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                
+                # Test 1: Check trademark_matrix field exists
+                if "trademark_matrix" not in brand:
+                    self.log_test("Legal Risk Matrix Fix - Matrix Field", False, "trademark_matrix field missing")
+                    return False
+                
+                tm_matrix = brand["trademark_matrix"]
+                if not tm_matrix:
+                    self.log_test("Legal Risk Matrix Fix - Matrix Data", False, "trademark_matrix is null/empty")
+                    return False
+                
+                print(f"✅ Found trademark_matrix field")
+                
+                # Test 2: Check all required matrix sections
+                required_sections = ["genericness", "existing_conflicts", "phonetic_similarity", "relevant_classes", "rebranding_probability"]
+                missing_sections = [section for section in required_sections if section not in tm_matrix]
+                
+                if missing_sections:
+                    self.log_test("Legal Risk Matrix Fix - Matrix Sections", False, f"Missing sections: {missing_sections}")
+                    return False
+                
+                print(f"✅ All required matrix sections present: {required_sections}")
+                
+                # Test 3: Check genericness.commentary for SPECIFIC content
+                genericness_commentary = tm_matrix.get("genericness", {}).get("commentary", "")
+                print(f"Genericness commentary: {genericness_commentary[:100]}...")
+                
+                if "No specific risk identified" in genericness_commentary:
+                    self.log_test("Legal Risk Matrix Fix - Genericness Generic", False, f"Genericness commentary contains generic text: {genericness_commentary}")
+                    return False
+                
+                if not any(keyword in genericness_commentary.lower() for keyword in ["coined", "invented", "class", "filing"]):
+                    self.log_test("Legal Risk Matrix Fix - Genericness Specific", False, f"Genericness commentary lacks specific content: {genericness_commentary}")
+                    return False
+                
+                print(f"✅ Genericness commentary is specific (no generic text)")
+                
+                # Test 4: Check existing_conflicts.commentary for conflict count
+                conflicts_commentary = tm_matrix.get("existing_conflicts", {}).get("commentary", "")
+                print(f"Existing conflicts commentary: {conflicts_commentary[:100]}...")
+                
+                if "No specific risk identified" in conflicts_commentary:
+                    self.log_test("Legal Risk Matrix Fix - Conflicts Generic", False, f"Conflicts commentary contains generic text: {conflicts_commentary}")
+                    return False
+                
+                if not any(keyword in conflicts_commentary.lower() for keyword in ["found", "conflict", "0", "1", "2", "3", "4", "5"]):
+                    self.log_test("Legal Risk Matrix Fix - Conflicts Count", False, f"Conflicts commentary lacks conflict count: {conflicts_commentary}")
+                    return False
+                
+                print(f"✅ Existing conflicts commentary mentions conflict count")
+                
+                # Test 5: Check phonetic_similarity.commentary for phonetic analysis
+                phonetic_commentary = tm_matrix.get("phonetic_similarity", {}).get("commentary", "")
+                print(f"Phonetic similarity commentary: {phonetic_commentary[:100]}...")
+                
+                if "No specific risk identified" in phonetic_commentary:
+                    self.log_test("Legal Risk Matrix Fix - Phonetic Generic", False, f"Phonetic commentary contains generic text: {phonetic_commentary}")
+                    return False
+                
+                if not any(keyword in phonetic_commentary.lower() for keyword in ["phonetic", "sound", "similar", "pronunciation"]):
+                    self.log_test("Legal Risk Matrix Fix - Phonetic Analysis", False, f"Phonetic commentary lacks phonetic analysis: {phonetic_commentary}")
+                    return False
+                
+                print(f"✅ Phonetic similarity commentary mentions phonetic analysis")
+                
+                # Test 6: Check relevant_classes.commentary for NICE class number
+                classes_commentary = tm_matrix.get("relevant_classes", {}).get("commentary", "")
+                print(f"Relevant classes commentary: {classes_commentary[:100]}...")
+                
+                if "No specific risk identified" in classes_commentary:
+                    self.log_test("Legal Risk Matrix Fix - Classes Generic", False, f"Classes commentary contains generic text: {classes_commentary}")
+                    return False
+                
+                if not any(keyword in classes_commentary for keyword in ["Class", "class"]) or not any(num in classes_commentary for num in ["9", "42", "35", "36", "25"]):
+                    self.log_test("Legal Risk Matrix Fix - Classes Number", False, f"Classes commentary lacks specific NICE class number: {classes_commentary}")
+                    return False
+                
+                print(f"✅ Relevant classes commentary mentions specific NICE class")
+                
+                # Test 7: Check rebranding_probability.commentary for probability percentage
+                rebranding_commentary = tm_matrix.get("rebranding_probability", {}).get("commentary", "")
+                print(f"Rebranding probability commentary: {rebranding_commentary[:100]}...")
+                
+                if "No specific risk identified" in rebranding_commentary:
+                    self.log_test("Legal Risk Matrix Fix - Rebranding Generic", False, f"Rebranding commentary contains generic text: {rebranding_commentary}")
+                    return False
+                
+                if not any(keyword in rebranding_commentary for keyword in ["%", "percent", "probability", "success", "registration"]):
+                    self.log_test("Legal Risk Matrix Fix - Rebranding Probability", False, f"Rebranding commentary lacks probability info: {rebranding_commentary}")
+                    return False
+                
+                print(f"✅ Rebranding probability commentary mentions probability/percentage")
+                
+                # Test 8: Check backend logs for the expected message
+                print(f"✅ All trademark matrix commentary fields contain SPECIFIC content")
+                
+                # Test 9: Verify no generic "No specific risk identified" anywhere in matrix
+                matrix_text = json.dumps(tm_matrix).lower()
+                generic_count = matrix_text.count("no specific risk identified")
+                
+                if generic_count > 0:
+                    self.log_test("Legal Risk Matrix Fix - Generic Text Found", False, f"Found {generic_count} instances of 'No specific risk identified' in matrix")
+                    return False
+                
+                print(f"✅ No generic 'No specific risk identified' text found in entire matrix")
+                
+                self.log_test("Legal Risk Matrix Fix", True, 
+                            f"All matrix commentary is SPECIFIC and actionable. No generic text found. All 5 sections have detailed commentary.")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Legal Risk Matrix Fix - JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Legal Risk Matrix Fix - Timeout", False, "Request timed out after 180 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Legal Risk Matrix Fix - Exception", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
