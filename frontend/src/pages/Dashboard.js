@@ -1246,43 +1246,57 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                             return (
                                 <div
                                     key={i}
-                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
+                                    className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10"
                                     style={{ left: `${x}%`, top: `${y}%` }}
                                 >
-                                    <div className={`w-7 h-7 bg-gradient-to-r ${colorScheme.bg} rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                                    <div className="w-8 h-8 bg-slate-500 hover:bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md transition-all cursor-pointer">
                                         {i + 1}
                                     </div>
-                                    <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-10">
-                                        {comp.name}
+                                    <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-20 shadow-lg">
+                                        <span className="font-semibold">{comp.name}</span>
+                                        {comp.quadrant && <span className="text-slate-300 ml-1">• {comp.quadrant}</span>}
                                     </div>
                                 </div>
                             );
                         })}
                         
-                        {/* User brand position */}
+                        {/* User brand position - GOLD/HIGHLIGHTED */}
                         {analysis.user_brand_position && (
                             <div
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 group"
                                 style={{
                                     left: `${(analysis.user_brand_position.x_coordinate || analysis.user_brand_position.x || 70) / 100 * 80 + 10}%`,
                                     top: `${100 - ((analysis.user_brand_position.y_coordinate || analysis.user_brand_position.y || 70) / 100 * 80 + 10)}%`
                                 }}
                             >
-                                <div className="w-9 h-9 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white">
+                                <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-amber-900 text-[10px] font-bold shadow-lg border-2 border-white animate-pulse">
                                     YOU
                                 </div>
+                                {analysis.user_brand_position.quadrant && (
+                                    <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-amber-600 text-white text-xs rounded whitespace-nowrap z-20 shadow-lg">
+                                        <span className="font-semibold">{analysis.user_brand_position.quadrant}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
                     
-                    {/* Legend */}
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        {comps.slice(0, 5).map((comp, i) => (
-                            <div key={i} className="flex items-center gap-1 text-xs">
-                                <div className={`w-4 h-4 bg-gradient-to-r ${colorScheme.bg} rounded-full flex items-center justify-center text-white text-xs`}>{i + 1}</div>
-                                <span className="text-slate-600 text-xs">{comp.name}</span>
+                    {/* Legend with improved styling */}
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* User Brand Legend */}
+                            <div className="flex items-center gap-2 text-xs border-r border-slate-300 pr-3">
+                                <div className="w-5 h-5 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-amber-900 text-[8px] font-bold">Y</div>
+                                <span className="text-slate-700 font-semibold">Your Brand</span>
                             </div>
-                        ))}
+                            {/* Competitors Legend */}
+                            {comps.slice(0, 6).map((comp, i) => (
+                                <div key={i} className="flex items-center gap-1 text-xs">
+                                    <div className="w-5 h-5 bg-slate-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold">{i + 1}</div>
+                                    <span className="text-slate-600">{comp.name}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                     
                     {/* Market Insights */}
