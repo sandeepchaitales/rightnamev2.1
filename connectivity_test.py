@@ -4,7 +4,7 @@ import json
 
 def test_health():
     """Test API health endpoint"""
-    url = "https://parallel-llm.preview.emergentagent.com/api/health"
+    url = "https://brandcheck-app.preview.emergentagent.com/api/health"
     
     try:
         print("🔍 Testing API health...")
@@ -22,7 +22,7 @@ def test_health():
 
 def test_basic_api():
     """Test basic API endpoint"""
-    url = "https://parallel-llm.preview.emergentagent.com/api/"
+    url = "https://brandcheck-app.preview.emergentagent.com/api/"
     
     try:
         print("🔍 Testing basic API endpoint...")
