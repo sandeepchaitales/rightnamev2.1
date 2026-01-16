@@ -955,11 +955,19 @@ NICE_CLASS_MAP = {
     "it services": {"class_number": 42, "class_description": "Scientific and technological services, software as a service"},
     "platform": {"class_number": 42, "class_description": "Scientific and technological services, software as a service"},
     
-    # Class 43 - Restaurant, hospitality
+    # Class 43 - Restaurant, hospitality (PRIORITY - check these first)
+    "hotel chain": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "hotel": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "hotels": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "resort": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "resorts": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "motel": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "lodge": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "inn": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "accommodation": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
+    "hospitality": {"class_number": 43, "class_description": "Hotels, temporary accommodation, restaurant services"},
     "restaurant": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
     "cafe": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
-    "hotel": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
-    "hospitality": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
     "food service": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
     "quick service": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
     "qsr": {"class_number": 43, "class_description": "Restaurant services, food and drink services, hotels"},
