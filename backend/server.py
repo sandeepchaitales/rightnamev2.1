@@ -823,8 +823,16 @@ COUNTRY_CULTURAL_DATA = {
 }
 
 def generate_cultural_analysis(countries: list, brand_name: str) -> list:
-    """Generate cultural analysis for ALL user-selected countries (max 4)"""
+    """Generate cultural analysis for ALL user-selected countries (max 4)
+    Now includes sacred/royal name detection for cultural sensitivity warnings
+    """
     result = []
+    
+    # First, check for sacred/royal name conflicts
+    sacred_check = check_sacred_royal_names(brand_name, countries)
+    
+    if sacred_check["has_issues"]:
+        logging.warning(f"⚠️ SACRED/ROYAL NAME DETECTED: '{brand_name}' contains sensitive terms for: {sacred_check['affected_countries']}")
     
     # Ensure we process up to 4 countries
     countries_to_process = countries[:4] if len(countries) > 4 else countries
@@ -836,12 +844,33 @@ def generate_cultural_analysis(countries: list, brand_name: str) -> list:
         # Get cultural data for this country
         cultural_data = COUNTRY_CULTURAL_DATA.get(country_name, COUNTRY_CULTURAL_DATA["default"])
         
+        # Base cultural notes
+        cultural_notes = cultural_data["cultural_notes"].replace("'", "'")
+        resonance_score = cultural_data["resonance_score"]
+        linguistic_check = cultural_data["linguistic_check"]
+        
+        # Check if this country has sacred name warnings
+        country_warning = None
+        for warning in sacred_check.get("warnings", []):
+            if warning["country"] == country_name:
+                country_warning = warning
+                break
+        
+        if country_warning:
+            # Prepend the warning to cultural notes
+            matched_terms_str = ", ".join(country_warning["matched_terms"])
+            cultural_notes = f"{country_warning['warning']}\n\n**Detected terms:** {matched_terms_str}\n\n**Original Analysis:** {cultural_notes}"
+            # Reduce resonance score for countries with sacred name issues
+            resonance_score = max(3.0, resonance_score - 3.0)
+            linguistic_check = f"⚠️ CULTURAL RISK DETECTED - Contains terms: {matched_terms_str}"
+            logging.info(f"⚠️ Cultural warning added for {country_name} - detected: {matched_terms_str}")
+        
         result.append({
             "country": country_name,
             "country_flag": COUNTRY_FLAGS.get(country_name, "🌍"),
-            "cultural_resonance_score": cultural_data["resonance_score"],
-            "cultural_notes": cultural_data["cultural_notes"].replace("'", "'"),
-            "linguistic_check": cultural_data["linguistic_check"]
+            "cultural_resonance_score": resonance_score,
+            "cultural_notes": cultural_notes,
+            "linguistic_check": linguistic_check
         })
     
     return result
