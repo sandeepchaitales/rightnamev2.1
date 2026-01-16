@@ -589,7 +589,7 @@ const FinalAssessmentFull = ({ assessment, verdict, score }) => {
                                         <Rocket className="w-4 h-4 text-orange-600" />
                                         <h5 className="font-bold text-orange-800 text-sm">Launch Tactics</h5>
                                     </div>
-                                    <p className="text-xs text-slate-600">{assessment.launch_tactics}</p>
+                                    <p className="text-xs text-slate-600"><MarkdownText text={assessment.launch_tactics} /></p>
                                 </div>
                             )}
                         </div>
