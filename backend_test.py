@@ -17,6 +17,7 @@ class BrandEvaluationTester:
         self.test_user_password = "TestPass123!"
         self.test_user_name = "Test User"
         self.test_report_id = None
+        self.admin_token = None
 
     def log_test(self, name, success, details=""):
         """Log test result"""
