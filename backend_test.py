@@ -5784,6 +5784,37 @@ class BrandEvaluationTester:
         
         return self.tests_passed == self.tests_run
 
+    def run_category_and_sacred_name_tests_only(self):
+        """Run only the Category-Specific Market Data and Sacred/Royal Name Detection tests"""
+        print("🔧 CATEGORY-SPECIFIC MARKET DATA & SACRED NAME DETECTION FIXES TESTING")
+        print("=" * 80)
+        print("Testing the two newly implemented fixes for RIGHTNAME brand evaluation API:")
+        print()
+        print("FIX 1: Category-Specific Market Data")
+        print("- Previously: All categories showed BEAUTY industry competitors (Nykaa, Glossier, etc.)")
+        print("- Now: Each category has its own competitor data (Hotels show Taj Hotels, OYO, Marriott)")
+        print()
+        print("FIX 2: Sacred/Royal Name Detection")
+        print("- Previously: No warning for culturally sensitive names like 'Rama'")
+        print("- Now: Detects sacred/royal names and shows detailed warnings in cultural analysis")
+        print()
+        print("TEST CASES:")
+        print("1. RamaRaya (Hotel Chain) in India + Thailand - Should show hotel competitors + cultural warnings")
+        print("2. TechNova (Technology) in India + USA - Should show tech competitors + no warnings")
+        print("=" * 80)
+        
+        # Test API health first
+        if not self.test_api_health():
+            print("❌ API health check failed, stopping tests")
+            return False
+        
+        # Run the specific tests for the fixes
+        self.test_category_specific_market_data_hotel_chain()  # Test Case 1: Hotel Chain + RamaRaya
+        self.test_sacred_royal_name_detection_ramaraya()       # Test Case 1: RamaRaya sacred/royal warnings
+        self.test_technology_category_comparison()             # Test Case 2: Technology category comparison
+        
+        return self.print_summary()
+
 def main():
     """Main function to run Admin Panel API tests as requested in review"""
     tester = BrandEvaluationTester()
