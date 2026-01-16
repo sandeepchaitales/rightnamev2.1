@@ -634,12 +634,13 @@ Return ONLY valid JSON.
       },
       
       "trademark_matrix": {
-          "genericness": {"likelihood": 2, "severity": 8, "zone": "Green", "commentary": "Detailed reasoning..."},
-          "existing_conflicts": {"likelihood": 4, "severity": 9, "zone": "Yellow", "commentary": "Detailed reasoning..."},
-          "phonetic_similarity": {"likelihood": 3, "severity": 7, "zone": "Green", "commentary": "Detailed reasoning..."},
-          "relevant_classes": {"likelihood": 5, "severity": 5, "zone": "Yellow", "commentary": "Detailed reasoning..."},
-          "rebranding_probability": {"likelihood": 1, "severity": 10, "zone": "Green", "commentary": "Detailed reasoning..."},
-          "overall_assessment": "Full legal strategy recommendation."
+          "CRITICAL_COMMENTARY_INSTRUCTION": "⚠️ NEVER write generic text like 'No specific risk identified'. Each commentary MUST contain: (1) The specific risk factor analyzed, (2) What was found or not found, (3) A concrete action item. Even for low-risk items, provide proactive advice.",
+          "genericness": {"likelihood": 2, "severity": 8, "zone": "Green", "commentary": "EXAMPLE: Name is invented/coined with no dictionary meaning. Register as wordmark + design mark for maximum protection. File intent-to-use application before public launch."},
+          "existing_conflicts": {"likelihood": 4, "severity": 9, "zone": "Yellow", "commentary": "EXAMPLE: Found 2 similar marks in Class 35. Recommend: (1) Conduct knockout search with IP attorney, (2) Prepare coexistence agreement template, (3) Consider design mark differentiation."},
+          "phonetic_similarity": {"likelihood": 3, "severity": 7, "zone": "Green", "commentary": "EXAMPLE: No phonetically similar marks found in relevant classes. However, monitor for new filings using soundex variants (e.g., Zyflo, Xyflo). Set up trademark watch service."},
+          "relevant_classes": {"likelihood": 5, "severity": 5, "zone": "Yellow", "commentary": "EXAMPLE: Primary class (Class 42) is moderately crowded with 847 active marks. Strategy: File in Class 42 + Class 9 (software) for defensive protection."},
+          "rebranding_probability": {"likelihood": 1, "severity": 10, "zone": "Green", "commentary": "EXAMPLE: Low rebranding risk. Name is distinctive and no senior marks found. Secure brand equity early with federal registration to prevent future challenges."},
+          "overall_assessment": "Full legal strategy recommendation with specific next steps, timeline, and cost estimates."
       },
 
       "trademark_research": {
