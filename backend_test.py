@@ -5399,55 +5399,61 @@ class BrandEvaluationTester:
         return self.tests_passed == self.tests_run
 
 def main():
+    """Main function to run Admin Panel API tests as requested in review"""
     tester = BrandEvaluationTester()
     
-    # Run Brand Audit test as per review request
-    print("🔍 BRAND AUDIT API TEST: Testing /api/brand-audit endpoint after improved error handling")
+    print("🔐 RIGHTNAME ADMIN PANEL API TESTING")
     print("=" * 80)
-    print("🎯 TESTING: Brand Audit API with Bikanervala test case")
-    print("🔧 IMPROVED: Added empty response checks")
-    print("🔧 IMPROVED: Changed model priority: gpt-4o first (more stable), then gpt-4o-mini, then gpt-4.1")
+    print("Testing new Admin Panel API endpoints as requested in review:")
+    print("1. POST /api/admin/login - Admin authentication")
+    print("2. GET /api/admin/verify - Token verification")
+    print("3. GET /api/admin/prompts/system - Get system prompt")
+    print("4. GET /api/admin/prompts/early_stopping - Get early stopping prompt")
+    print("5. GET /api/admin/settings/model - Get model settings")
+    print("6. GET /api/admin/analytics/usage - Get usage analytics")
+    print()
+    print("Admin Credentials: email='chaibunkcafe@gmail.com', password='Sandy@2614'")
+    print("All endpoints require authentication except login")
     print("=" * 80)
     
-    # Test API health first
-    if not tester.test_api_health():
-        print("❌ API health check failed, stopping tests")
-        return 1
-    
-    # PRIORITY: Run Brand Audit test as per review request
-    print("\n🔍 FINAL BRAND AUDIT TEST:")
-    print("Testing Brand Audit API with Bikanervala (Indian sweets brand) after improved error handling...")
-    print("Expected: Status 200 with report_id, overall_score, verdict, executive_summary, dimensions")
-    print("Allow 180 seconds. If valid JSON response = SUCCESS.")
-    
-    # Run the specific test requested
-    success = tester.test_brand_audit_bikanervala_final()
-    
-    # Print summary
-    print(f"\n📊 Brand Audit Test Summary:")
-    print(f"Tests Run: {tester.tests_run}")
-    print(f"Tests Passed: {tester.tests_passed}")
-    print(f"Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%" if tester.tests_run > 0 else "0%")
+    # Run admin tests only
+    success = tester.run_admin_tests_only()
     
     # Save detailed results
-    with open('/app/backend_test_results.json', 'w') as f:
+    with open('/app/admin_test_results.json', 'w') as f:
         json.dump({
-            "test_focus": "Brand Audit API Test - Bikanervala Final Test",
-            "description": "Final test of Brand Audit API /api/brand-audit with improved error handling",
-            "improvement_details": {
-                "issue": "Previous issues with empty responses and model stability",
-                "solution": "Added empty response checks, changed model priority: gpt-4o first (more stable), then gpt-4o-mini, then gpt-4.1",
-                "timeout": "Allow 180 seconds for processing"
+            "test_focus": "Admin Panel API Testing",
+            "description": "Testing new Admin Panel API endpoints for RIGHTNAME application",
+            "endpoints_tested": [
+                "POST /api/admin/login",
+                "GET /api/admin/verify", 
+                "GET /api/admin/prompts/system",
+                "GET /api/admin/prompts/early_stopping",
+                "GET /api/admin/settings/model",
+                "GET /api/admin/analytics/usage"
+            ],
+            "admin_credentials": {
+                "email": "chaibunkcafe@gmail.com",
+                "password": "Sandy@2614"
             },
-            "test_case": {
-                "brand_name": "Bikanervala",
-                "brand_website": "https://bfresco.com",
-                "category": "Food & Beverage",
-                "geography": "India",
-                "competitor_1": "Haldiram",
-                "competitor_2": "Bikano"
-            },
-            "verification_points": [
+            "authentication_flow": [
+                "1. Login with credentials to get JWT token",
+                "2. Use Bearer token for all subsequent requests",
+                "3. Verify token validation works",
+                "4. Test all protected endpoints"
+            ],
+            "test_results": tester.test_results,
+            "summary": {
+                "total_tests": tester.tests_run,
+                "passed_tests": tester.tests_passed,
+                "failed_tests": tester.tests_run - tester.tests_passed,
+                "success_rate": f"{(tester.tests_passed/tester.tests_run)*100:.1f}%" if tester.tests_run > 0 else "0%"
+            }
+        }, indent=2)
+    
+    print(f"\n📄 Detailed results saved to: /app/admin_test_results.json")
+    
+    return 0 if success else 1
                 "API returns successful response (200 OK)",
                 "Response contains report_id (string)",
                 "Response contains overall_score (number 0-100)",
