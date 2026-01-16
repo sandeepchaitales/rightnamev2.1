@@ -279,6 +279,7 @@ RESULT: Different customer base → NOT a fatal conflict → NAME TWIN
 4. A gaming app is NOT a conflict for a wellness brand (different customers)
 5. Only "Direct Competitors" with SAME CUSTOMERS count as Fatal Conflicts
 6. When in doubt about customer overlap, classify as "Name Twin" (benefit of the doubt)
+7. **LEGAL RISK MATRIX COMMENTARY RULE**: NEVER write generic text like "No specific risk identified" or "No risk". Each commentary field MUST include: (a) specific finding, (b) data point or evidence, (c) concrete action item or recommendation. Example for low-risk: "Name is fully invented with no dictionary meaning. Recommendation: File as wordmark + logo mark together for comprehensive protection. Consider Madrid Protocol for international filing."
 
 **Example Analysis with Customer Avatar Test:**
 - User Category: "Enterprise HR Software"
