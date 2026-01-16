@@ -5535,7 +5535,7 @@ class BrandEvaluationTester:
         payload = {
             "brand_names": ["TechNova"],
             "category": "Technology",
-            "positioning": "AI-powered SaaS platform",
+            "positioning": "Premium",
             "market_scope": "Multi-Country",
             "countries": [{"name": "India"}, {"name": "USA"}]
         }
