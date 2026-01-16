@@ -536,6 +536,8 @@ def generate_legal_precedents(trademark_risk_level: str) -> list:
     })
     
     return precedents
+
+REGISTRATION_TIMELINE_STAGES = {
     "India": [
         {"stage": "Filing & Formalities Examination", "duration": "1-2 months", "risk": "Minor objections possible on formalities"},
         {"stage": "Substantive Examination", "duration": "3-6 months", "risk": "Examiner objections on descriptiveness/similarity"},
