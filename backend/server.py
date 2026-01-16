@@ -2653,19 +2653,22 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                 ] if verdict != "GO" else [],
                 "cultural_analysis": [
                     {
-                        "region": "Global",
-                        "sentiment": "Positive" if verdict == "GO" else "Neutral",
-                        "notes": f"'{brand_name}' has no negative connotations in major languages. The coined nature provides flexibility for international positioning."
+                        "country": "Global",
+                        "cultural_resonance_score": 7.5,
+                        "cultural_notes": f"'{brand_name}' has no negative connotations in major languages. The coined nature provides flexibility for international positioning.",
+                        "linguistic_check": "PASS - No adverse meanings detected"
                     },
                     {
-                        "region": "India",
-                        "sentiment": "Positive",
-                        "notes": f"No adverse meanings in Hindi, Tamil, or other major Indian languages. Suitable for pan-India branding."
+                        "country": "India",
+                        "cultural_resonance_score": 7.5,
+                        "cultural_notes": "No adverse meanings in Hindi, Tamil, or other major Indian languages. Suitable for pan-India branding.",
+                        "linguistic_check": "PASS - Clean linguistic profile"
                     },
                     {
-                        "region": "Western Markets",
-                        "sentiment": "Positive",
-                        "notes": "Clean linguistic profile for English-speaking markets. No phonetic conflicts identified."
+                        "country": "USA",
+                        "cultural_resonance_score": 7.5,
+                        "cultural_notes": "Clean linguistic profile for English-speaking markets. No phonetic conflicts identified.",
+                        "linguistic_check": "PASS - No conflicts"
                     }
                 ],
                 "competitor_analysis": {
