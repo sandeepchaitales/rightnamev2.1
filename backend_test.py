@@ -5547,27 +5547,8 @@ def main_chai_bunk_test():
         return 1
 
 if __name__ == "__main__":
-    # Check if we should run the Chai Bunk test specifically
-    if len(sys.argv) > 1 and sys.argv[1] == "chai_bunk":
-        sys.exit(main_chai_bunk_test())
-    elif len(sys.argv) > 1 and sys.argv[1] == "schema_fix":
-        # Run the schema fix test
-        tester = BrandEvaluationTester()
-        
-        print("🔍 CHAI BUNK BRAND AUDIT API - SCHEMA FIX TEST")
-        print("="*80)
-        print("Testing Brand Audit API with Chai Bunk - StrategicRecommendation Schema Fix")
-        print("Expected: 200 OK response (not 500 error) with valid JSON structure")
-        print("Timeout: 180 seconds (3 minutes)")
-        print("="*80)
-        
-        # Add the schema fix test method
-        def test_brand_audit_chai_bunk_schema_fix():
-            """Test Brand Audit API with Chai Bunk - Schema Fix for StrategicRecommendation"""
-            payload = {
-                "brand_name": "Chai Bunk",
-                "brand_website": "https://www.chaibunk.com",
-                "competitor_1": "https://www.chaayos.com",
+    # Run Admin Panel API tests by default (as requested in review)
+    sys.exit(main())
                 "competitor_2": "https://www.chaipoint.com",
                 "category": "Cafe/QSR",
                 "geography": "India"
