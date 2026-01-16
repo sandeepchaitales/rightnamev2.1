@@ -304,121 +304,409 @@ def check_sacred_royal_names(brand_name: str, countries: list) -> dict:
         "risk_score_modifier": risk_score_modifier
     }
 
-# RESEARCHED Country-Specific Market Intelligence
-COUNTRY_MARKET_DATA = {
-    "India": {
-        "competitors": [
-            {"name": "Nykaa", "x_coordinate": 70, "y_coordinate": 75, "quadrant": "Premium Digital-First"},
-            {"name": "Mamaearth", "x_coordinate": 55, "y_coordinate": 80, "quadrant": "Natural/Clean Beauty"},
-            {"name": "Sugar Cosmetics", "x_coordinate": 50, "y_coordinate": 70, "quadrant": "Affordable Trendy"},
-            {"name": "Plum Goodness", "x_coordinate": 60, "y_coordinate": 65, "quadrant": "Vegan Premium"}
-        ],
-        "user_position": {"x": 65, "y": 78, "quadrant": "Premium Accessible"},
-        "axis_x": "Price: ₹200 Budget → ₹2000+ Premium",
-        "axis_y": "Positioning: Mass Market → Premium DTC",
-        "white_space": "India's ₹1.2 trillion beauty market is dominated by legacy brands (Lakme, L'Oréal India) in mass retail. The DTC premium segment (₹500-1500 price point) targeting 25-35 urban professionals remains underpenetrated. Opportunity: 'Clean beauty' positioning resonates with health-conscious millennials - only 12% of market currently addresses this.",
-        "strategic_advantage": "India's DTC beauty grew 45% YoY (2023-24). First-mover advantage in Tier 2/3 cities where Nykaa/Mamaearth have limited reach. Lower CAC ($2-4) vs USA ($15-25) enables faster scale. Vernacular marketing in Hindi/regional languages can capture 400M non-English speakers.",
-        "entry_recommendation": "Phase 1: Launch on Amazon India, Flipkart, and Nykaa marketplace (6 months). Phase 2: Own D2C website with COD (Cash on Delivery - 65% of orders). Phase 3: Quick commerce (Blinkit, Zepto) for replenishment. Key: Partner with micro-influencers (10K-100K followers) at ₹5,000-20,000/post vs celebrity endorsements."
+# ============ CATEGORY-SPECIFIC COUNTRY MARKET DATA ============
+# Structure: CATEGORY_COUNTRY_MARKET_DATA[category][country]
+CATEGORY_COUNTRY_MARKET_DATA = {
+    # ============ HOTELS & HOSPITALITY ============
+    "hotels": {
+        "India": {
+            "competitors": [
+                {"name": "Taj Hotels", "x_coordinate": 90, "y_coordinate": 85, "quadrant": "Heritage Luxury"},
+                {"name": "OYO Rooms", "x_coordinate": 25, "y_coordinate": 40, "quadrant": "Budget Tech-Enabled"},
+                {"name": "ITC Hotels", "x_coordinate": 85, "y_coordinate": 75, "quadrant": "Luxury Business"},
+                {"name": "Lemon Tree", "x_coordinate": 45, "y_coordinate": 55, "quadrant": "Mid-scale Value"}
+            ],
+            "user_position": {"x": 65, "y": 70, "quadrant": "Premium Boutique"},
+            "axis_x": "Price: ₹1,500/night Budget → ₹50,000+/night Luxury",
+            "axis_y": "Experience: Standardized → Unique/Boutique",
+            "white_space": "India's $30B hospitality market is polarized - luxury (Taj, Oberoi, ITC) and budget (OYO). **Gap: Premium boutique segment (₹5,000-15,000/night)** targeting experience-seeking millennials and domestic tourists. Heritage properties, wellness retreats, and experiential stays are undersupplied despite 78M domestic tourist trips annually.",
+            "strategic_advantage": "Post-COVID domestic tourism boom: 2B+ domestic trips projected by 2030. First-mover advantage in Tier 2 cities (Jaipur, Udaipur, Goa, Kerala) where international chains have limited presence. Lower real estate costs enable unique property acquisition. Government's 'Swadesh Darshan' scheme offers incentives for heritage tourism.",
+            "entry_recommendation": "Phase 1: Acquire/lease 3-5 heritage properties in high-tourism corridors (Rajasthan, Kerala, Himachal). Phase 2: List on MakeMyTrip, Goibibo, Booking.com with competitive commission structure. Phase 3: Build direct booking channel with loyalty program. Key: Partner with Airbnb Luxe for global exposure, target NRI travelers (high-spending segment)."
+        },
+        "USA": {
+            "competitors": [
+                {"name": "Marriott International", "x_coordinate": 75, "y_coordinate": 65, "quadrant": "Full-Service Leader"},
+                {"name": "Hilton Hotels", "x_coordinate": 70, "y_coordinate": 70, "quadrant": "Business Premium"},
+                {"name": "Airbnb", "x_coordinate": 50, "y_coordinate": 80, "quadrant": "Alternative Experience"},
+                {"name": "Hyatt Hotels", "x_coordinate": 80, "y_coordinate": 75, "quadrant": "Upscale Lifestyle"}
+            ],
+            "user_position": {"x": 60, "y": 78, "quadrant": "Boutique Lifestyle"},
+            "axis_x": "Price: $100/night Economy → $500+/night Luxury",
+            "axis_y": "Experience: Chain Standard → Unique/Local",
+            "white_space": "US hotel market ($230B) is dominated by mega-chains. **Gap: Lifestyle boutique segment** for millennials/Gen Z who reject cookie-cutter hotels. The 'soft brand' space (Marriott's Autograph, Hilton's Curio) is growing but mostly conversions, not purpose-built. Opportunity in secondary markets (Austin, Nashville, Denver) where demand exceeds boutique supply.",
+            "strategic_advantage": "'Revenge travel' spending remains strong. Independent hotels outperform chains on RevPAR in lifestyle segment. Direct booking technology eliminates OTA commissions (15-25%). Opportunity to partner with local F&B concepts for unique food experiences.",
+            "entry_recommendation": "Phase 1: Flagship property in high-profile secondary market (Nashville, Portland, Savannah). Phase 2: Expand via management contracts with property owners seeking lifestyle repositioning. Phase 3: Launch loyalty program and direct booking platform. Key: Instagram-worthy design, local partnerships, competitive group business rates."
+        },
+        "Thailand": {
+            "competitors": [
+                {"name": "Dusit International", "x_coordinate": 80, "y_coordinate": 70, "quadrant": "Thai Heritage Luxury"},
+                {"name": "Centara Hotels", "x_coordinate": 65, "y_coordinate": 60, "quadrant": "Resort Mid-Scale"},
+                {"name": "Minor Hotels (Anantara)", "x_coordinate": 90, "y_coordinate": 85, "quadrant": "Ultra-Luxury Experience"},
+                {"name": "Onyx Hospitality (Amari)", "x_coordinate": 55, "y_coordinate": 55, "quadrant": "Urban Business"}
+            ],
+            "user_position": {"x": 70, "y": 75, "quadrant": "Premium Wellness"},
+            "axis_x": "Price: ฿1,500/night Budget → ฿30,000+/night Ultra-Luxury",
+            "axis_y": "Positioning: City/Business → Resort/Experiential",
+            "white_space": "Thailand's $20B tourism industry is rebounding to 40M+ arrivals. **Gap: Premium wellness and sustainable tourism** segment. Existing luxury (Four Seasons, Aman, Six Senses) is ultra-high-end. Mid-luxury wellness (฿5,000-15,000/night) targeting health-conscious Western and Asian travelers is underserved.",
+            "strategic_advantage": "Thailand is world's #1 medical tourism destination ($4B market). Wellness tourism growing 20%+ annually. Lower operating costs than Bali or Vietnam. TAT (Tourism Authority) actively promotes 'Amazing Thailand' wellness positioning. Phuket, Chiang Mai, Koh Samui have established infrastructure.",
+            "entry_recommendation": "Phase 1: Launch wellness resort in Chiang Mai (lower costs, growing demand) or Hua Hin (proximity to Bangkok). Phase 2: Partner with Thai spas, traditional medicine practitioners for authentic programs. Phase 3: Expand to beach destinations (Koh Samui, Krabi). Key: Target Chinese returning tourists, partner with Agoda (dominant in Thailand), secure TAT partnership for marketing support."
+        },
+        "UK": {
+            "competitors": [
+                {"name": "Premier Inn (Whitbread)", "x_coordinate": 35, "y_coordinate": 40, "quadrant": "Budget Consistent"},
+                {"name": "The Hoxton", "x_coordinate": 70, "y_coordinate": 80, "quadrant": "Hipster Lifestyle"},
+                {"name": "Gleneagles/Rocco Forte", "x_coordinate": 90, "y_coordinate": 75, "quadrant": "Heritage Luxury"},
+                {"name": "citizenM", "x_coordinate": 55, "y_coordinate": 75, "quadrant": "Tech-Forward Affordable"}
+            ],
+            "user_position": {"x": 65, "y": 72, "quadrant": "Contemporary Premium"},
+            "axis_x": "Price: £60/night Budget → £400+/night Luxury",
+            "axis_y": "Style: Traditional/Chain → Contemporary/Independent",
+            "white_space": "UK hotel market (£26B) is split between budget chains (Premier Inn, Travelodge) and London luxury (Claridge's, The Savoy). **Gap: Regional boutique hotels** outside London. Edinburgh, Manchester, Bristol, Bath have tourism demand but limited boutique supply. 'Staycation' trend continues post-Brexit.",
+            "strategic_advantage": "Weak pound drives inbound tourism and domestic stays. Regional cities growing faster than London. Listed buildings offer unique conversion opportunities with heritage tax benefits. UK consumers trust independent hotels over chains for 'authentic' experiences.",
+            "entry_recommendation": "Phase 1: Acquire/convert Georgian or Victorian property in Edinburgh or Bath. Phase 2: List on Mr & Mrs Smith, Tablet Hotels for affluent positioning. Phase 3: Expand to Manchester, Bristol with consistent brand identity. Key: Emphasize British heritage with modern amenities, partner with local restaurants, leverage National Trust for heritage positioning."
+        },
+        "UAE": {
+            "competitors": [
+                {"name": "Jumeirah Group", "x_coordinate": 90, "y_coordinate": 85, "quadrant": "Iconic Luxury"},
+                {"name": "Rotana Hotels", "x_coordinate": 60, "y_coordinate": 55, "quadrant": "Regional Business"},
+                {"name": "Address Hotels (Emaar)", "x_coordinate": 80, "y_coordinate": 75, "quadrant": "Lifestyle Luxury"},
+                {"name": "Rove Hotels", "x_coordinate": 45, "y_coordinate": 65, "quadrant": "Affordable Contemporary"}
+            ],
+            "user_position": {"x": 70, "y": 78, "quadrant": "Premium Lifestyle"},
+            "axis_x": "Price: AED 300/night Budget → AED 5,000+/night Ultra-Luxury",
+            "axis_y": "Positioning: Business/Transit → Destination/Experience",
+            "white_space": "UAE hospitality ($15B) is dominated by mega-brands and ultra-luxury. **Gap: Design-forward mid-luxury** (AED 600-1,200/night) targeting younger affluent travelers and digital nomads. Dubai's new visa programs (remote work, golden visa) create demand for longer stays with lifestyle amenities.",
+            "strategic_advantage": "UAE targeting 25M tourists by 2025. Expo 2020 legacy infrastructure. No income tax enables competitive pricing. Dubai Marina, JBR, Business Bay have high demand but limited boutique supply. Abu Dhabi positioning for cultural tourism (Louvre, Guggenheim).",
+            "entry_recommendation": "Phase 1: Management contract or lease in Dubai Marina or Downtown area. Phase 2: Develop co-living/long-stay concept for digital nomads. Phase 3: Expand to Abu Dhabi for cultural tourism segment. Key: Partner with Emirates for travel packages, target GCC weekend travelers, emphasize Instagram-worthy design."
+        },
+        "Singapore": {
+            "competitors": [
+                {"name": "Marina Bay Sands", "x_coordinate": 95, "y_coordinate": 80, "quadrant": "Iconic Integrated Resort"},
+                {"name": "Raffles Singapore", "x_coordinate": 90, "y_coordinate": 70, "quadrant": "Heritage Luxury"},
+                {"name": "YOTEL", "x_coordinate": 40, "y_coordinate": 75, "quadrant": "Tech Compact"},
+                {"name": "The Warehouse Hotel", "x_coordinate": 75, "y_coordinate": 80, "quadrant": "Boutique Heritage"}
+            ],
+            "user_position": {"x": 68, "y": 75, "quadrant": "Contemporary Lifestyle"},
+            "axis_x": "Price: S$150/night Budget → S$1,000+/night Luxury",
+            "axis_y": "Style: Business/Chain → Lifestyle/Boutique",
+            "white_space": "Singapore hospitality ($10B) is highly competitive with international chains. **Gap: Mid-range lifestyle hotels** targeting regional business travelers and short-stay tourists. Limited supply in emerging districts (Tiong Bahru, Katong, Kampong Glam) where heritage shophouses create unique opportunities.",
+            "strategic_advantage": "Singapore is ASEAN business hub with 19M+ annual visitors. Strong IP protection and rule of law for international brands. Changi Airport connectivity. STB (Singapore Tourism Board) offers grants for tourism innovation.",
+            "entry_recommendation": "Phase 1: Boutique hotel in heritage district (Tiong Bahru, Katong) via shophouse conversion. Phase 2: Partner with SilkAir/Singapore Airlines for regional packages. Phase 3: Expand to Sentosa for leisure segment. Key: Emphasize local Peranakan culture, target Malaysian/Indonesian weekend visitors, leverage Singapore's food scene."
+        },
+        "Japan": {
+            "competitors": [
+                {"name": "Hoshino Resorts", "x_coordinate": 85, "y_coordinate": 80, "quadrant": "Japanese Luxury Experience"},
+                {"name": "APA Hotels", "x_coordinate": 30, "y_coordinate": 35, "quadrant": "Budget Business"},
+                {"name": "Prince Hotels", "x_coordinate": 65, "y_coordinate": 55, "quadrant": "Traditional Premium"},
+                {"name": "Aman Tokyo", "x_coordinate": 95, "y_coordinate": 90, "quadrant": "Ultra-Luxury Minimal"}
+            ],
+            "user_position": {"x": 70, "y": 75, "quadrant": "Modern Ryokan Fusion"},
+            "axis_x": "Price: ¥8,000/night Budget → ¥100,000+/night Luxury",
+            "axis_y": "Style: Western Standard → Japanese Authentic",
+            "white_space": "Japan hospitality ($100B) is recovering to 60M+ tourist target. **Gap: Modern ryokan concept** bridging traditional Japanese hospitality with contemporary design for Western travelers. Existing ryokans are either ultra-luxury (¥50,000+) or dated mid-range. Demand for 'accessible Japanese experience' (¥15,000-30,000/night) exceeds supply.",
+            "strategic_advantage": "Yen weakness (150+/$) drives record inbound tourism. 2025 Osaka Expo creates demand surge. Rural revitalization initiatives offer subsidies for heritage property development. Japanese service culture ('omotenashi') is unique differentiator.",
+            "entry_recommendation": "Phase 1: Acquire/restore traditional property in Kyoto or Kanazawa with modern amenities. Phase 2: Partner with JR rail passes for package offerings. Phase 3: Expand to secondary cities (Takayama, Naoshima, Hakone). Key: Hire experienced Japanese hospitality staff, design for tatami/futon flexibility, target FIT (Free Independent Travelers) via Jalan and Rakuten Travel."
+        },
+        "default": {
+            "competitors": [
+                {"name": "Marriott International", "x_coordinate": 75, "y_coordinate": 65, "quadrant": "Global Full-Service"},
+                {"name": "Hilton Worldwide", "x_coordinate": 70, "y_coordinate": 60, "quadrant": "Business Premium"},
+                {"name": "Accor Hotels", "x_coordinate": 60, "y_coordinate": 55, "quadrant": "European Diverse"},
+                {"name": "IHG Hotels", "x_coordinate": 65, "y_coordinate": 50, "quadrant": "Mid-Scale Focus"}
+            ],
+            "user_position": {"x": 65, "y": 72, "quadrant": "Boutique Lifestyle"},
+            "axis_x": "Price: Budget → Luxury",
+            "axis_y": "Experience: Standardized Chain → Unique Boutique",
+            "white_space": "Global hospitality market shows consistent demand for **lifestyle boutique experiences** over standardized chain offerings. Millennials and Gen Z prioritize Instagram-worthy design, local authenticity, and unique experiences over loyalty program points.",
+            "strategic_advantage": "Independent boutique hotels consistently outperform chains on guest satisfaction and social media engagement. Direct booking technology reduces OTA dependency. Flexible brand standards enable local adaptation.",
+            "entry_recommendation": "Phase 1: Flagship property in high-demand destination. Phase 2: Management contract expansion with property partners. Phase 3: Regional brand building via strategic marketing. Focus on design differentiation, local partnerships, and digital-first guest experience."
+        }
     },
-    "USA": {
-        "competitors": [
-            {"name": "Glossier", "x_coordinate": 75, "y_coordinate": 85, "quadrant": "Premium Millennial"},
-            {"name": "The Ordinary", "x_coordinate": 40, "y_coordinate": 70, "quadrant": "Science-Led Affordable"},
-            {"name": "Drunk Elephant", "x_coordinate": 85, "y_coordinate": 80, "quadrant": "Clean Luxury"},
-            {"name": "CeraVe", "x_coordinate": 35, "y_coordinate": 55, "quadrant": "Dermatologist Value"}
-        ],
-        "user_position": {"x": 60, "y": 72, "quadrant": "Accessible Clean Beauty"},
-        "axis_x": "Price: $10 Drugstore → $100+ Prestige",
-        "axis_y": "Channel: Mass Retail → DTC/Specialty",
-        "white_space": "US skincare market ($24B) is saturated at premium ($50+) and mass ($10-15) tiers. The $20-40 'masstige' segment is contested but not dominated. Gap: Brands combining clinical efficacy (like The Ordinary) with aspirational branding (like Glossier) at mid-price. Gen Z demands transparency + sustainability.",
-        "strategic_advantage": "TikTok-driven discovery is reshaping US beauty - #SkinTok has 100B+ views. Unlike established brands, new entrants can build virality through UGC. Opportunity in Ulta Beauty's 'Conscious Beauty' program and Target's clean beauty shelf space expansion.",
-        "entry_recommendation": "Phase 1: Amazon US launch with FBA (test market fit, 3-6 months). Phase 2: Ulta Beauty pitch (requires $2M+ marketing commitment). Phase 3: Own DTC with Shopify + aggressive Meta/TikTok ads ($50-100 CAC expected). Critical: FDA compliance for claims, clean ingredient list for retailer acceptance. Consider B-Corp certification for ESG positioning."
+    
+    # ============ BEAUTY & COSMETICS ============
+    "beauty": {
+        "India": {
+            "competitors": [
+                {"name": "Nykaa", "x_coordinate": 70, "y_coordinate": 75, "quadrant": "Premium Digital-First"},
+                {"name": "Mamaearth", "x_coordinate": 55, "y_coordinate": 80, "quadrant": "Natural/Clean Beauty"},
+                {"name": "Sugar Cosmetics", "x_coordinate": 50, "y_coordinate": 70, "quadrant": "Affordable Trendy"},
+                {"name": "Plum Goodness", "x_coordinate": 60, "y_coordinate": 65, "quadrant": "Vegan Premium"}
+            ],
+            "user_position": {"x": 65, "y": 78, "quadrant": "Premium Accessible"},
+            "axis_x": "Price: ₹200 Budget → ₹2000+ Premium",
+            "axis_y": "Positioning: Mass Market → Premium DTC",
+            "white_space": "India's ₹1.2 trillion beauty market is dominated by legacy brands (Lakme, L'Oréal India) in mass retail. **Gap: DTC premium segment** (₹500-1500 price point) targeting 25-35 urban professionals remains underpenetrated. 'Clean beauty' positioning resonates with health-conscious millennials - only 12% of market currently addresses this.",
+            "strategic_advantage": "India's DTC beauty grew 45% YoY (2023-24). First-mover advantage in Tier 2/3 cities where Nykaa/Mamaearth have limited reach. Lower CAC ($2-4) vs USA ($15-25) enables faster scale. Vernacular marketing in Hindi/regional languages can capture 400M non-English speakers.",
+            "entry_recommendation": "Phase 1: Launch on Amazon India, Flipkart, and Nykaa marketplace (6 months). Phase 2: Own D2C website with COD (Cash on Delivery - 65% of orders). Phase 3: Quick commerce (Blinkit, Zepto) for replenishment. Key: Partner with micro-influencers (10K-100K followers) at ₹5,000-20,000/post vs celebrity endorsements."
+        },
+        "USA": {
+            "competitors": [
+                {"name": "Glossier", "x_coordinate": 75, "y_coordinate": 85, "quadrant": "Premium Millennial"},
+                {"name": "The Ordinary", "x_coordinate": 40, "y_coordinate": 70, "quadrant": "Science-Led Affordable"},
+                {"name": "Drunk Elephant", "x_coordinate": 85, "y_coordinate": 80, "quadrant": "Clean Luxury"},
+                {"name": "CeraVe", "x_coordinate": 35, "y_coordinate": 55, "quadrant": "Dermatologist Value"}
+            ],
+            "user_position": {"x": 60, "y": 72, "quadrant": "Accessible Clean Beauty"},
+            "axis_x": "Price: $10 Drugstore → $100+ Prestige",
+            "axis_y": "Channel: Mass Retail → DTC/Specialty",
+            "white_space": "US skincare market ($24B) is saturated at premium ($50+) and mass ($10-15) tiers. **Gap: The $20-40 'masstige' segment** is contested but not dominated. Brands combining clinical efficacy (like The Ordinary) with aspirational branding (like Glossier) at mid-price. Gen Z demands transparency + sustainability.",
+            "strategic_advantage": "TikTok-driven discovery is reshaping US beauty - #SkinTok has 100B+ views. Unlike established brands, new entrants can build virality through UGC. Opportunity in Ulta Beauty's 'Conscious Beauty' program and Target's clean beauty shelf space expansion.",
+            "entry_recommendation": "Phase 1: Amazon US launch with FBA (test market fit, 3-6 months). Phase 2: Ulta Beauty pitch (requires $2M+ marketing commitment). Phase 3: Own DTC with Shopify + aggressive Meta/TikTok ads ($50-100 CAC expected). Critical: FDA compliance for claims, clean ingredient list for retailer acceptance."
+        },
+        "Thailand": {
+            "competitors": [
+                {"name": "Oriental Princess", "x_coordinate": 65, "y_coordinate": 60, "quadrant": "Local Heritage Premium"},
+                {"name": "Mistine", "x_coordinate": 40, "y_coordinate": 50, "quadrant": "Mass Market Leader"},
+                {"name": "Beauty Buffet", "x_coordinate": 35, "y_coordinate": 65, "quadrant": "K-Beauty Inspired Affordable"},
+                {"name": "SRICHAND", "x_coordinate": 55, "y_coordinate": 45, "quadrant": "Traditional Thai Beauty"}
+            ],
+            "user_position": {"x": 70, "y": 75, "quadrant": "Modern Premium Import"},
+            "axis_x": "Price: ฿100 Mass → ฿1500+ Import Premium",
+            "axis_y": "Origin: Local Thai → International/K-Beauty",
+            "white_space": "Thailand's $6B beauty market is K-Beauty dominated (40% market share). **Gap: Western/International clean beauty** brands are underrepresented. Thai consumers associate 'farang' (foreign) brands with premium quality. Opportunity in 'whitening-free' positioning - global clean beauty trend conflicts with local whitening obsession.",
+            "strategic_advantage": "Thailand is ASEAN's beauty hub - successful launch here provides gateway to Vietnam, Indonesia, Philippines. Lower regulatory burden than China. Thai FDA approval is straightforward for cosmetics. Bangkok's 7-Eleven (13,000+ stores) is a unique distribution channel.",
+            "entry_recommendation": "Phase 1: Shopee Thailand and Lazada launch (dominant e-commerce, 70% of online sales). Phase 2: Watsons and Boots pharmacy chains (high-trust retail). Phase 3: 7-Eleven for impulse SKUs. Key: Thai-language social media (Line, not WhatsApp), partner with Thai beauty bloggers, consider Thai celebrity ambassador."
+        },
+        "UK": {
+            "competitors": [
+                {"name": "Charlotte Tilbury", "x_coordinate": 85, "y_coordinate": 80, "quadrant": "Luxury Glamour"},
+                {"name": "The Body Shop", "x_coordinate": 50, "y_coordinate": 55, "quadrant": "Ethical Mass"},
+                {"name": "Lush", "x_coordinate": 60, "y_coordinate": 70, "quadrant": "Handmade Premium"},
+                {"name": "Boots No7", "x_coordinate": 40, "y_coordinate": 45, "quadrant": "Pharmacy Value"}
+            ],
+            "user_position": {"x": 65, "y": 75, "quadrant": "Modern Clean Premium"},
+            "axis_x": "Price: £5 Value → £50+ Luxury",
+            "axis_y": "Positioning: Traditional → Modern/Clean",
+            "white_space": "UK beauty market (£10B) faces post-Brexit supply chain challenges for EU brands. **Gap: British-made clean beauty** brands are rare - most 'clean' brands are US imports. Opportunity in 'Made in UK' positioning with sustainability focus. Vegan/cruelty-free is table stakes.",
+            "strategic_advantage": "UK consumers are Europe's most digitally-savvy beauty shoppers. Lower customer acquisition costs than US. Boots (2,200 stores) and Superdrug (800 stores) provide mass reach. UK launch validates brand for broader European expansion.",
+            "entry_recommendation": "Phase 1: Amazon UK + own D2C site (3-6 months validation). Phase 2: Cult Beauty or Space NK for premium positioning, OR Boots for mass reach. Phase 3: Expand to EU via Netherlands hub. Key: UK-specific claims compliance, sustainable packaging mandatory."
+        },
+        "default": {
+            "competitors": [
+                {"name": "L'Oréal Group", "x_coordinate": 75, "y_coordinate": 65, "quadrant": "Mass Premium Leader"},
+                {"name": "Estée Lauder", "x_coordinate": 85, "y_coordinate": 75, "quadrant": "Prestige Beauty"},
+                {"name": "Unilever Beauty", "x_coordinate": 50, "y_coordinate": 50, "quadrant": "Mass Market"},
+                {"name": "Indie Brands", "x_coordinate": 60, "y_coordinate": 80, "quadrant": "DTC Disruptors"}
+            ],
+            "user_position": {"x": 65, "y": 72, "quadrant": "Accessible Premium"},
+            "axis_x": "Price: Budget → Premium",
+            "axis_y": "Channel: Mass Retail → DTC/Specialty",
+            "white_space": "Global beauty market shows consistent demand for **clean, transparent, sustainable** brands. The 'masstige' segment ($20-50) remains underpenetrated in most markets.",
+            "strategic_advantage": "DTC brands with authentic stories consistently outperform on customer loyalty. Social media (TikTok, Instagram) enables rapid brand building without traditional advertising spend.",
+            "entry_recommendation": "Phase 1: E-commerce validation on marketplaces. Phase 2: Build DTC channel with strong social presence. Phase 3: Retail partnerships for scale. Focus on ingredient transparency, sustainable packaging, and community building."
+        }
     },
-    "Thailand": {
-        "competitors": [
-            {"name": "Oriental Princess", "x_coordinate": 65, "y_coordinate": 60, "quadrant": "Local Heritage Premium"},
-            {"name": "Mistine", "x_coordinate": 40, "y_coordinate": 50, "quadrant": "Mass Market Leader"},
-            {"name": "Beauty Buffet", "x_coordinate": 35, "y_coordinate": 65, "quadrant": "K-Beauty Inspired Affordable"},
-            {"name": "SRICHAND", "x_coordinate": 55, "y_coordinate": 45, "quadrant": "Traditional Thai Beauty"}
-        ],
-        "user_position": {"x": 70, "y": 75, "quadrant": "Modern Premium Import"},
-        "axis_x": "Price: ฿100 Mass → ฿1500+ Import Premium",
-        "axis_y": "Origin: Local Thai → International/K-Beauty",
-        "white_space": "Thailand's $6B beauty market is K-Beauty dominated (40% market share). Gap: Western/International clean beauty brands are underrepresented. Thai consumers (especially Bangkok's 15M urban population) associate 'farang' (foreign) brands with premium quality. Opportunity in 'whitening-free' positioning - global clean beauty trend conflicts with local whitening obsession.",
-        "strategic_advantage": "Thailand is ASEAN's beauty hub - successful launch here provides gateway to Vietnam, Indonesia, Philippines. Lower regulatory burden than China. Thai FDA approval is straightforward for cosmetics. Bangkok's 7-Eleven (13,000+ stores) is a unique distribution channel unavailable elsewhere.",
-        "entry_recommendation": "Phase 1: Shopee Thailand and Lazada launch (dominant e-commerce, 70% of online sales). Phase 2: Watsons and Boots pharmacy chains (high-trust retail). Phase 3: 7-Eleven for impulse SKUs (requires high volume commitment). Key: Thai-language social media (Line, not WhatsApp), partner with Thai beauty bloggers, consider Thai celebrity ambassador (฿500K-2M/campaign)."
+    
+    # ============ TECHNOLOGY & SAAS ============
+    "technology": {
+        "India": {
+            "competitors": [
+                {"name": "Zoho", "x_coordinate": 65, "y_coordinate": 70, "quadrant": "Indian Enterprise SaaS"},
+                {"name": "Freshworks", "x_coordinate": 60, "y_coordinate": 75, "quadrant": "Global SMB Focus"},
+                {"name": "Razorpay", "x_coordinate": 70, "y_coordinate": 80, "quadrant": "Fintech Leader"},
+                {"name": "Infosys", "x_coordinate": 80, "y_coordinate": 55, "quadrant": "Enterprise Services"}
+            ],
+            "user_position": {"x": 55, "y": 72, "quadrant": "Emerging SaaS"},
+            "axis_x": "Market: SMB/Startup → Enterprise",
+            "axis_y": "Reach: India-First → Global-First",
+            "white_space": "India's $10B SaaS market is dominated by US imports and a few Indian giants. **Gap: Vertical-specific SaaS** for Indian industries (pharma, textiles, agriculture). 75M+ SMBs lack affordable, localized software solutions. Opportunity in vernacular interfaces and UPI-integrated tools.",
+            "strategic_advantage": "India produces world-class engineering talent at 70-80% lower cost. Domestic market of 75M+ SMBs for validation before global expansion. Government's 'Digital India' initiative drives cloud adoption. Strong VC ecosystem (Sequoia, Accel, Peak XV) for growth funding.",
+            "entry_recommendation": "Phase 1: MVP for specific vertical (healthcare, education, retail) with freemium model. Phase 2: Build enterprise sales team for mid-market. Phase 3: Expand to SEA markets with similar characteristics. Key: Offer UPI/local payment integration, WhatsApp Business API support, Hindi/regional language support."
+        },
+        "USA": {
+            "competitors": [
+                {"name": "Salesforce", "x_coordinate": 90, "y_coordinate": 70, "quadrant": "Enterprise CRM Leader"},
+                {"name": "HubSpot", "x_coordinate": 65, "y_coordinate": 75, "quadrant": "SMB Growth Platform"},
+                {"name": "Stripe", "x_coordinate": 80, "y_coordinate": 85, "quadrant": "Developer-First Payments"},
+                {"name": "Notion", "x_coordinate": 55, "y_coordinate": 80, "quadrant": "Productivity Disruptor"}
+            ],
+            "user_position": {"x": 60, "y": 78, "quadrant": "Emerging Challenger"},
+            "axis_x": "Market: SMB → Enterprise",
+            "axis_y": "Approach: Sales-Led → Product-Led Growth",
+            "white_space": "US SaaS market ($200B) is mature but fragmented. **Gap: AI-native vertical solutions** for specific industries. Horizontal tools (CRM, project management) are commoditized. Opportunity in applying GPT/AI to specific workflows (legal, healthcare, construction) with deep domain expertise.",
+            "strategic_advantage": "PLG (Product-Led Growth) enables efficient scaling. US market validates global pricing. Access to world's largest talent pool and VC ecosystem. Enterprise willingness to pay premium for best-in-class solutions.",
+            "entry_recommendation": "Phase 1: Launch AI-powered niche tool with freemium or free trial. Phase 2: Build self-serve motion with product-led growth. Phase 3: Add enterprise sales for larger accounts. Key: SOC2 compliance mandatory, integrate with existing workflows (Slack, Salesforce), competitive pricing vs incumbents."
+        },
+        "default": {
+            "competitors": [
+                {"name": "Microsoft", "x_coordinate": 85, "y_coordinate": 60, "quadrant": "Enterprise Incumbent"},
+                {"name": "Google Cloud", "x_coordinate": 80, "y_coordinate": 70, "quadrant": "Cloud Infrastructure"},
+                {"name": "Atlassian", "x_coordinate": 60, "y_coordinate": 75, "quadrant": "Developer Tools"},
+                {"name": "Local Players", "x_coordinate": 45, "y_coordinate": 55, "quadrant": "Regional Focus"}
+            ],
+            "user_position": {"x": 55, "y": 72, "quadrant": "Agile Innovator"},
+            "axis_x": "Market: SMB → Enterprise",
+            "axis_y": "Approach: Traditional Sales → Product-Led Growth",
+            "white_space": "Global SaaS market continues rapid growth. **Gap: AI-native, vertical-specific solutions** that solve specific industry problems better than horizontal tools.",
+            "strategic_advantage": "Product-led growth enables efficient customer acquisition. Cloud infrastructure reduces time-to-market. Global talent pool available for remote hiring.",
+            "entry_recommendation": "Phase 1: MVP with clear value proposition for specific use case. Phase 2: Build self-serve onboarding and product-led growth. Phase 3: Add sales team for enterprise expansion. Focus on customer success and net revenue retention."
+        }
     },
-    "UK": {
-        "competitors": [
-            {"name": "Charlotte Tilbury", "x_coordinate": 85, "y_coordinate": 80, "quadrant": "Luxury Glamour"},
-            {"name": "The Body Shop", "x_coordinate": 50, "y_coordinate": 55, "quadrant": "Ethical Mass"},
-            {"name": "Lush", "x_coordinate": 60, "y_coordinate": 70, "quadrant": "Handmade Premium"},
-            {"name": "Boots No7", "x_coordinate": 40, "y_coordinate": 45, "quadrant": "Pharmacy Value"}
-        ],
-        "user_position": {"x": 65, "y": 75, "quadrant": "Modern Clean Premium"},
-        "axis_x": "Price: £5 Value → £50+ Luxury",
-        "axis_y": "Positioning: Traditional → Modern/Clean",
-        "white_space": "UK beauty market (£10B) faces post-Brexit supply chain challenges for EU brands. Gap: British-made clean beauty brands are rare - most 'clean' brands are US imports. Opportunity in 'Made in UK' positioning with sustainability focus. Vegan/cruelty-free is table stakes, not differentiator.",
-        "strategic_advantage": "UK consumers are Europe's most digitally-savvy beauty shoppers. Lower customer acquisition costs than US. Boots (2,200 stores) and Superdrug (800 stores) provide mass reach. UK launch validates brand for broader European expansion.",
-        "entry_recommendation": "Phase 1: Amazon UK + own D2C site (3-6 months validation). Phase 2: Cult Beauty or Space NK for premium positioning, OR Boots for mass reach. Phase 3: Expand to EU via Netherlands hub post-Brexit. Key: UK-specific claims compliance (different from EU), sustainable packaging is mandatory for retailer acceptance."
+    
+    # ============ FOOD & BEVERAGE ============
+    "food": {
+        "India": {
+            "competitors": [
+                {"name": "Haldiram's", "x_coordinate": 70, "y_coordinate": 55, "quadrant": "Heritage Snacks Leader"},
+                {"name": "Paper Boat", "x_coordinate": 60, "y_coordinate": 80, "quadrant": "Premium Nostalgia"},
+                {"name": "Chaayos", "x_coordinate": 55, "y_coordinate": 75, "quadrant": "Modern Chai Chain"},
+                {"name": "Chai Point", "x_coordinate": 50, "y_coordinate": 70, "quadrant": "B2B Tea Focus"}
+            ],
+            "user_position": {"x": 65, "y": 78, "quadrant": "Premium Authentic"},
+            "axis_x": "Price: ₹20 Mass → ₹200+ Premium",
+            "axis_y": "Positioning: Traditional → Modern Premium",
+            "white_space": "India's $800B food market is highly fragmented. **Gap: Premium authentic regional cuisine** for urban millennials. 400M+ urban consumers willing to pay premium for 'grandmother's recipes' with modern packaging. Opportunity in healthy traditional foods (millets, regional snacks) without preservatives.",
+            "strategic_advantage": "India's food delivery grew 25%+ annually. Quick commerce (10-min delivery) changes consumption patterns. Regional pride drives demand for authentic local foods. Lower manufacturing costs enable competitive pricing.",
+            "entry_recommendation": "Phase 1: D2C launch via own website + Amazon/Flipkart. Phase 2: Quick commerce (Blinkit, Zepto, Instamart) for metro cities. Phase 3: Modern trade (Big Bazaar, Reliance Retail). Key: Clean labels (no preservatives), regional authenticity story, Instagram-worthy packaging."
+        },
+        "USA": {
+            "competitors": [
+                {"name": "Oatly", "x_coordinate": 75, "y_coordinate": 80, "quadrant": "Plant-Based Leader"},
+                {"name": "Impossible Foods", "x_coordinate": 70, "y_coordinate": 85, "quadrant": "Alt-Protein Innovation"},
+                {"name": "KIND Snacks", "x_coordinate": 60, "y_coordinate": 65, "quadrant": "Better-For-You"},
+                {"name": "Chobani", "x_coordinate": 65, "y_coordinate": 60, "quadrant": "Greek Yogurt Leader"}
+            ],
+            "user_position": {"x": 68, "y": 75, "quadrant": "Clean Label Premium"},
+            "axis_x": "Price: $3 Mass → $10+ Premium",
+            "axis_y": "Positioning: Conventional → Health/Sustainability",
+            "white_space": "US food market ($1T) is shifting to health-conscious choices. **Gap: Ethnic 'better-for-you' foods** targeting diverse population. Indian, Korean, Mexican cuisines growing but lack clean-label, premium brands. Opportunity in functional foods (adaptogens, probiotics) with ethnic positioning.",
+            "strategic_advantage": "US consumers increasingly adventurous with global flavors. Whole Foods, Sprouts, Target expanding ethnic/health sections. Food service channel (restaurants, cafeterias) provides scale. DTC subscription models enable customer retention.",
+            "entry_recommendation": "Phase 1: Amazon + specialty retailers (Whole Foods, Sprouts). Phase 2: Foodservice partnerships (corporate cafeterias, universities). Phase 3: Mass retail (Target, Walmart) with proven velocity. Key: Clean ingredient deck, compelling origin story, competitive shelf price."
+        },
+        "default": {
+            "competitors": [
+                {"name": "Nestlé", "x_coordinate": 80, "y_coordinate": 50, "quadrant": "Global Mass Leader"},
+                {"name": "Kraft Heinz", "x_coordinate": 70, "y_coordinate": 45, "quadrant": "Processed Foods"},
+                {"name": "Local Champions", "x_coordinate": 55, "y_coordinate": 60, "quadrant": "Regional Favorites"},
+                {"name": "Health Brands", "x_coordinate": 60, "y_coordinate": 80, "quadrant": "Better-For-You"}
+            ],
+            "user_position": {"x": 65, "y": 72, "quadrant": "Premium Authentic"},
+            "axis_x": "Price: Budget → Premium",
+            "axis_y": "Positioning: Conventional → Health/Authentic",
+            "white_space": "Global food trends favor **health-conscious, authentic, sustainable** options. Plant-based, functional foods, and clean labels are growth drivers across all markets.",
+            "strategic_advantage": "Consumer willingness to pay premium for quality and authenticity. E-commerce and quick commerce reduce distribution barriers. Social media enables direct brand building.",
+            "entry_recommendation": "Phase 1: E-commerce and specialty retail validation. Phase 2: Foodservice partnerships for scale. Phase 3: Mass retail with proven demand. Focus on clean ingredients, compelling story, and sustainable packaging."
+        }
     },
-    "Singapore": {
+    
+    # ============ FINANCE & PAYMENTS ============
+    "finance": {
+        "India": {
+            "competitors": [
+                {"name": "PhonePe", "x_coordinate": 45, "y_coordinate": 85, "quadrant": "Mass UPI Leader"},
+                {"name": "Razorpay", "x_coordinate": 70, "y_coordinate": 70, "quadrant": "B2B Payments"},
+                {"name": "Groww", "x_coordinate": 55, "y_coordinate": 80, "quadrant": "Retail Investing"},
+                {"name": "Zerodha", "x_coordinate": 60, "y_coordinate": 75, "quadrant": "Discount Broker Leader"}
+            ],
+            "user_position": {"x": 65, "y": 78, "quadrant": "Digital-First Premium"},
+            "axis_x": "Market: Retail/Consumer → Business/Enterprise",
+            "axis_y": "Innovation: Traditional → Digital-Native",
+            "white_space": "India's fintech market ($100B by 2025) is dominated by payments. **Gap: Embedded finance and neobanking** for underserved segments. 400M+ Indians lack access to credit. Opportunity in BNPL for non-metro, SMB lending, and wealth management for mass affluent.",
+            "strategic_advantage": "India Stack (UPI, Aadhaar, DigiLocker) enables instant onboarding. RBI's regulatory sandbox encourages innovation. Lower customer acquisition costs via WhatsApp. Account Aggregator framework enables open banking.",
+            "entry_recommendation": "Phase 1: Niche segment focus (freelancers, students, SMBs) with specific product. Phase 2: Expand product suite (savings, credit, insurance). Phase 3: Build to 'super app' with ecosystem. Key: RBI compliance, partnerships with banks for deposits, fraud prevention."
+        },
+        "USA": {
+            "competitors": [
+                {"name": "Stripe", "x_coordinate": 80, "y_coordinate": 85, "quadrant": "Developer Payments"},
+                {"name": "Square (Block)", "x_coordinate": 65, "y_coordinate": 75, "quadrant": "SMB Ecosystem"},
+                {"name": "Chime", "x_coordinate": 50, "y_coordinate": 80, "quadrant": "Consumer Neobank"},
+                {"name": "Plaid", "x_coordinate": 75, "y_coordinate": 70, "quadrant": "Infrastructure"}
+            ],
+            "user_position": {"x": 60, "y": 78, "quadrant": "Vertical Fintech"},
+            "axis_x": "Market: Consumer → Enterprise",
+            "axis_y": "Approach: Banking → Fintech/Embedded",
+            "white_space": "US fintech market is mature but fragmented. **Gap: Vertical-specific embedded finance** for industries (healthcare, construction, legal) with complex payment flows. Opportunity in 'banking-as-a-service' for non-financial brands.",
+            "strategic_advantage": "APIs enable rapid product development. Banking charters available (easier than before). Enterprise willingness to pay for specialized solutions. Strong VC funding environment.",
+            "entry_recommendation": "Phase 1: Solve specific pain point for defined vertical. Phase 2: Expand product suite within vertical. Phase 3: Horizontal expansion to adjacent verticals. Key: Compliance (state licenses, SOC2), banking partnerships, fraud prevention."
+        },
+        "default": {
+            "competitors": [
+                {"name": "Visa/Mastercard", "x_coordinate": 85, "y_coordinate": 55, "quadrant": "Card Network Incumbents"},
+                {"name": "PayPal", "x_coordinate": 70, "y_coordinate": 65, "quadrant": "Digital Payments"},
+                {"name": "Local Banks", "x_coordinate": 60, "y_coordinate": 45, "quadrant": "Traditional Banking"},
+                {"name": "Regional Fintechs", "x_coordinate": 55, "y_coordinate": 75, "quadrant": "Digital Challengers"}
+            ],
+            "user_position": {"x": 60, "y": 72, "quadrant": "Digital-First Challenger"},
+            "axis_x": "Market: Consumer → Enterprise",
+            "axis_y": "Innovation: Traditional → Digital-Native",
+            "white_space": "Global fintech continues rapid growth. **Gap: Embedded finance for specific verticals** and underserved segments. Cross-border payments, SMB lending, and wealth management remain underpenetrated.",
+            "strategic_advantage": "Digital-first approach enables superior user experience. API-based architecture allows rapid iteration. Regulatory clarity increasing globally.",
+            "entry_recommendation": "Phase 1: Niche segment with clear pain point. Phase 2: Expand product suite. Phase 3: Geographic or vertical expansion. Focus on compliance, partnerships with licensed entities, and fraud prevention."
+        }
+    }
+}
+
+# Category mapping to normalize input categories
+CATEGORY_MAPPING = {
+    # Hotels & Hospitality
+    "hotel": "hotels", "hotels": "hotels", "hotel chain": "hotels", "hospitality": "hotels",
+    "resort": "hotels", "motel": "hotels", "lodge": "hotels", "inn": "hotels",
+    "accommodation": "hotels", "lodging": "hotels", "boutique hotel": "hotels",
+    
+    # Beauty & Cosmetics  
+    "beauty": "beauty", "cosmetics": "beauty", "skincare": "beauty", "makeup": "beauty",
+    "personal care": "beauty", "haircare": "beauty", "fragrance": "beauty",
+    
+    # Technology & SaaS
+    "technology": "technology", "tech": "technology", "saas": "technology", "software": "technology",
+    "it": "technology", "app": "technology", "ai": "technology", "fintech": "technology",
+    
+    # Food & Beverage
+    "food": "food", "beverage": "food", "food & beverage": "food", "f&b": "food",
+    "restaurant": "food", "cafe": "food", "snacks": "food", "drinks": "food",
+    "tea": "food", "coffee": "food", "chai": "food",
+    
+    # Finance & Payments
+    "finance": "finance", "banking": "finance", "payments": "finance", "insurance": "finance",
+    "investment": "finance", "lending": "finance", "wealth": "finance"
+}
+
+def get_category_key(category: str) -> str:
+    """Normalize category input to match our data structure"""
+    if not category:
+        return "default"
+    
+    category_lower = category.lower().strip()
+    
+    # Check direct mapping
+    if category_lower in CATEGORY_MAPPING:
+        return CATEGORY_MAPPING[category_lower]
+    
+    # Check if any mapped key is contained in the category
+    for key, value in CATEGORY_MAPPING.items():
+        if key in category_lower:
+            return value
+    
+    return "default"
+
+def get_market_data_for_category_country(category: str, country: str) -> dict:
+    """Get market data for specific category and country combination"""
+    category_key = get_category_key(category)
+    
+    # Get category-specific data
+    category_data = CATEGORY_COUNTRY_MARKET_DATA.get(category_key, {})
+    
+    # Get country-specific data within category
+    if country in category_data:
+        return category_data[country]
+    elif "default" in category_data:
+        return category_data["default"]
+    
+    # Fallback to beauty default (original behavior) if category not found
+    return CATEGORY_COUNTRY_MARKET_DATA.get("beauty", {}).get("default", {
         "competitors": [
-            {"name": "SK-II", "x_coordinate": 90, "y_coordinate": 70, "quadrant": "Japanese Luxury"},
-            {"name": "Innisfree", "x_coordinate": 55, "y_coordinate": 65, "quadrant": "K-Beauty Natural"},
-            {"name": "Guardian House Brands", "x_coordinate": 30, "y_coordinate": 40, "quadrant": "Pharmacy Value"},
-            {"name": "Sephora Exclusives", "x_coordinate": 75, "y_coordinate": 75, "quadrant": "Prestige Curated"}
-        ],
-        "user_position": {"x": 65, "y": 70, "quadrant": "Premium Accessible"},
-        "axis_x": "Price: S$15 Mass → S$200+ Prestige",
-        "axis_y": "Channel: Pharmacy → Department Store",
-        "white_space": "Singapore ($1.5B market) is a testbed for Asia expansion. Highly educated, English-speaking consumers with $65K GDP/capita. Gap: Local Singaporean beauty brands are virtually non-existent - market is 95% imported. Opportunity for 'Asia-formulated' positioning.",
-        "strategic_advantage": "Singapore success = credibility for Malaysia, Indonesia, Hong Kong expansion. No import duties on cosmetics. Straightforward HSA registration. Small market (6M population) allows controlled launch with manageable inventory risk.",
-        "entry_recommendation": "Phase 1: Shopee Singapore + Lazada (combined 80% e-commerce share). Phase 2: Guardian and Watsons pharmacy chains. Phase 3: Sephora Singapore for prestige validation. Key: Multilingual marketing (English, Mandarin, Malay), leverage Singapore's influencer ecosystem for regional reach."
-    },
-    "UAE": {
-        "competitors": [
-            {"name": "Huda Beauty", "x_coordinate": 85, "y_coordinate": 85, "quadrant": "Influencer Luxury"},
-            {"name": "Faces", "x_coordinate": 60, "y_coordinate": 55, "quadrant": "Regional Chain"},
-            {"name": "Sephora Middle East", "x_coordinate": 75, "y_coordinate": 70, "quadrant": "Prestige Retail"},
-            {"name": "Boots Arabia", "x_coordinate": 45, "y_coordinate": 45, "quadrant": "Pharmacy Mid-range"}
-        ],
-        "user_position": {"x": 70, "y": 75, "quadrant": "Premium Modern"},
-        "axis_x": "Price: AED 50 Mass → AED 500+ Luxury",
-        "axis_y": "Positioning: Traditional → Modern/Global",
-        "white_space": "UAE ($2B market) serves as gateway to $30B GCC beauty market. Gap: Halal-certified clean beauty brands are rare. Opportunity in modest beauty positioning and Halal certification - not just 'no pork' but full supply chain compliance.",
-        "strategic_advantage": "Dubai is regional hub - success here opens Saudi Arabia (largest GCC market), Kuwait, Qatar. Tax-free environment. High per-capita beauty spend ($300/year). Diverse expat population (85% non-Emirati) means multiple consumer segments.",
-        "entry_recommendation": "Phase 1: Noon.com and Amazon.ae e-commerce launch. Phase 2: Faces or Paris Gallery department stores. Phase 3: Own boutique in Dubai Mall for brand building. Key: Arabic-language marketing, Halal certification, respect for local customs in imagery."
-    },
-    "Japan": {
-        "competitors": [
-            {"name": "Shiseido", "x_coordinate": 80, "y_coordinate": 60, "quadrant": "Heritage Luxury"},
-            {"name": "SK-II (P&G)", "x_coordinate": 90, "y_coordinate": 70, "quadrant": "Premium Anti-aging"},
-            {"name": "Canmake", "x_coordinate": 30, "y_coordinate": 65, "quadrant": "Cute Affordable"},
-            {"name": "FANCL", "x_coordinate": 65, "y_coordinate": 55, "quadrant": "Preservative-free Premium"}
-        ],
-        "user_position": {"x": 55, "y": 70, "quadrant": "Modern Natural"},
-        "axis_x": "Price: ¥500 Drugstore → ¥15,000+ Department",
-        "axis_y": "Positioning: Traditional J-Beauty → Modern/Western",
-        "white_space": "Japan ($40B market) is dominated by domestic giants. Foreign brands struggle - even L'Oréal has <5% share. Gap: 'Clean beauty' concept is nascent in Japan where preservative-heavy formulas are norm. Opportunity for brands with strong 'story' and craftsmanship positioning.",
-        "strategic_advantage": "If you can succeed in Japan's demanding market, you can succeed anywhere in Asia. Japanese consumers are loyal once converted. Japan launch provides credibility for other Asian markets.",
-        "entry_recommendation": "Phase 1: Amazon Japan + Rakuten (test consumer response). Phase 2: Cosme.net listing (Japan's Sephora equivalent). Phase 3: @cosme store or Loft retail. Key: Japanese-language everything, extensive product testing for Japanese skin types, kawaii-adjacent but sophisticated design. Budget 2-3 years for meaningful traction."
-    },
-    "default": {
-        "competitors": [
-            {"name": "Global Leader 1", "x_coordinate": 75, "y_coordinate": 70, "quadrant": "Premium Established"},
-            {"name": "Global Leader 2", "x_coordinate": 50, "y_coordinate": 60, "quadrant": "Mass Market"},
+            {"name": "Market Leader 1", "x_coordinate": 75, "y_coordinate": 70, "quadrant": "Premium Established"},
+            {"name": "Market Leader 2", "x_coordinate": 50, "y_coordinate": 60, "quadrant": "Mass Market"},
             {"name": "Regional Player", "x_coordinate": 60, "y_coordinate": 55, "quadrant": "Local Champion"},
-            {"name": "Emerging Brand", "x_coordinate": 45, "y_coordinate": 75, "quadrant": "Challenger"}
+            {"name": "Challenger Brand", "x_coordinate": 45, "y_coordinate": 75, "quadrant": "Emerging Disruptor"}
         ],
         "user_position": {"x": 65, "y": 72, "quadrant": "Accessible Premium"},
         "axis_x": "Price: Budget → Premium",
         "axis_y": "Positioning: Traditional → Modern",
-        "white_space": "Market analysis indicates opportunities in the accessible premium segment where established players have limited presence. Consumer trends favor clean, transparent brands.",
-        "strategic_advantage": "As a new entrant without legacy constraints, the brand can adopt digital-first strategies and respond quickly to consumer trends. Distinctive positioning can capture underserved segments.",
-        "entry_recommendation": "Phased market entry recommended: Phase 1 (E-commerce validation), Phase 2 (Retail partnerships), Phase 3 (Brand building). Focus on digital channels, influencer partnerships, and building authentic brand story."
-    }
-}
+        "white_space": "Market analysis indicates opportunities in the premium accessible segment. Consumer trends favor innovative, authentic brands with clear differentiation.",
+        "strategic_advantage": "As a new entrant, the brand can leverage digital-first strategies and agile positioning to capture underserved market segments.",
+        "entry_recommendation": "Phased market entry: Phase 1 (Digital validation), Phase 2 (Strategic partnerships), Phase 3 (Scale operations). Focus on building authentic brand story and community."
+    })
 
 def generate_country_competitor_analysis(countries: list, category: str, brand_name: str) -> list:
     """Generate RESEARCHED competitor analysis for ALL user-selected countries (max 4)"""
