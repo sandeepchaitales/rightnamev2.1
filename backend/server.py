@@ -1538,7 +1538,7 @@ async def llm_first_country_analysis(
         logging.info(f"⚡ Using hardcoded data (LLM research disabled)")
         return (
             generate_country_competitor_analysis(countries, category, brand_name),
-            generate_cultural_analysis(countries, brand_name)
+            generate_cultural_analysis(countries, brand_name, category)
         )
     
     logging.info(f"🔬 LLM-FIRST RESEARCH: Starting {positioning} research for {len(countries)} countries...")
