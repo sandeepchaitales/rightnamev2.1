@@ -3205,17 +3205,9 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                         {"name": f"Neo{brand_name[:4]}", "score": 70, "rationale": "Innovation-focused prefix"}
                     ]
                 },
-                "mitigation_strategies": [
-                    {"risk": "Domain availability", "strategy": "Secure alternative TLDs (.co, .io, .beauty) immediately"},
-                    {"risk": "Trademark conflicts", "strategy": "Conduct comprehensive trademark search before filing"},
-                    {"risk": "Brand awareness", "strategy": "Invest in digital marketing for brand recognition"}
-                ] if verdict != "GO" else [],
-                "registration_timeline": {
-                    "trademark_filing": "2-4 weeks for application preparation",
-                    "examination_period": "12-18 months typical examination",
-                    "opposition_period": "4 months post-publication",
-                    "estimated_completion": "18-24 months total"
-                },
+                "mitigation_strategies": RISK_MITIGATION_STRATEGIES[:5],
+                "registration_timeline": generate_registration_timeline(request.countries),
+                "legal_precedents": generate_legal_precedents("LOW" if trademark_risk <= 3 else "MEDIUM"),
                 "strategic_classification": f"{'STRONG' if trademark_risk <= 3 else 'MODERATE' if trademark_risk <= 6 else 'WEAK'} - Coined/Invented term with {'high' if trademark_risk <= 3 else 'moderate'} legal distinctiveness",
                 "trademark_classes": [str(nice_class.get('class_number', 3))],
                 "trademark_matrix": {
