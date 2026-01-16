@@ -1266,8 +1266,8 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
     
     return (
         <div className="space-y-4">
-            {/* Global/Overall Strategic Positioning Matrix */}
-            {competitorAnalysis && competitors.length > 0 && (
+            {/* Global/Overall Strategic Positioning Matrix - ALWAYS show if competitorAnalysis exists */}
+            {competitorAnalysis && (
                 <>
                     <PrintCard>
                         <div className="bg-white rounded-2xl p-6 border border-slate-200">
@@ -1293,7 +1293,12 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                                 <div className="absolute bottom-6 left-6 text-xs text-slate-400">Budget + Classic</div>
                                 <div className="absolute bottom-6 right-6 text-xs text-slate-400 text-right">Luxury + Classic</div>
                                 
-                                {/* Plot competitors */}
+                                {/* Plot competitors - show message if empty */}
+                                {competitors.length === 0 && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <p className="text-slate-400 text-sm">Competitor data not available</p>
+                                    </div>
+                                )}
                                 {competitors.slice(0, 6).map((comp, i) => {
                                     const x = (comp.x_coordinate || 50) / 100 * 80 + 10;
                                     const y = 100 - ((comp.y_coordinate || 50) / 100 * 80 + 10);
@@ -1330,14 +1335,15 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                             </div>
                             
                             {/* Legend */}
-                            <div className="mt-4 flex flex-wrap gap-3">
-                                {competitors.slice(0, 6).map((comp, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-xs">
-                                        <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">{i + 1}</div>
-                                        <span className="text-slate-600">{comp.name}</span>
-                                        <Badge variant="outline" className="text-xs">{comp.quadrant || comp.price_position}</Badge>
-                                    </div>
-                                ))}
+                            {competitors.length > 0 && (
+                                <div className="mt-4 flex flex-wrap gap-3">
+                                    {competitors.slice(0, 6).map((comp, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-xs">
+                                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">{i + 1}</div>
+                                            <span className="text-slate-600">{comp.name}</span>
+                                            <Badge variant="outline" className="text-xs">{comp.quadrant || comp.price_position}</Badge>
+                                        </div>
+                                    ))}
                             </div>
                         </div>
                     </PrintCard>
