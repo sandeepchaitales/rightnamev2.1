@@ -403,10 +403,8 @@ async def llm_detect_suffix_conflicts(brand_name: str, category: str) -> Dict:
             category=category
         )
         
-        chat = LlmChat(
-            api_key=EMERGENT_KEY,
-            model="openai/gpt-4o-mini"
-        )
+        # Correct LlmChat initialization: (api_key, provider, model)
+        chat = LlmChat(EMERGENT_KEY, "openai", "gpt-4o-mini")
         
         response = await asyncio.wait_for(
             chat.send_message_async(prompt),
