@@ -2572,7 +2572,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
             llm_chat = LlmChat(
                 api_key=EMERGENT_KEY,
                 session_id=unique_session,
-                system_message=SYSTEM_PROMPT
+                system_message=active_system_prompt  # Use dynamic prompt from DB/default
             ).with_model(model_provider, model_name)
             
             user_message = UserMessage(text=user_prompt)
