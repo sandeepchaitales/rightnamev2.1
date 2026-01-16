@@ -595,7 +595,7 @@ const FinalAssessmentFull = ({ assessment, verdict, score }) => {
                         </div>
                         {(assessment.contingency_note || assessment.alternative_path) && (
                             <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                <p className="text-xs text-slate-600 italic">💡 {assessment.contingency_note || assessment.alternative_path}</p>
+                                <p className="text-xs text-slate-600 italic">💡 <MarkdownText text={assessment.contingency_note || assessment.alternative_path} /></p>
                             </div>
                         )}
                     </div>
