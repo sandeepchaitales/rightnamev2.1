@@ -69,11 +69,20 @@ if GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID:
 else:
     logging.warning("⚠️ Google Search API not configured - using Bing fallback")
 
+# Import admin routes
+from admin_routes import admin_router, initialize_admin, set_db
+
 # Lifespan context manager for graceful startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logging.info("Application starting... MongoDB pool initialized")
+    
+    # Initialize admin panel
+    set_db(db)
+    await initialize_admin(db)
+    logging.info("✅ Admin panel initialized")
+    
     yield
     # Shutdown - cleanup connections
     if client:
