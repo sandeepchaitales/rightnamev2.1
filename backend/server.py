@@ -872,19 +872,24 @@ def generate_cultural_analysis(countries: list, brand_name: str) -> list:
     for country in countries_to_process:
         # Get country name (handle dict or string)
         country_name = country.get('name') if isinstance(country, dict) else str(country)
+        country_lower = country_name.lower().strip() if country_name else ""
+        display_name = country_name.title() if country_name else "Unknown"
         
-        # Get cultural data for this country
-        cultural_data = COUNTRY_CULTURAL_DATA.get(country_name, COUNTRY_CULTURAL_DATA["default"])
+        # Get cultural data for this country - CASE INSENSITIVE
+        cultural_data = cultural_data_lower.get(country_lower, COUNTRY_CULTURAL_DATA["default"])
+        
+        # Get flag - CASE INSENSITIVE
+        flag = flags_lower.get(country_lower, "🌍")
         
         # Base cultural notes
         cultural_notes = cultural_data["cultural_notes"].replace("'", "'")
         resonance_score = cultural_data["resonance_score"]
         linguistic_check = cultural_data["linguistic_check"]
         
-        # Check if this country has sacred name warnings
+        # Check if this country has sacred name warnings (case-insensitive match)
         country_warning = None
         for warning in sacred_check.get("warnings", []):
-            if warning["country"] == country_name:
+            if warning["country"].lower() == country_lower:
                 country_warning = warning
                 break
         
@@ -895,11 +900,11 @@ def generate_cultural_analysis(countries: list, brand_name: str) -> list:
             # Reduce resonance score for countries with sacred name issues
             resonance_score = max(3.0, resonance_score - 3.0)
             linguistic_check = f"⚠️ CULTURAL RISK DETECTED - Contains terms: {matched_terms_str}"
-            logging.info(f"⚠️ Cultural warning added for {country_name} - detected: {matched_terms_str}")
+            logging.info(f"⚠️ Cultural warning added for {display_name} - detected: {matched_terms_str}")
         
         result.append({
-            "country": country_name,
-            "country_flag": COUNTRY_FLAGS.get(country_name, "🌍"),
+            "country": display_name,
+            "country_flag": flag,
             "cultural_resonance_score": resonance_score,
             "cultural_notes": cultural_notes,
             "linguistic_check": linguistic_check
