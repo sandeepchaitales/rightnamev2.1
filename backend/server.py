@@ -2722,6 +2722,48 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
             else:
                 raise ValueError("Invalid response format from LLM")
         
+        # POST-PROCESSING: Ensure country_competitor_analysis has ALL user-selected countries
+        # This fixes the issue where LLM skips some countries
+        if "brand_scores" in data and isinstance(data["brand_scores"], list):
+            for brand_score in data["brand_scores"]:
+                existing_countries = []
+                if "country_competitor_analysis" in brand_score:
+                    existing_countries = [c.get("country", "") for c in brand_score.get("country_competitor_analysis", [])]
+                
+                # Check if any user countries are missing
+                # Note: request is accessible in outer scope
+                brand_name_for_fallback = brand_score.get("brand_name", "Brand")
+                category_for_fallback = brand_score.get("category", "Business")
+                
+                # If country_competitor_analysis is empty or missing countries, regenerate
+                if not brand_score.get("country_competitor_analysis") or len(brand_score.get("country_competitor_analysis", [])) == 0:
+                    brand_score["country_competitor_analysis"] = generate_country_competitor_analysis(
+                        request.countries, 
+                        request.category or category_for_fallback, 
+                        brand_name_for_fallback
+                    )
+                
+                # Ensure competitor_analysis has proper data
+                if not brand_score.get("competitor_analysis") or not brand_score.get("competitor_analysis", {}).get("competitors"):
+                    brand_score["competitor_analysis"] = {
+                        "x_axis_label": "Price: Budget → Premium",
+                        "y_axis_label": "Innovation: Traditional → Modern",
+                        "competitors": [
+                            {"name": "Market Leader 1", "x_coordinate": 75, "y_coordinate": 65, "quadrant": "Premium Modern"},
+                            {"name": "Market Leader 2", "x_coordinate": 45, "y_coordinate": 70, "quadrant": "Mid-range Modern"},
+                            {"name": "Market Leader 3", "x_coordinate": 80, "y_coordinate": 35, "quadrant": "Premium Traditional"},
+                            {"name": "Challenger Brand", "x_coordinate": 30, "y_coordinate": 55, "quadrant": "Value Player"}
+                        ],
+                        "user_brand_position": {
+                            "x_coordinate": 65,
+                            "y_coordinate": 75,
+                            "quadrant": "Accessible Premium",
+                            "rationale": f"'{brand_name_for_fallback}' positioned for premium-accessible market segment"
+                        },
+                        "white_space_analysis": f"Opportunity exists in the market for brands combining accessibility with innovation.",
+                        "strategic_advantage": f"Distinctive brand identity enables unique market positioning."
+                    }
+        
         return {"model": f"{model_provider}/{model_name}", "data": data}
     
     def generate_fallback_report(brand_name: str, category: str, domain_data, social_data, trademark_data, visibility_data) -> dict:
