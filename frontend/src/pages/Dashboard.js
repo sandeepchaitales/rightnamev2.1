@@ -1155,12 +1155,16 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
     
     const competitors = competitorAnalysis?.competitors || competitorAnalysis?.true_market_competitors || [];
     
-    // Country colors for different markets
+    // Country colors for different markets - extended to support 8+ countries
     const countryColors = [
         { bg: 'from-blue-500 to-indigo-500', light: 'bg-blue-50 border-blue-200', text: 'text-blue-700' },
         { bg: 'from-emerald-500 to-teal-500', light: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' },
         { bg: 'from-amber-500 to-orange-500', light: 'bg-amber-50 border-amber-200', text: 'text-amber-700' },
         { bg: 'from-rose-500 to-pink-500', light: 'bg-rose-50 border-rose-200', text: 'text-rose-700' },
+        { bg: 'from-violet-500 to-purple-500', light: 'bg-violet-50 border-violet-200', text: 'text-violet-700' },
+        { bg: 'from-cyan-500 to-sky-500', light: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-700' },
+        { bg: 'from-lime-500 to-green-500', light: 'bg-lime-50 border-lime-200', text: 'text-lime-700' },
+        { bg: 'from-fuchsia-500 to-pink-500', light: 'bg-fuchsia-50 border-fuchsia-200', text: 'text-fuchsia-700' },
     ];
     
     // Render a single positioning matrix
