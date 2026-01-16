@@ -252,42 +252,58 @@ async def search_cultural_sensitivity(brand_name: str, country: str) -> str:
 
 # ============ LLM ANALYSIS FUNCTIONS ============
 
-COMPETITOR_ANALYSIS_PROMPT = """You are a market research analyst. Analyze the web search results and extract REAL competitor data.
+COMPETITOR_ANALYSIS_PROMPT = """You are a market research analyst specializing in LOCAL market intelligence.
 
 CATEGORY: {category}
 COUNTRY: {country}
+POSITIONING SEGMENT: {positioning}
 BRAND BEING EVALUATED: {brand_name}
 
 WEB SEARCH RESULTS:
 {search_results}
 
-YOUR TASK: Extract REAL competitors from the search results. DO NOT invent or hallucinate companies.
+YOUR TASK: Extract REAL LOCAL competitors from the search results that match the user's positioning segment.
+
+⚠️ CRITICAL RULES FOR COMPETITOR SELECTION:
+1. **PRIORITIZE LOCAL/DOMESTIC BRANDS** that originated from {country}
+2. **MATCH THE POSITIONING**: User wants {positioning} segment - return competitors in THAT price tier
+3. **AVOID GLOBAL CHAINS** unless they are specifically dominant in that country's segment
+4. For India: Prioritize Taj, OYO, ITC, Lemon Tree, Ginger over Marriott, Hilton
+5. For Thailand: Prioritize Dusit, Centara, Minor Hotels, Onyx over international chains
+6. For USA: Mix of US-origin brands (Marriott, Hilton are US companies) + local boutiques
+
+POSITIONING-SEGMENT MAPPING:
+| Positioning | Price Tier | Example Brands (Hotels in India) |
+|-------------|------------|----------------------------------|
+| Budget | ₹1,000-3,000/night | OYO, Treebo, FabHotels, Zostel |
+| Mid-Range | ₹3,000-8,000/night | Lemon Tree, Ginger, Keys Hotels |
+| Premium | ₹8,000-20,000/night | Taj, ITC, Oberoi, Leela |
+| Luxury | ₹20,000+/night | Taj Palace, Oberoi Udaivilas, Aman |
 
 Return a JSON object with this EXACT structure:
 {{
     "competitors": [
         {{
-            "name": "REAL company name found in search results",
-            "x_coordinate": 65,  // 0-100 scale based on price positioning (0=budget, 100=luxury)
-            "y_coordinate": 70,  // 0-100 scale based on market presence (0=traditional, 100=modern/digital)
-            "quadrant": "Brief positioning description (e.g., 'Premium Digital-First')",
+            "name": "LOCAL brand name from {country} matching {positioning} segment",
+            "x_coordinate": 65,  // 0-100 scale based on price (0=budget, 100=luxury)
+            "y_coordinate": 70,  // 0-100 scale based on experience (0=basic, 100=premium experience)
+            "quadrant": "Brief positioning (e.g., 'Local Mid-Range Leader')",
             "market_share": "X%" or "Leading" or "Challenger" if mentioned,
-            "key_strength": "One-line strength"
+            "key_strength": "One-line strength",
+            "origin": "LOCAL" or "INTERNATIONAL"
         }}
     ],
-    "market_size": "Market size in local currency (e.g., '$24B', '₹1.2 trillion')",
+    "market_size": "Market size in LOCAL currency (₹ for India, ฿ for Thailand, $ for USA)",
     "growth_rate": "Annual growth rate if mentioned",
     "x_axis_label": "Price: [local currency] Budget → [local currency] Premium",
-    "y_axis_label": "Relevant axis for this industry (e.g., 'Channel: Mass Retail → DTC')",
+    "y_axis_label": "Experience: Basic/Standard → Boutique/Unique",
     "key_trends": ["Trend 1", "Trend 2", "Trend 3"]
 }}
 
-RULES:
-1. Only include companies EXPLICITLY mentioned in search results
-2. If fewer than 4 competitors found, include only what you found
-3. Use local currency for market size
-4. Position coordinates should reflect actual market positioning
-5. If data not found, use null
+VALIDATION CHECKLIST:
+✅ At least 2-3 competitors should be LOCAL brands from {country}
+✅ All competitors should be in the {positioning} segment (not mixed tiers)
+✅ Coordinates should reflect the {positioning} tier (Budget=20-40, Mid=40-60, Premium=60-80, Luxury=80-100)
 
 Return ONLY valid JSON, no explanations."""
 
@@ -296,6 +312,7 @@ WHITE_SPACE_ANALYSIS_PROMPT = """You are a strategic consultant analyzing market
 
 CATEGORY: {category}
 COUNTRY: {country}
+POSITIONING SEGMENT: {positioning}
 BRAND BEING EVALUATED: {brand_name}
 
 COMPETITOR DATA:
