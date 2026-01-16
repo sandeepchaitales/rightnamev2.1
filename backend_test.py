@@ -5934,6 +5934,12 @@ class BrandEvaluationTester:
         self.test_sacred_royal_name_detection_ramaraya()       # Test Case 1: RamaRaya sacred/royal warnings
         self.test_technology_category_comparison()             # Test Case 2: Technology category comparison
         
+        # NEW: Legal Risk Matrix Fix Test
+        print("\n⚖️ LEGAL RISK MATRIX FIX TEST")
+        print("=" * 80)
+        print("Testing the Legal Risk Matrix fix - should generate SPECIFIC commentary instead of generic text")
+        self.test_legal_risk_matrix_fix()
+        
         # Print summary
         print(f"\n📊 Test Summary:")
         print(f"Tests Run: {self.tests_run}")
