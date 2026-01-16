@@ -1374,21 +1374,29 @@ COUNTRY_CULTURAL_DATA = {
     }
 }
 
-def generate_cultural_analysis(countries: list, brand_name: str) -> list:
+def generate_cultural_analysis(countries: list, brand_name: str, category: str = "Business") -> list:
     """Generate cultural analysis for ALL user-selected countries (max 4)
-    Now includes sacred/royal name detection for cultural sensitivity warnings
+    
+    NOW INCLUDES:
+    - Linguistic decomposition (morpheme analysis)
+    - Cultural resonance per country based on morphemes
+    - Industry-suffix fit analysis
+    - Phonetic risk detection
+    - Sacred/royal name warnings
     """
     result = []
     
-    # Create case-insensitive lookup for cultural data
+    # Create case-insensitive lookups
     cultural_data_lower = {k.lower(): v for k, v in COUNTRY_CULTURAL_DATA.items()}
     flags_lower = {k.lower(): v for k, v in COUNTRY_FLAGS.items()}
     
-    # First, check for sacred/royal name conflicts
-    sacred_check = check_sacred_royal_names(brand_name, countries)
+    # Generate comprehensive linguistic analysis
+    linguistic_analysis = generate_linguistic_decomposition(brand_name, countries, category)
     
-    if sacred_check["has_issues"]:
-        logging.warning(f"⚠️ SACRED/ROYAL NAME DETECTED: '{brand_name}' contains sensitive terms for: {sacred_check['affected_countries']}")
+    logging.info(f"🔤 LINGUISTIC DECOMPOSITION for '{brand_name}':")
+    logging.info(f"   Brand Type: {linguistic_analysis.get('brand_type')}")
+    logging.info(f"   Industry Fit: {linguistic_analysis.get('industry_fit', {}).get('fit_level')}")
+    logging.info(f"   Morphemes Found: {[m['text'] for m in linguistic_analysis.get('decomposition', {}).get('morphemes', [])]}")
     
     # Ensure we process up to 4 countries
     countries_to_process = countries[:4] if len(countries) > 4 else countries
@@ -1399,40 +1407,108 @@ def generate_cultural_analysis(countries: list, brand_name: str) -> list:
         country_lower = country_name.lower().strip() if country_name else ""
         display_name = country_name.title() if country_name else "Unknown"
         
-        # Get cultural data for this country - CASE INSENSITIVE
-        cultural_data = cultural_data_lower.get(country_lower, COUNTRY_CULTURAL_DATA["default"])
+        # Get base cultural data - CASE INSENSITIVE
+        base_cultural_data = cultural_data_lower.get(country_lower, COUNTRY_CULTURAL_DATA["default"])
         
         # Get flag - CASE INSENSITIVE
         flag = flags_lower.get(country_lower, "🌍")
         
-        # Base cultural notes
-        cultural_notes = cultural_data["cultural_notes"].replace("'", "'")
-        resonance_score = cultural_data["resonance_score"]
-        linguistic_check = cultural_data["linguistic_check"]
+        # Get linguistic analysis for this country
+        country_linguistic = linguistic_analysis.get("country_analysis", {}).get(display_name, {})
         
-        # Check if this country has sacred name warnings (case-insensitive match)
-        country_warning = None
-        for warning in sacred_check.get("warnings", []):
-            if warning["country"].lower() == country_lower:
-                country_warning = warning
-                break
+        # Build comprehensive cultural notes using linguistic decomposition
+        cultural_notes_parts = []
         
-        if country_warning:
-            # Prepend the warning to cultural notes
-            matched_terms_str = ", ".join(country_warning["matched_terms"])
-            cultural_notes = f"{country_warning['warning']}\n\n**Detected terms:** {matched_terms_str}\n\n**Original Analysis:** {cultural_notes}"
-            # Reduce resonance score for countries with sacred name issues
-            resonance_score = max(3.0, resonance_score - 3.0)
-            linguistic_check = f"⚠️ CULTURAL RISK DETECTED - Contains terms: {matched_terms_str}"
-            logging.info(f"⚠️ Cultural warning added for {display_name} - detected: {matched_terms_str}")
+        # Part 1: Linguistic Decomposition Header
+        cultural_notes_parts.append(f"**🔤 LINGUISTIC ANALYSIS: {brand_name}**\n")
+        
+        # Part 2: Morpheme Breakdown
+        decomposition = linguistic_analysis.get("decomposition", {})
+        if decomposition.get("morphemes"):
+            cultural_notes_parts.append("**MORPHEME BREAKDOWN:**")
+            for morpheme in decomposition["morphemes"]:
+                # Find this morpheme's analysis for this country
+                morpheme_data = None
+                for ma in country_linguistic.get("morpheme_analysis", []):
+                    if ma["morpheme"] == morpheme["text"]:
+                        morpheme_data = ma
+                        break
+                
+                if morpheme_data:
+                    resonance_emoji = "🔴" if morpheme_data["resonance_level"] == "CRITICAL" else "🟡" if morpheme_data["resonance_level"] == "HIGH" else "🟢"
+                    cultural_notes_parts.append(f"• **{morpheme['text'].upper()}** ({morpheme['origin']}): {morpheme['meaning']}")
+                    cultural_notes_parts.append(f"  └─ {display_name} Resonance: {resonance_emoji} {morpheme_data['resonance_level']} - {morpheme_data['context']}")
+                else:
+                    cultural_notes_parts.append(f"• **{morpheme['text'].upper()}** ({morpheme['origin']}): {morpheme['meaning']}")
+        
+        # Part 3: Industry Fit
+        industry_fit = linguistic_analysis.get("industry_fit", {})
+        fit_emoji = "✅" if industry_fit.get("fit_level") == "HIGH" else "⚠️" if industry_fit.get("fit_level") == "LOW" else "➡️"
+        cultural_notes_parts.append(f"\n**INDUSTRY FIT:** {fit_emoji} {industry_fit.get('fit_level', 'NEUTRAL')}")
+        cultural_notes_parts.append(f"  {industry_fit.get('reasoning', 'No specific analysis')}")
+        
+        # Part 4: Risk Flags
+        risk_flags = country_linguistic.get("risk_flags", [])
+        if risk_flags:
+            cultural_notes_parts.append("\n**⚠️ RISK FLAGS:**")
+            for flag_item in risk_flags:
+                cultural_notes_parts.append(f"• {flag_item}")
+        
+        # Part 5: Brand Classification
+        cultural_notes_parts.append(f"\n**BRAND TYPE:** {linguistic_analysis.get('brand_type', 'Modern/Coined')}")
+        
+        # Part 6: Country-Specific Recommendation
+        overall_resonance = country_linguistic.get("overall_resonance", "NEUTRAL")
+        if overall_resonance == "CRITICAL":
+            cultural_notes_parts.append("\n**RECOMMENDATION:** 🔴 CONSULT LOCAL LEGAL COUNSEL before market entry. Name contains culturally/legally sensitive elements that may face regulatory challenges.")
+        elif overall_resonance == "HIGH":
+            cultural_notes_parts.append("\n**RECOMMENDATION:** 🟡 Strong cultural resonance detected. Leverage this connection in local marketing while verifying no IP/trademark conflicts.")
+        else:
+            cultural_notes_parts.append("\n**RECOMMENDATION:** 🟢 Name appears suitable for this market. Proceed with standard trademark clearance and local linguistic validation.")
+        
+        # Part 7: Original base cultural notes
+        cultural_notes_parts.append(f"\n---\n**LOCAL MARKET CONTEXT:**\n{base_cultural_data['cultural_notes']}")
+        
+        # Join all parts
+        cultural_notes = "\n".join(cultural_notes_parts)
+        
+        # Calculate resonance score based on linguistic analysis
+        base_score = base_cultural_data["resonance_score"]
+        if overall_resonance == "CRITICAL":
+            resonance_score = max(2.0, base_score - 4.0)  # Significant penalty
+        elif overall_resonance == "HIGH" and not risk_flags:
+            resonance_score = min(9.5, base_score + 1.0)  # Boost for positive resonance
+        elif overall_resonance == "HIGH" and risk_flags:
+            resonance_score = max(4.0, base_score - 2.0)  # Some penalty for risks
+        else:
+            resonance_score = base_score
+        
+        # Generate linguistic check status
+        if overall_resonance == "CRITICAL":
+            linguistic_check = f"⚠️ CRITICAL RISK - {len(risk_flags)} issue(s) detected"
+        elif risk_flags:
+            linguistic_check = f"⚠️ CAUTION - {len(risk_flags)} potential concern(s)"
+        elif overall_resonance == "HIGH":
+            linguistic_check = f"✅ POSITIVE - High cultural resonance"
+        else:
+            linguistic_check = base_cultural_data.get("linguistic_check", "PASS - No issues detected")
         
         result.append({
             "country": display_name,
             "country_flag": flag,
-            "cultural_resonance_score": resonance_score,
+            "cultural_resonance_score": round(resonance_score, 1),
             "cultural_notes": cultural_notes,
-            "linguistic_check": linguistic_check
+            "linguistic_check": linguistic_check,
+            "linguistic_analysis": {
+                "morphemes": [m["text"] for m in decomposition.get("morphemes", [])],
+                "brand_type": linguistic_analysis.get("brand_type"),
+                "industry_fit": industry_fit.get("fit_level"),
+                "overall_resonance": overall_resonance,
+                "risk_count": len(risk_flags)
+            }
         })
+        
+        logging.info(f"📊 Cultural analysis for {display_name}: Resonance={overall_resonance}, Score={resonance_score}, Risks={len(risk_flags)}")
     
     return result
 
