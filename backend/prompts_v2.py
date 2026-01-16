@@ -288,6 +288,9 @@ For each dimension, provide structured analysis:
 | Singapore | 🇸🇬 | UAE | 🇦🇪 |
 | South Korea | 🇰🇷 | Italy | 🇮🇹 |
 | Spain | 🇪🇸 | Netherlands | 🇳🇱 |
+| Thailand | 🇹🇭 | Indonesia | 🇮🇩 |
+| Malaysia | 🇲🇾 | Vietnam | 🇻🇳 |
+| Mexico | 🇲🇽 | Russia | 🇷🇺 |
 
 ---
 
