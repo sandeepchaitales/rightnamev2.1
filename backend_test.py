@@ -5537,7 +5537,7 @@ class BrandEvaluationTester:
             "category": "Technology",
             "positioning": "Premium",
             "market_scope": "Multi-Country",
-            "countries": [{"name": "India"}, {"name": "USA"}]
+            "countries": ["India", "USA"]
         }
         
         try:
