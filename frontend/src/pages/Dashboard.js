@@ -1348,7 +1348,8 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                                             <Badge variant="outline" className="text-xs">{comp.quadrant || comp.price_position}</Badge>
                                         </div>
                                     ))}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </PrintCard>
                     
