@@ -26,13 +26,27 @@ const LOGO_URL = "https://customer-assets.emergentagent.com/job_naming-hub/artif
 const formatMarkdownText = (text) => {
     if (!text || typeof text !== 'string') return text;
     
-    // Remove unwanted headers like "**RIGHTNAME BRAND EVALUATION REPORT**"
+    // Remove unwanted headers and redundant info patterns
     let cleaned = text
+        // Remove "RIGHTNAME BRAND EVALUATION REPORT" and similar headers
         .replace(/\*\*RIGHTNAME[^*]*\*\*/gi, '')
+        .replace(/RIGHTNAME BRAND EVALUATION REPORT/gi, '')
+        // Remove "Brand: xxx" patterns
         .replace(/\*\*Brand:[^*]*\*\*/gi, '')
+        .replace(/Brand:\s*\w+/gi, '')
+        // Remove "Category: xxx" patterns
         .replace(/\*\*Category:[^*]*\*\*/gi, '')
+        .replace(/Category:\s*[\w\s]+/gi, '')
+        // Remove "Verdict: xxx" patterns
         .replace(/\*\*Verdict:[^*]*\*\*/gi, '')
+        .replace(/Verdict:\s*(GO|NO-GO|REJECT|CONDITIONAL GO)/gi, '')
+        // Remove "Score: xxx" patterns
         .replace(/\*\*Score:[^*]*\*\*/gi, '')
+        .replace(/Score:\s*\d+\/\d+/gi, '')
+        // Remove standalone brand name + category + verdict + score line (e.g., "deepstorika streetwear fashion GO 80/100")
+        .replace(/^\s*[\w]+\s+[\w\s]+\s+(GO|NO-GO|REJECT|CONDITIONAL GO)\s+\d+\/\d+\s*/gi, '')
+        // Remove patterns like "**brandname** **category** **GO** **80/100**"
+        .replace(/\*\*[\w]+\*\*\s*\*\*[\w\s]+\*\*\s*\*\*(GO|NO-GO|REJECT|CONDITIONAL GO)\*\*\s*\*\*\d+\/\d+\*\*/gi, '')
         .trim();
     
     // Convert **text** to <strong>text</strong>
@@ -43,6 +57,9 @@ const formatMarkdownText = (text) => {
     
     // Convert \n to <br/>
     cleaned = cleaned.replace(/\\n/g, '<br/>');
+    
+    // Clean up extra whitespace
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
 };
