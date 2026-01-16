@@ -1878,16 +1878,19 @@ const TrademarkResearchSection = ({ trademarkResearch, registrationTimeline, mit
                                     'bg-emerald-50 border-emerald-200'
                                 }`}>
                                     <div className="flex items-start justify-between mb-2">
-                                        <span className="font-bold text-slate-800">{strategy.action}</span>
+                                        <span className="font-bold text-slate-800"><MarkdownText text={strategy.action} /></span>
                                         <Badge className={
                                             strategy.priority === 'HIGH' ? 'bg-red-600 text-white' :
                                             strategy.priority === 'MEDIUM' ? 'bg-amber-500 text-white' :
                                             'bg-emerald-500 text-white'
                                         }>{strategy.priority}</Badge>
                                     </div>
-                                    <p className="text-sm text-slate-600">{strategy.rationale}</p>
+                                    <p className="text-sm text-slate-600"><MarkdownText text={strategy.rationale} /></p>
                                     {strategy.estimated_cost && (
                                         <div className="text-xs text-slate-500 mt-2">Estimated Cost: {strategy.estimated_cost}</div>
+                                    )}
+                                    {strategy.timeline && (
+                                        <div className="text-xs text-slate-500 mt-1">Timeline: {strategy.timeline}</div>
                                     )}
                                 </div>
                             ))}
