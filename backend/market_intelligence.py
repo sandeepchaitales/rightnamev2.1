@@ -751,13 +751,19 @@ async def research_all_countries(
     countries: List[Dict[str, str]],
     brand_name: str,
     fallback_market_data: Dict[str, Dict] = None,
-    fallback_cultural_data: Dict[str, Dict] = None
+    fallback_cultural_data: Dict[str, Dict] = None,
+    positioning: str = "Mid-Range"
 ) -> tuple:
     """
     Research market intelligence and cultural sensitivity for all countries in parallel.
+    
+    KEY IMPROVEMENT: Includes positioning to get segment-specific competitors.
+    Example: "Premium Hotel Chain Thailand" returns Dusit, Anantara, Minor Hotels
+    Instead of mixed segments.
+    
     Returns (market_intelligence_list, cultural_intelligence_list)
     """
-    logger.info(f"🚀 Starting parallel research for {len(countries)} countries...")
+    logger.info(f"🚀 Starting parallel {positioning} research for {len(countries)} countries...")
     
     # Limit to 4 countries max
     countries_to_process = countries[:4] if len(countries) > 4 else countries
@@ -773,8 +779,9 @@ async def research_all_countries(
         market_fallback = fallback_market_data.get(country_name) if fallback_market_data else None
         cultural_fallback = fallback_cultural_data.get(country_name) if fallback_cultural_data else None
         
+        # Pass positioning to market research
         market_tasks.append(
-            research_country_market(category, country_name, brand_name, market_fallback)
+            research_country_market(category, country_name, brand_name, market_fallback, positioning)
         )
         cultural_tasks.append(
             research_cultural_sensitivity(brand_name, country_name, cultural_fallback)
@@ -788,7 +795,7 @@ async def research_all_countries(
     market_intelligence = [r for r in market_results if isinstance(r, MarketIntelligence)]
     cultural_intelligence = [r for r in cultural_results if isinstance(r, CulturalIntelligence)]
     
-    logger.info(f"✅ Research complete: {len(market_intelligence)} market, {len(cultural_intelligence)} cultural")
+    logger.info(f"✅ {positioning} research complete: {len(market_intelligence)} market, {len(cultural_intelligence)} cultural")
     
     return market_intelligence, cultural_intelligence
 
