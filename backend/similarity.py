@@ -436,22 +436,56 @@ async def llm_detect_suffix_conflicts(brand_name: str, category: str) -> Dict:
 
 
 def llm_detect_suffix_conflicts_sync(brand_name: str, category: str) -> Dict:
-    """Synchronous wrapper for LLM suffix detection"""
+    """
+    Synchronous LLM suffix detection - directly calls LLM without async complexity.
+    """
+    if not LLM_AVAILABLE or not LlmChat:
+        logger.warning("LLM not available for suffix detection")
+        return None
+    
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # If we're already in an async context, create a new task
+        prompt = LLM_SUFFIX_DETECTION_PROMPT.format(
+            brand_name=brand_name,
+            category=category
+        )
+        
+        # Correct LlmChat initialization: (api_key, provider, model)
+        chat = LlmChat(EMERGENT_KEY, "openai", "gpt-4o-mini")
+        
+        # Helper function to run async send_message
+        async def _send_message():
+            return await chat.send_message(prompt)
+        
+        # Run the coroutine synchronously
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        if loop and loop.is_running():
+            # We're in an async context, need to use run_in_executor
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(
-                    asyncio.run,
-                    llm_detect_suffix_conflicts(brand_name, category)
-                )
-                return future.result(timeout=20)
+                future = executor.submit(asyncio.run, _send_message())
+                response = future.result(timeout=20)
         else:
-            return loop.run_until_complete(llm_detect_suffix_conflicts(brand_name, category))
+            # Not in async context, can run directly
+            response = asyncio.run(_send_message())
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            response_text = re.sub(r'^```json?\s*', '', response_text)
+            response_text = re.sub(r'\s*```$', '', response_text)
+        
+        result = json.loads(response_text)
+        logger.info(f"🤖 LLM Suffix Detection for '{brand_name}': {result.get('recommendation', 'UNKNOWN')} - {result.get('summary', 'No summary')}")
+        
+        return result
+        
     except Exception as e:
-        logger.warning(f"Sync LLM suffix detection failed: {e}")
+        logger.warning(f"LLM suffix detection failed: {e}")
         return None
 
 
