@@ -4680,11 +4680,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     f"**Trademark Potential:** {'Strong' if trademark_risk <= 3 else 'Moderate' if trademark_risk <= 6 else 'Limited'} registration prospects",
                     f"**Digital Availability:** Multiple domain and social handle options available"
                 ],
-                "cons": [
-                    f"**Name Length:** At {len(brand_name)} characters, {'optimal for memorability' if len(brand_name) <= 10 else 'may be challenging to recall'}",
-                    f"**Market Education:** As a coined term, will require brand awareness investment",
-                    f"**Domain Status:** Primary .com domain {'available' if domain_available else 'taken - alternatives needed'}"
-                ] if verdict != "GO" else [],
+                "cons": generate_risk_cons(brand_name, request.countries, category, domain_available, verdict),
                 "cultural_analysis": fallback_cultural if fallback_cultural else generate_cultural_analysis(request.countries, brand_name, category),
                 "competitor_analysis": global_competitor_analysis if global_competitor_analysis else {
                     "x_axis_label": f"Price: Budget → Premium",
