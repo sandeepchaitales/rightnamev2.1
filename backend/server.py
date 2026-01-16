@@ -3168,26 +3168,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     f"**Market Education:** As a coined term, will require brand awareness investment",
                     f"**Domain Status:** Primary .com domain {'available' if domain_available else 'taken - alternatives needed'}"
                 ] if verdict != "GO" else [],
-                "cultural_analysis": [
-                    {
-                        "country": "Global",
-                        "cultural_resonance_score": 7.5,
-                        "cultural_notes": f"'{brand_name}' has no negative connotations in major languages. The coined nature provides flexibility for international positioning.",
-                        "linguistic_check": "PASS - No adverse meanings detected"
-                    },
-                    {
-                        "country": "India",
-                        "cultural_resonance_score": 7.5,
-                        "cultural_notes": "No adverse meanings in Hindi, Tamil, or other major Indian languages. Suitable for pan-India branding.",
-                        "linguistic_check": "PASS - Clean linguistic profile"
-                    },
-                    {
-                        "country": "USA",
-                        "cultural_resonance_score": 7.5,
-                        "cultural_notes": "Clean linguistic profile for English-speaking markets. No phonetic conflicts identified.",
-                        "linguistic_check": "PASS - No conflicts"
-                    }
-                ],
+                "cultural_analysis": generate_cultural_analysis(request.countries, brand_name),
                 "competitor_analysis": {
                     "x_axis_label": f"Price: Budget → Premium",
                     "y_axis_label": f"Innovation: Traditional → Modern",
