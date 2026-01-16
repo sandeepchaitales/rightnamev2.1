@@ -2491,6 +2491,22 @@ const Dashboard = () => {
                     </section>
                 )}
 
+                {/* ==================== NEW PAGE: MARKET INTELLIGENCE (MOVED BEFORE DIGITAL PRESENCE) ==================== */}
+                {(brand.domain_analysis || brand.visibility_analysis || brand.cultural_analysis) && (
+                    <section className="print-new-page">
+                        <SectionHeader icon={TrendingUp} title="Market Intelligence" subtitle="Domain status, conflicts & cultural fit" color="amber" />
+                        {isAuthenticated ? (
+                            <MarketIntelligenceSection 
+                                domainAnalysis={brand.domain_analysis}
+                                visibilityAnalysis={brand.visibility_analysis}
+                                culturalAnalysis={brand.cultural_analysis}
+                            />
+                        ) : (
+                            <LockedSection title="Market Intelligence" onUnlock={handleRegister} />
+                        )}
+                    </section>
+                )}
+
                 {/* ==================== NEW PAGE: DIGITAL PRESENCE ==================== */}
                 {(brand.multi_domain_availability || brand.social_availability) && (
                     <section className="print-new-page">
@@ -2503,22 +2519,6 @@ const Dashboard = () => {
                             />
                         ) : (
                             <LockedSection title="Digital Presence Check" onUnlock={handleRegister} />
-                        )}
-                    </section>
-                )}
-
-                {/* ==================== NEW PAGE: MARKET INTELLIGENCE ==================== */}
-                {(brand.domain_analysis || brand.visibility_analysis || brand.cultural_analysis) && (
-                    <section className="print-new-page">
-                        <SectionHeader icon={TrendingUp} title="Market Intelligence" subtitle="Domain status, conflicts & cultural fit" color="amber" />
-                        {isAuthenticated ? (
-                            <MarketIntelligenceSection 
-                                domainAnalysis={brand.domain_analysis}
-                                visibilityAnalysis={brand.visibility_analysis}
-                                culturalAnalysis={brand.cultural_analysis}
-                            />
-                        ) : (
-                            <LockedSection title="Market Intelligence" onUnlock={handleRegister} />
                         )}
                     </section>
                 )}
