@@ -209,6 +209,88 @@ async def get_active_model_settings() -> dict:
     return defaults
 
 
+# ============ COUNTRY COMPETITOR ANALYSIS GENERATOR ============
+COUNTRY_FLAGS = {
+    "India": "🇮🇳", "USA": "🇺🇸", "United States": "🇺🇸", "UK": "🇬🇧", "United Kingdom": "🇬🇧",
+    "Germany": "🇩🇪", "France": "🇫🇷", "Japan": "🇯🇵", "China": "🇨🇳", "Australia": "🇦🇺",
+    "Canada": "🇨🇦", "Brazil": "🇧🇷", "Singapore": "🇸🇬", "UAE": "🇦🇪", "Thailand": "🇹🇭",
+    "Indonesia": "🇮🇩", "Malaysia": "🇲🇾", "Vietnam": "🇻🇳", "South Korea": "🇰🇷", "Italy": "🇮🇹",
+    "Spain": "🇪🇸", "Netherlands": "🇳🇱", "Mexico": "🇲🇽", "Russia": "🇷🇺", "Global": "🌍"
+}
+
+COUNTRY_COMPETITORS_TEMPLATE = {
+    "India": ["Nykaa", "Mamaearth", "Sugar Cosmetics", "Plum Goodness"],
+    "USA": ["Glossier", "The Ordinary", "Fenty Beauty", "Drunk Elephant"],
+    "Thailand": ["Oriental Princess", "Mistine", "Beauty Buffet", "Srichand"],
+    "UK": ["Charlotte Tilbury", "The Body Shop", "Lush", "Pixi Beauty"],
+    "Singapore": ["TANGS", "Sephora SG", "Guardian", "Watsons"],
+    "Japan": ["Shiseido", "SK-II", "Canmake", "DHC"],
+    "China": ["Perfect Diary", "Florasis", "Proya", "Winona"],
+    "Australia": ["Aesop", "Go-To Skincare", "Frank Body", "Sand & Sky"],
+    "Germany": ["Dr. Hauschka", "Weleda", "Babor", "Sans Soucis"],
+    "France": ["L'Oréal", "Lancôme", "Bioderma", "La Roche-Posay"],
+    "default": ["Market Leader 1", "Market Leader 2", "Challenger Brand", "Emerging Player"]
+}
+
+def generate_country_competitor_analysis(countries: list, category: str, brand_name: str) -> list:
+    """Generate competitor analysis for ALL user-selected countries (max 4)"""
+    result = []
+    
+    # Ensure we process up to 4 countries
+    countries_to_process = countries[:4] if len(countries) > 4 else countries
+    
+    for idx, country in enumerate(countries_to_process):
+        # Get country name (handle dict or string)
+        country_name = country.get('name') if isinstance(country, dict) else str(country)
+        
+        # Get flag
+        flag = COUNTRY_FLAGS.get(country_name, "🌍")
+        
+        # Get template competitors for this country or default
+        template_comps = COUNTRY_COMPETITORS_TEMPLATE.get(country_name, COUNTRY_COMPETITORS_TEMPLATE["default"])
+        
+        # Generate competitor data with varied coordinates
+        competitors = []
+        base_coords = [(75, 65), (45, 70), (80, 35), (30, 55)]
+        quadrants = ["Premium Modern", "Mid-range Modern", "Premium Traditional", "Value Player"]
+        
+        for i, comp_name in enumerate(template_comps[:4]):
+            x, y = base_coords[i % len(base_coords)]
+            # Add some variation per country
+            x = min(95, max(5, x + (idx * 5) - 10))
+            y = min(95, max(5, y + (idx * 3) - 6))
+            competitors.append({
+                "name": comp_name,
+                "x_coordinate": x,
+                "y_coordinate": y,
+                "quadrant": quadrants[i % len(quadrants)]
+            })
+        
+        # User brand position (varies slightly per country)
+        user_x = 65 + (idx * 3)
+        user_y = 72 - (idx * 2)
+        
+        result.append({
+            "country": country_name,
+            "country_flag": flag,
+            "x_axis_label": "Price: Budget → Premium",
+            "y_axis_label": "Innovation: Traditional → Modern",
+            "competitors": competitors,
+            "user_brand_position": {
+                "x_coordinate": user_x,
+                "y_coordinate": user_y,
+                "quadrant": "Accessible Premium",
+                "rationale": f"'{brand_name}' positioned for accessible premium segment in {country_name} market"
+            },
+            "white_space_analysis": f"The {country_name} {category} market shows opportunity for brands offering premium quality at accessible price points. '{brand_name}' can capture this underserved segment.",
+            "strategic_advantage": f"First-mover advantage in {country_name}'s emerging {category} premium-accessible segment with distinctive brand identity.",
+            "market_entry_recommendation": f"Recommended entry strategy for {country_name}: Start with digital-first approach, partner with local e-commerce platforms, and build brand awareness through influencer marketing."
+        })
+    
+    return result
+
+
+
 # Country-specific ACTUAL trademark costs (not just currency conversion)
 # These are real trademark office costs for each country
 COUNTRY_TRADEMARK_COSTS = {
