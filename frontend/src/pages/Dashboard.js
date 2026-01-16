@@ -571,7 +571,7 @@ const FinalAssessmentFull = ({ assessment, verdict, score }) => {
                                         <Shield className="w-4 h-4 text-violet-600" />
                                         <h5 className="font-bold text-violet-800 text-sm">IP Strategy</h5>
                                     </div>
-                                    <p className="text-xs text-slate-600">{assessment.ip_strategy}</p>
+                                    <p className="text-xs text-slate-600"><MarkdownText text={assessment.ip_strategy} /></p>
                                 </div>
                             )}
                             {!assessment.recommendations && assessment.brand_narrative && (
