@@ -3326,6 +3326,36 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
     logging.info(f"PARALLEL data gathering completed in {parallel_time:.2f}s (vs ~90s sequential)")
     # ==================== END PARALLEL PROCESSING ====================
     
+    # ==================== LLM-FIRST COUNTRY RESEARCH ====================
+    # Run LLM-powered market intelligence research in parallel with other processing
+    logging.info(f"🔬 Starting LLM-first country research for {len(request.countries)} countries...")
+    llm_research_start = time_module.time()
+    
+    try:
+        # Get the first brand for research (primary brand being evaluated)
+        primary_brand = request.brand_names[0] if request.brand_names else "Brand"
+        
+        # Execute LLM-first research
+        country_competitor_analysis, cultural_analysis = await llm_first_country_analysis(
+            countries=request.countries,
+            category=request.category or "Business",
+            brand_name=primary_brand,
+            use_llm_research=True  # Enable LLM research
+        )
+        
+        llm_research_time = time_module.time() - llm_research_start
+        logging.info(f"✅ LLM-FIRST COUNTRY RESEARCH completed in {llm_research_time:.2f}s")
+        
+        # Store for later use
+        llm_research_data = {
+            "country_competitor_analysis": country_competitor_analysis,
+            "cultural_analysis": cultural_analysis
+        }
+    except Exception as e:
+        logging.error(f"❌ LLM-first research failed: {e}, will use fallback in report generation")
+        llm_research_data = None
+    # ==================== END LLM-FIRST COUNTRY RESEARCH ====================
+    
     # Update progress - all data gathering done, starting analysis
     await update_progress("trademark", 45)
     
