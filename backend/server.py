@@ -3770,6 +3770,27 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         
         nice_class = get_nice_classification(category)
         
+        # Use LLM research data if available, otherwise use hardcoded fallback
+        fallback_cultural = llm_research_data.get("cultural_analysis") if llm_research_data else None
+        fallback_competitors = llm_research_data.get("country_competitor_analysis") if llm_research_data else None
+        
+        # Get first country data for global competitor_analysis
+        global_competitor_analysis = None
+        if fallback_competitors and len(fallback_competitors) > 0:
+            first_country = fallback_competitors[0]
+            global_competitor_analysis = {
+                "x_axis_label": first_country.get("x_axis_label", "Price: Budget → Premium"),
+                "y_axis_label": first_country.get("y_axis_label", "Innovation: Traditional → Modern"),
+                "competitors": first_country.get("competitors", []),
+                "user_brand_position": first_country.get("user_brand_position", {
+                    "x_coordinate": 65, "y_coordinate": 75, "quadrant": "Accessible Premium",
+                    "rationale": f"'{brand_name}' positioned for premium-accessible market segment"
+                }),
+                "white_space_analysis": first_country.get("white_space_analysis", f"Opportunity exists in the {category} market for brands combining accessibility with innovation."),
+                "strategic_advantage": first_country.get("strategic_advantage", f"As a distinctive coined term, '{brand_name}' can establish unique market positioning."),
+                "suggested_pricing": f"{'Premium' if overall_score >= 75 else 'Mid-range'} positioning recommended"
+            }
+        
         return {
             "brand_scores": [{
                 "brand_name": brand_name,
@@ -3793,8 +3814,8 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     f"**Market Education:** As a coined term, will require brand awareness investment",
                     f"**Domain Status:** Primary .com domain {'available' if domain_available else 'taken - alternatives needed'}"
                 ] if verdict != "GO" else [],
-                "cultural_analysis": generate_cultural_analysis(request.countries, brand_name),
-                "competitor_analysis": {
+                "cultural_analysis": fallback_cultural if fallback_cultural else generate_cultural_analysis(request.countries, brand_name),
+                "competitor_analysis": global_competitor_analysis if global_competitor_analysis else {
                     "x_axis_label": f"Price: Budget → Premium",
                     "y_axis_label": f"Innovation: Traditional → Modern",
                     "competitors": [
@@ -3820,7 +3841,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                     "seo_potential": "HIGH" if len(brand_name) <= 12 else "MEDIUM",
                     "recommendation": f"Strong potential for building digital presence with '{brand_name}'"
                 },
-                "country_competitor_analysis": generate_country_competitor_analysis(request.countries, category, brand_name),
+                "country_competitor_analysis": fallback_competitors if fallback_competitors else generate_country_competitor_analysis(request.countries, category, brand_name),
                 "alternative_names": {
                     "poison_words": [],
                     "reasoning": "Alternative names generated based on brand analysis",
