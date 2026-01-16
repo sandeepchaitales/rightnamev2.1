@@ -21,6 +21,43 @@ import html2pdf from 'html2pdf.js';
 // RIGHTNAME Logo URL
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_naming-hub/artifacts/vj8cw9xx_R.png";
 
+// ============ MARKDOWN TEXT FORMATTER ============
+// Converts markdown-style text (**bold**, *italic*) to proper HTML
+const formatMarkdownText = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    
+    // Remove unwanted headers like "**RIGHTNAME BRAND EVALUATION REPORT**"
+    let cleaned = text
+        .replace(/\*\*RIGHTNAME[^*]*\*\*/gi, '')
+        .replace(/\*\*Brand:[^*]*\*\*/gi, '')
+        .replace(/\*\*Category:[^*]*\*\*/gi, '')
+        .replace(/\*\*Verdict:[^*]*\*\*/gi, '')
+        .replace(/\*\*Score:[^*]*\*\*/gi, '')
+        .trim();
+    
+    // Convert **text** to <strong>text</strong>
+    cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert *text* to <em>text</em> (but not if already part of **)
+    cleaned = cleaned.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    
+    // Convert \n to <br/>
+    cleaned = cleaned.replace(/\\n/g, '<br/>');
+    
+    return cleaned;
+};
+
+// Component to render markdown-formatted text
+const MarkdownText = ({ text, className = "" }) => {
+    const formattedText = formatMarkdownText(text);
+    return (
+        <span 
+            className={className}
+            dangerouslySetInnerHTML={{ __html: formattedText }}
+        />
+    );
+};
+
 // Get country name (handles both string and object formats)
 const getCountryName = (country) => {
     return typeof country === 'object' ? country?.name : country;
