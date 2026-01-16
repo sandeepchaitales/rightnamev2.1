@@ -297,7 +297,7 @@ Return ONLY valid JSON. No markdown, no explanation.
 
 ```json
 {
-  "executive_summary": "MAX 100 words. Verdict + single most critical reason. Answer-first style.",
+  "executive_summary": "MINIMUM 100 words. DO NOT include headers like 'RIGHTNAME BRAND EVALUATION REPORT'. Start directly with brand analysis. Format: '[Brand Name]' is a [adjective] choice for [category] because [core reason]. Discuss phonetic quality, market fit, trademark viability, and strategic positioning. End with clear verdict recommendation. Write as flowing prose, not bullet points.",
   
   "brand_scores": [
     {
@@ -313,8 +313,8 @@ Return ONLY valid JSON. No markdown, no explanation.
         "Strength 3 with strategic implication"
       ],
       "cons": [
-        "Risk 1 with mitigation approach",
-        "Risk 2 with mitigation approach"
+        "Risk 1 with mitigation approach - MUST provide at least 2 risks even for GO verdict",
+        "Risk 2 with mitigation approach - consider trademark, domain, competition risks"
       ],
       
       "alternative_names": {
@@ -329,7 +329,7 @@ Return ONLY valid JSON. No markdown, no explanation.
       },
       
       "competitor_analysis": {
-        "_INSTRUCTION": "Search by CATEGORY, not brand name. Find REAL market competitors.",
+        "_INSTRUCTION": "Search by CATEGORY, not brand name. Find REAL market competitors. MUST populate competitors array with at least 4 entries.",
         "x_axis_label": "Use category-specific axis from Section 9",
         "y_axis_label": "Use category-specific axis from Section 9",
         "competitors": [
