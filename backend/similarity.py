@@ -1,6 +1,6 @@
 """
 String Similarity Layer for Brand Name Analysis
-Uses Levenshtein Distance + Jaro-Winkler to detect similar brand names
+Uses Levenshtein Distance + Jaro-Winkler + LLM-First Detection for comprehensive brand conflict analysis
 """
 
 import jellyfish
@@ -8,6 +8,22 @@ from rapidfuzz import fuzz
 from rapidfuzz.distance import Levenshtein
 from typing import List, Dict, Tuple, Optional
 import re
+import os
+import json
+import asyncio
+import logging
+
+# Try to import LLM capabilities
+try:
+    from emergentintegrations.llm.chat import LlmChat
+    EMERGENT_KEY = os.environ.get('EMERGENT_LLM_KEY')
+    LLM_AVAILABLE = bool(EMERGENT_KEY)
+except ImportError:
+    LlmChat = None
+    EMERGENT_KEY = None
+    LLM_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 # Well-known brands by category (expandable)
 KNOWN_BRANDS = {
