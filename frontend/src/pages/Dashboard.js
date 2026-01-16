@@ -1864,7 +1864,7 @@ const McKinseyAnalysisSection = ({ mckinsey }) => {
                     {critical_assessment && (
                         <div className="mt-4 p-3 bg-white/50 rounded-lg">
                             <div className="text-xs font-bold uppercase tracking-wide mb-1">Critical Assessment</div>
-                            <p className="text-sm italic">{critical_assessment}</p>
+                            <p className="text-sm italic"><MarkdownText text={critical_assessment} /></p>
                         </div>
                     )}
                 </div>
