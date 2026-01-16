@@ -611,7 +611,9 @@ const StrategySnapshot = ({ classification, pros, cons }) => (
         {classification && (
             <PrintCard>
                 <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
-                    <p className="text-lg font-bold text-violet-900 italic text-center">"{classification}"</p>
+                    <p className="text-lg font-bold text-violet-900 italic text-center">
+                        <MarkdownText text={classification} />
+                    </p>
                 </div>
             </PrintCard>
         )}
@@ -625,12 +627,16 @@ const StrategySnapshot = ({ classification, pros, cons }) => (
                         <h4 className="font-bold text-emerald-700">KEY STRENGTHS</h4>
                     </div>
                     <ul className="space-y-2">
-                        {pros?.map((pro, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                                <span className="text-emerald-500 mt-0.5">✓</span>
-                                {pro}
-                            </li>
-                        ))}
+                        {pros && pros.length > 0 ? (
+                            pros.map((pro, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                    <span className="text-emerald-500 mt-0.5">✓</span>
+                                    <MarkdownText text={pro} />
+                                </li>
+                            ))
+                        ) : (
+                            <li className="text-sm text-slate-500 italic">No specific strengths identified in this analysis.</li>
+                        )}
                     </ul>
                 </div>
                 <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-xl p-5">
@@ -641,12 +647,16 @@ const StrategySnapshot = ({ classification, pros, cons }) => (
                         <h4 className="font-bold text-amber-700">KEY RISKS</h4>
                     </div>
                     <ul className="space-y-2">
-                        {cons?.map((con, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                                <span className="text-amber-500 mt-0.5">!</span>
-                                {con}
-                            </li>
-                        ))}
+                        {cons && cons.length > 0 ? (
+                            cons.map((con, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                    <span className="text-amber-500 mt-0.5">!</span>
+                                    <MarkdownText text={con} />
+                                </li>
+                            ))
+                        ) : (
+                            <li className="text-sm text-slate-500 italic">No significant risks identified. Proceed with standard brand registration precautions.</li>
+                        )}
                     </ul>
                 </div>
             </div>
