@@ -1304,13 +1304,13 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                         {analysis.white_space_analysis && (
                             <div className={`p-3 rounded-lg border ${colorScheme.light}`}>
                                 <p className={`text-xs font-bold ${colorScheme.text} mb-1`}>White Space</p>
-                                <p className="text-xs text-slate-600">{analysis.white_space_analysis}</p>
+                                <p className="text-xs text-slate-600"><MarkdownText text={analysis.white_space_analysis} /></p>
                             </div>
                         )}
                         {analysis.strategic_advantage && (
                             <div className={`p-3 rounded-lg border ${colorScheme.light}`}>
                                 <p className={`text-xs font-bold ${colorScheme.text} mb-1`}>Strategic Advantage</p>
-                                <p className="text-xs text-slate-600">{analysis.strategic_advantage}</p>
+                                <p className="text-xs text-slate-600"><MarkdownText text={analysis.strategic_advantage} /></p>
                             </div>
                         )}
                     </div>
@@ -1319,7 +1319,7 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                     {analysis.market_entry_recommendation && (
                         <div className="mt-3 p-3 bg-violet-50 rounded-lg border border-violet-200">
                             <p className="text-xs font-bold text-violet-700 mb-1">Market Entry Recommendation</p>
-                            <p className="text-xs text-slate-600">{analysis.market_entry_recommendation}</p>
+                            <p className="text-xs text-slate-600"><MarkdownText text={analysis.market_entry_recommendation} /></p>
                         </div>
                     )}
                 </div>
