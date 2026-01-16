@@ -750,12 +750,12 @@ const DetailedDimensionCard = ({ dimension, index }) => {
                             {parsed.sections.map((sec, i) => (
                                 <div key={i} className="p-3 bg-slate-50 rounded-lg">
                                     <h5 className="text-xs font-bold text-slate-700 uppercase mb-1">{sec.title}</h5>
-                                    <p className="text-xs text-slate-600">{sec.content}</p>
+                                    <p className="text-xs text-slate-600"><MarkdownText text={sec.content} /></p>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-600 leading-relaxed">{dimension.reasoning}</p>
+                        <p className="text-sm text-slate-600 leading-relaxed"><MarkdownText text={dimension.reasoning} /></p>
                     )}
                 </div>
             </div>
