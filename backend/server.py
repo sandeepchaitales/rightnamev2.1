@@ -273,6 +273,530 @@ SACRED_ROYAL_NAMES = {
     }
 }
 
+# ============ LINGUISTIC DECOMPOSITION DATABASE ============
+# Morpheme database for brand name analysis
+
+MORPHEME_DATABASE = {
+    # Sanskrit/Hindi roots (common in South/Southeast Asian names)
+    "rama": {
+        "origin": "Sanskrit",
+        "meaning": "deity/king/seventh avatar of Vishnu",
+        "type": "root",
+        "cultural_resonance": {
+            "India": {"level": "HIGH", "context": "Hindu deity Lord Rama from Ramayana epic - deeply revered"},
+            "Thailand": {"level": "CRITICAL", "context": "Royal regnal name (Rama I-X) - current king is Rama X. Lèse-majesté laws apply"},
+            "Indonesia": {"level": "HIGH", "context": "Ramayana tradition is central to Javanese/Balinese culture"},
+            "Japan": {"level": "LOW", "context": "No significant cultural connection"},
+            "USA": {"level": "LOW", "context": "Exotic/foreign sounding, no negative connotations"},
+            "UK": {"level": "LOW", "context": "Exotic/foreign sounding, no negative connotations"}
+        },
+        "industry_fit": {"hotels": "HIGH", "wellness": "HIGH", "luxury": "HIGH", "tech": "MEDIUM"}
+    },
+    "raya": {
+        "origin": "Sanskrit/Malay",
+        "meaning": "king/royal/great/celebration",
+        "type": "suffix",
+        "cultural_resonance": {
+            "India": {"level": "HIGH", "context": "Sanskrit 'Raja' derivative - royal/kingly connotation"},
+            "Thailand": {"level": "HIGH", "context": "Royal connotation, associated with grandeur"},
+            "Indonesia": {"level": "HIGH", "context": "Hari Raya (celebration), royal connotation"},
+            "Malaysia": {"level": "HIGH", "context": "Hari Raya festival, positive festive association"},
+            "Japan": {"level": "LOW", "context": "No cultural significance"},
+            "USA": {"level": "MEDIUM", "context": "Exotic luxury sound"},
+            "UK": {"level": "MEDIUM", "context": "Exotic luxury sound"}
+        },
+        "industry_fit": {"hotels": "HIGH", "luxury": "HIGH", "food": "HIGH", "tech": "LOW"}
+    },
+    "raj": {
+        "origin": "Sanskrit",
+        "meaning": "rule/kingdom/reign",
+        "type": "root",
+        "cultural_resonance": {
+            "India": {"level": "HIGH", "context": "Royal/imperial connotation, British Raj historical association"},
+            "UK": {"level": "MEDIUM", "context": "British Raj colonial history - check sensitivity"},
+            "USA": {"level": "LOW", "context": "Exotic, no strong associations"}
+        },
+        "industry_fit": {"hotels": "HIGH", "luxury": "HIGH", "restaurants": "HIGH", "tech": "LOW"}
+    },
+    "zen": {
+        "origin": "Japanese/Chinese Buddhist",
+        "meaning": "meditation/enlightenment",
+        "type": "root",
+        "cultural_resonance": {
+            "Japan": {"level": "MEDIUM", "context": "Buddhist term - respectful use expected"},
+            "China": {"level": "MEDIUM", "context": "Chan Buddhism origin"},
+            "USA": {"level": "HIGH", "context": "Positive wellness/calm association"},
+            "UK": {"level": "HIGH", "context": "Positive wellness/calm association"}
+        },
+        "industry_fit": {"wellness": "HIGH", "spa": "HIGH", "tech": "MEDIUM", "hotels": "HIGH"}
+    },
+    "sakura": {
+        "origin": "Japanese",
+        "meaning": "cherry blossom",
+        "type": "root",
+        "cultural_resonance": {
+            "Japan": {"level": "HIGH", "context": "National symbol, positive but may seem appropriative if non-Japanese brand"},
+            "USA": {"level": "HIGH", "context": "Positive Japanese aesthetic association"},
+            "UK": {"level": "HIGH", "context": "Positive Japanese aesthetic association"}
+        },
+        "industry_fit": {"beauty": "HIGH", "food": "HIGH", "hotels": "MEDIUM", "tech": "LOW"}
+    },
+    "nova": {
+        "origin": "Latin",
+        "meaning": "new/star",
+        "type": "root",
+        "cultural_resonance": {
+            "Global": {"level": "HIGH", "context": "Universal positive - innovation, brightness"},
+            "Spanish-speaking": {"level": "CAUTION", "context": "'No va' = 'doesn't go' - Chevy Nova issue"}
+        },
+        "industry_fit": {"tech": "HIGH", "automotive": "CAUTION", "hotels": "MEDIUM", "finance": "HIGH"}
+    },
+    "lux": {
+        "origin": "Latin",
+        "meaning": "light/luxury",
+        "type": "root/prefix",
+        "cultural_resonance": {
+            "Global": {"level": "HIGH", "context": "Universal luxury association"}
+        },
+        "industry_fit": {"hotels": "HIGH", "beauty": "HIGH", "fashion": "HIGH", "tech": "MEDIUM"}
+    },
+    "kai": {
+        "origin": "Multiple (Hawaiian/Japanese/Chinese)",
+        "meaning": "sea (Hawaiian), forgiveness (Japanese), open (Chinese)",
+        "type": "root",
+        "cultural_resonance": {
+            "Hawaii/USA": {"level": "HIGH", "context": "Ocean, nature, positive"},
+            "Japan": {"level": "MEDIUM", "context": "Multiple meanings, generally positive"},
+            "China": {"level": "MEDIUM", "context": "Opening/beginning, positive"}
+        },
+        "industry_fit": {"hospitality": "HIGH", "wellness": "HIGH", "food": "MEDIUM", "tech": "MEDIUM"}
+    },
+    "om": {
+        "origin": "Sanskrit",
+        "meaning": "sacred syllable/primordial sound",
+        "type": "root",
+        "cultural_resonance": {
+            "India": {"level": "CRITICAL", "context": "Most sacred Hindu syllable - commercial use controversial"},
+            "Nepal": {"level": "CRITICAL", "context": "Sacred Hindu/Buddhist symbol"},
+            "USA": {"level": "MEDIUM", "context": "Yoga/wellness association, generally positive"}
+        },
+        "industry_fit": {"wellness": "HIGH", "yoga": "HIGH", "hotels": "MEDIUM", "tech": "LOW"}
+    },
+    "veda": {
+        "origin": "Sanskrit",
+        "meaning": "knowledge/sacred texts",
+        "type": "root",
+        "cultural_resonance": {
+            "India": {"level": "HIGH", "context": "Sacred Hindu scriptures - use with respect"},
+            "USA": {"level": "MEDIUM", "context": "Wisdom/knowledge connotation"}
+        },
+        "industry_fit": {"education": "HIGH", "wellness": "HIGH", "tech": "MEDIUM", "hotels": "LOW"}
+    }
+}
+
+# Suffix-Industry Fit Scoring
+SUFFIX_INDUSTRY_FIT = {
+    "hotels": {
+        "high_fit": ["ya", "kan", "tel", "inn", "stay", "nest", "haven", "lodge", "palace", "manor", "raya", "raj", "villa"],
+        "medium_fit": ["hub", "spot", "zone", "place", "casa", "maison"],
+        "low_fit": ["ify", "ly", "io", "soft", "tech", "ai", "bot", "ware", "labs", "byte"]
+    },
+    "technology": {
+        "high_fit": ["ify", "ly", "io", "ai", "hub", "lab", "labs", "tech", "soft", "ware", "byte", "bit", "cloud", "net"],
+        "medium_fit": ["pro", "plus", "max", "go", "one", "x"],
+        "low_fit": ["inn", "stay", "nest", "tel", "palace", "manor", "villa", "lodge"]
+    },
+    "beauty": {
+        "high_fit": ["glow", "lux", "belle", "beauty", "skin", "glo", "radiance", "pure", "bloom"],
+        "medium_fit": ["lab", "labs", "co", "studio"],
+        "low_fit": ["tech", "soft", "ware", "byte", "inn", "tel"]
+    },
+    "food": {
+        "high_fit": ["kitchen", "eats", "bites", "feast", "table", "bowl", "plate", "spice", "flavor"],
+        "medium_fit": ["hub", "spot", "co", "house"],
+        "low_fit": ["tech", "soft", "ware", "byte", "labs"]
+    },
+    "finance": {
+        "high_fit": ["pay", "fin", "bank", "capital", "wealth", "fund", "vest", "money", "cash"],
+        "medium_fit": ["pro", "plus", "hub", "one"],
+        "low_fit": ["inn", "tel", "stay", "kitchen", "eats"]
+    },
+    "wellness": {
+        "high_fit": ["zen", "calm", "peace", "vita", "life", "health", "fit", "well", "soul", "mind"],
+        "medium_fit": ["hub", "lab", "co", "studio"],
+        "low_fit": ["tech", "soft", "ware", "byte"]
+    }
+}
+
+# Phonetic Risk Patterns by Country
+PHONETIC_RISKS = {
+    "Japan": {
+        "shi": {"risk": "HIGH", "reason": "Sounds like 'death' (死)"},
+        "ku": {"risk": "MEDIUM", "reason": "Can sound like 'suffering' (苦)"},
+        "shiku": {"risk": "HIGH", "reason": "Combination sounds like 'death and suffering'"}
+    },
+    "China": {
+        "si": {"risk": "HIGH", "reason": "Sounds like 'death' (死) in Mandarin"},
+        "fan": {"risk": "MEDIUM", "reason": "Can mean 'trouble' in some contexts"},
+        "gui": {"risk": "MEDIUM", "reason": "Can sound like 'ghost' (鬼)"}
+    },
+    "Thailand": {
+        "hia": {"risk": "HIGH", "reason": "Sounds like Chinese-Thai slur"},
+        "mung": {"risk": "MEDIUM", "reason": "Can be considered rude pronoun"}
+    },
+    "Germany": {
+        "mist": {"risk": "HIGH", "reason": "Means 'manure/crap' in German"},
+        "gift": {"risk": "HIGH", "reason": "Means 'poison' in German"}
+    },
+    "Spain": {
+        "nova": {"risk": "MEDIUM", "reason": "'No va' sounds like 'doesn't go'"}
+    },
+    "France": {
+        "pet": {"risk": "MEDIUM", "reason": "Means 'fart' in French"}
+    },
+    "Italy": {
+        "cazzo": {"risk": "HIGH", "reason": "Vulgar term"},
+        "fica": {"risk": "HIGH", "reason": "Vulgar term"}
+    }
+}
+
+def decompose_brand_name(brand_name: str) -> dict:
+    """
+    Decompose a brand name into morphemes (roots, prefixes, suffixes).
+    Uses pattern matching and known morpheme database.
+    """
+    name_lower = brand_name.lower().strip()
+    morphemes = []
+    remaining = name_lower
+    
+    # First pass: Check for known morphemes in database
+    found_morphemes = []
+    for morpheme, data in MORPHEME_DATABASE.items():
+        if morpheme in name_lower:
+            start_idx = name_lower.find(morpheme)
+            found_morphemes.append({
+                "text": morpheme,
+                "start": start_idx,
+                "end": start_idx + len(morpheme),
+                "data": data
+            })
+    
+    # Sort by position
+    found_morphemes.sort(key=lambda x: x["start"])
+    
+    # Build morpheme list with positions
+    result = {
+        "original": brand_name,
+        "lowercase": name_lower,
+        "morphemes": [],
+        "unknown_parts": []
+    }
+    
+    if found_morphemes:
+        # Extract known morphemes
+        last_end = 0
+        for fm in found_morphemes:
+            # Check for unknown part before this morpheme
+            if fm["start"] > last_end:
+                unknown_part = name_lower[last_end:fm["start"]]
+                if unknown_part.strip():
+                    result["unknown_parts"].append({
+                        "text": unknown_part,
+                        "position": "prefix" if last_end == 0 else "infix"
+                    })
+            
+            result["morphemes"].append({
+                "text": fm["text"],
+                "original_case": brand_name[fm["start"]:fm["end"]],
+                "origin": fm["data"].get("origin", "Unknown"),
+                "meaning": fm["data"].get("meaning", "Unknown"),
+                "type": fm["data"].get("type", "root"),
+                "cultural_resonance": fm["data"].get("cultural_resonance", {}),
+                "industry_fit": fm["data"].get("industry_fit", {})
+            })
+            last_end = fm["end"]
+        
+        # Check for trailing unknown part
+        if last_end < len(name_lower):
+            trailing = name_lower[last_end:]
+            if trailing.strip():
+                result["unknown_parts"].append({
+                    "text": trailing,
+                    "position": "suffix"
+                })
+    else:
+        # No known morphemes found - treat whole name as unknown
+        result["unknown_parts"].append({
+            "text": name_lower,
+            "position": "whole"
+        })
+    
+    return result
+
+def analyze_suffix_industry_fit(brand_name: str, category: str) -> dict:
+    """
+    Analyze if the brand name's suffix fits the target industry.
+    """
+    name_lower = brand_name.lower()
+    category_lower = category.lower()
+    
+    # Map category to our suffix database
+    category_map = {
+        "hotel": "hotels", "hotels": "hotels", "hospitality": "hotels", "accommodation": "hotels",
+        "tech": "technology", "technology": "technology", "software": "technology", "saas": "technology", "app": "technology",
+        "beauty": "beauty", "cosmetics": "beauty", "skincare": "beauty",
+        "food": "food", "restaurant": "food", "f&b": "food", "beverage": "food",
+        "finance": "finance", "fintech": "finance", "banking": "finance", "payments": "finance",
+        "wellness": "wellness", "health": "wellness", "fitness": "wellness", "spa": "wellness"
+    }
+    
+    industry_key = None
+    for key, value in category_map.items():
+        if key in category_lower:
+            industry_key = value
+            break
+    
+    if not industry_key:
+        industry_key = "hotels"  # Default
+    
+    industry_suffixes = SUFFIX_INDUSTRY_FIT.get(industry_key, SUFFIX_INDUSTRY_FIT["hotels"])
+    
+    result = {
+        "industry": industry_key,
+        "fit_level": "NEUTRAL",
+        "matched_suffix": None,
+        "reasoning": ""
+    }
+    
+    # Check high fit suffixes
+    for suffix in industry_suffixes.get("high_fit", []):
+        if name_lower.endswith(suffix) or suffix in name_lower:
+            result["fit_level"] = "HIGH"
+            result["matched_suffix"] = suffix
+            result["reasoning"] = f"'{suffix}' suffix/element strongly aligns with {industry_key} industry"
+            return result
+    
+    # Check low fit suffixes
+    for suffix in industry_suffixes.get("low_fit", []):
+        if name_lower.endswith(suffix) or suffix in name_lower:
+            result["fit_level"] = "LOW"
+            result["matched_suffix"] = suffix
+            result["reasoning"] = f"'{suffix}' suffix/element typically associated with different industries (not {industry_key})"
+            return result
+    
+    # Check medium fit
+    for suffix in industry_suffixes.get("medium_fit", []):
+        if name_lower.endswith(suffix) or suffix in name_lower:
+            result["fit_level"] = "MEDIUM"
+            result["matched_suffix"] = suffix
+            result["reasoning"] = f"'{suffix}' is moderately suitable for {industry_key} industry"
+            return result
+    
+    result["reasoning"] = f"No strong industry-specific suffix detected for {industry_key}"
+    return result
+
+def check_phonetic_risks(brand_name: str, countries: list) -> list:
+    """
+    Check for phonetic collision risks in target countries.
+    """
+    name_lower = brand_name.lower()
+    risks = []
+    
+    for country in countries:
+        country_name = country.get('name') if isinstance(country, dict) else str(country)
+        country_title = country_name.title()
+        
+        country_risks = PHONETIC_RISKS.get(country_title, {})
+        for sound, risk_data in country_risks.items():
+            if sound in name_lower:
+                risks.append({
+                    "country": country_title,
+                    "sound": sound,
+                    "risk_level": risk_data["risk"],
+                    "reason": risk_data["reason"]
+                })
+    
+    return risks
+
+def generate_linguistic_decomposition(brand_name: str, countries: list, category: str) -> dict:
+    """
+    Generate comprehensive linguistic decomposition analysis for a brand name.
+    
+    Returns structured analysis including:
+    - Morpheme breakdown
+    - Cultural resonance per country
+    - Industry fit analysis
+    - Risk detection
+    - Overall classification
+    """
+    # Step 1: Decompose the brand name
+    decomposition = decompose_brand_name(brand_name)
+    
+    # Step 2: Analyze suffix-industry fit
+    industry_fit = analyze_suffix_industry_fit(brand_name, category)
+    
+    # Step 3: Check phonetic risks
+    phonetic_risks = check_phonetic_risks(brand_name, countries)
+    
+    # Step 4: Check sacred/royal names (existing function)
+    sacred_check = check_sacred_royal_names(brand_name, countries)
+    
+    # Step 5: Build per-country cultural analysis
+    country_analysis = {}
+    flags_lower = {k.lower(): v for k, v in COUNTRY_FLAGS.items()}
+    
+    for country in countries:
+        country_name = country.get('name') if isinstance(country, dict) else str(country)
+        country_lower = country_name.lower().strip()
+        country_title = country_name.title()
+        country_flag = flags_lower.get(country_lower, "🌍")
+        
+        morpheme_analysis = []
+        overall_resonance = "NEUTRAL"
+        risk_flags = []
+        
+        for morpheme in decomposition["morphemes"]:
+            cultural_data = morpheme.get("cultural_resonance", {})
+            
+            # Try exact country match, then partial match
+            resonance_data = None
+            for key in cultural_data.keys():
+                if country_lower in key.lower() or key.lower() in country_lower:
+                    resonance_data = cultural_data[key]
+                    break
+            
+            # Try "Global" fallback
+            if not resonance_data:
+                resonance_data = cultural_data.get("Global", {"level": "NEUTRAL", "context": "No specific cultural data"})
+            
+            morpheme_analysis.append({
+                "morpheme": morpheme["text"],
+                "origin": morpheme["origin"],
+                "meaning": morpheme["meaning"],
+                "resonance_level": resonance_data.get("level", "NEUTRAL"),
+                "context": resonance_data.get("context", "No specific data")
+            })
+            
+            # Update overall resonance (CRITICAL > HIGH > MEDIUM > LOW > NEUTRAL)
+            level = resonance_data.get("level", "NEUTRAL")
+            if level == "CRITICAL":
+                overall_resonance = "CRITICAL"
+                risk_flags.append(f"CRITICAL: {morpheme['text']} - {resonance_data.get('context', '')}")
+            elif level == "HIGH" and overall_resonance not in ["CRITICAL"]:
+                overall_resonance = "HIGH"
+        
+        # Check for phonetic risks in this country
+        country_phonetic_risks = [r for r in phonetic_risks if r["country"] == country_title]
+        for pr in country_phonetic_risks:
+            risk_flags.append(f"PHONETIC: '{pr['sound']}' - {pr['reason']}")
+        
+        # Check for sacred name warnings
+        for warning in sacred_check.get("warnings", []):
+            if warning["country"].lower() == country_lower:
+                risk_flags.append(f"SACRED/ROYAL: {', '.join(warning['matched_terms'])}")
+        
+        country_analysis[country_title] = {
+            "country_flag": country_flag,
+            "morpheme_analysis": morpheme_analysis,
+            "overall_resonance": overall_resonance,
+            "risk_flags": risk_flags,
+            "risk_count": len(risk_flags)
+        }
+    
+    # Step 6: Determine brand type classification
+    brand_type = "Modern/Coined"
+    heritage_origins = ["Sanskrit", "Latin", "Greek", "Japanese", "Chinese", "Arabic"]
+    for morpheme in decomposition["morphemes"]:
+        if morpheme.get("origin") in heritage_origins:
+            brand_type = "Heritage"
+            break
+    
+    # Check for category mismatch
+    category_mismatch = False
+    if industry_fit["fit_level"] == "LOW":
+        category_mismatch = True
+    
+    # Step 7: Generate recommendations
+    recommendations = []
+    high_risk_countries = [c for c, data in country_analysis.items() if data["overall_resonance"] == "CRITICAL"]
+    medium_risk_countries = [c for c, data in country_analysis.items() if data["overall_resonance"] == "HIGH"]
+    
+    if high_risk_countries:
+        recommendations.append(f"⚠️ CRITICAL RISK in {', '.join(high_risk_countries)}: Consult local legal counsel before market entry")
+    if medium_risk_countries:
+        recommendations.append(f"📋 HIGH RESONANCE in {', '.join(medium_risk_countries)}: Leverage cultural connection in marketing")
+    if category_mismatch:
+        recommendations.append(f"⚠️ CATEGORY MISMATCH: '{industry_fit['matched_suffix']}' suffix may not align with {category} positioning")
+    if not recommendations:
+        recommendations.append(f"✅ Name appears suitable for target markets. Proceed with standard trademark clearance.")
+    
+    return {
+        "brand_name": brand_name,
+        "decomposition": decomposition,
+        "industry_fit": industry_fit,
+        "phonetic_risks": phonetic_risks,
+        "sacred_name_check": sacred_check,
+        "country_analysis": country_analysis,
+        "brand_type": brand_type,
+        "category_mismatch": category_mismatch,
+        "recommendations": recommendations
+    }
+
+def format_linguistic_analysis_for_output(analysis: dict, country: str) -> str:
+    """
+    Format the linguistic analysis into a readable cultural notes string for a specific country.
+    """
+    country_data = analysis.get("country_analysis", {}).get(country, {})
+    decomposition = analysis.get("decomposition", {})
+    industry_fit = analysis.get("industry_fit", {})
+    
+    output_parts = []
+    
+    # Header
+    output_parts.append(f"**LINGUISTIC ANALYSIS: {analysis['brand_name']}**\n")
+    
+    # Morpheme Breakdown
+    if decomposition.get("morphemes"):
+        output_parts.append("**MORPHEME BREAKDOWN:**")
+        for idx, morpheme in enumerate(decomposition["morphemes"]):
+            ma = None
+            for m in country_data.get("morpheme_analysis", []):
+                if m["morpheme"] == morpheme["text"]:
+                    ma = m
+                    break
+            
+            if ma:
+                resonance_emoji = "🔴" if ma["resonance_level"] == "CRITICAL" else "🟡" if ma["resonance_level"] == "HIGH" else "🟢"
+                output_parts.append(f"• **{morpheme['text'].upper()}** ({morpheme['origin']})")
+                output_parts.append(f"  Meaning: {morpheme['meaning']}")
+                output_parts.append(f"  {country} Resonance: {resonance_emoji} {ma['resonance_level']} - {ma['context']}")
+    
+    # Industry Fit
+    fit_emoji = "✅" if industry_fit.get("fit_level") == "HIGH" else "⚠️" if industry_fit.get("fit_level") == "LOW" else "➡️"
+    output_parts.append(f"\n**INDUSTRY FIT:** {fit_emoji} {industry_fit.get('fit_level', 'NEUTRAL')}")
+    output_parts.append(f"  {industry_fit.get('reasoning', 'No specific analysis')}")
+    
+    # Risk Flags
+    if country_data.get("risk_flags"):
+        output_parts.append("\n**⚠️ RISK FLAGS:**")
+        for flag in country_data["risk_flags"]:
+            output_parts.append(f"• {flag}")
+    
+    # Classification
+    output_parts.append(f"\n**BRAND TYPE:** {analysis.get('brand_type', 'Unknown')}")
+    
+    # Recommendation for this country
+    overall = country_data.get("overall_resonance", "NEUTRAL")
+    if overall == "CRITICAL":
+        output_parts.append("\n**RECOMMENDATION:** 🔴 Consult local legal counsel before market entry. Name contains culturally/legally sensitive elements.")
+    elif overall == "HIGH":
+        output_parts.append("\n**RECOMMENDATION:** 🟡 Strong cultural resonance - leverage in marketing but verify no IP conflicts.")
+    else:
+        output_parts.append("\n**RECOMMENDATION:** 🟢 Name appears suitable for this market. Proceed with standard trademark clearance.")
+    
+    return "\n".join(output_parts)
+
+
 def check_sacred_royal_names(brand_name: str, countries: list) -> dict:
     """Check if brand name contains sacred, royal, or culturally sensitive terms for target markets"""
     brand_lower = brand_name.lower()
