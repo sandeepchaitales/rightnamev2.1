@@ -5276,6 +5276,382 @@ class BrandEvaluationTester:
         # Print final summary
         return self.print_summary()
 
+    def test_category_specific_market_data_hotel_chain(self):
+        """Test FIX 1: Category-Specific Market Data - Hotel Chain should show hotel competitors, not beauty brands"""
+        payload = {
+            "brand_names": ["RamaRaya"],
+            "category": "Hotel Chain",
+            "positioning": "Premium boutique hotel chain",
+            "market_scope": "Multi-Country",
+            "countries": [{"name": "India"}, {"name": "Thailand"}]
+        }
+        
+        try:
+            print(f"\n🏨 Testing Category-Specific Market Data Fix - Hotel Chain Category...")
+            print(f"Expected: Hotel competitors (Taj Hotels, OYO, Dusit, Centara), NOT beauty brands (Nykaa, Glossier)")
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=240  # Extended timeout for comprehensive analysis
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("Category-Specific Market Data - Hotel Chain HTTP", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("Category-Specific Market Data - Hotel Chain Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check country_competitor_analysis for correct hotel competitors
+                if "country_competitor_analysis" not in brand:
+                    issues.append("country_competitor_analysis field missing")
+                else:
+                    competitor_analysis = brand["country_competitor_analysis"]
+                    if not isinstance(competitor_analysis, list) or len(competitor_analysis) == 0:
+                        issues.append("country_competitor_analysis is empty or not a list")
+                    else:
+                        # Check India competitors
+                        india_analysis = next((c for c in competitor_analysis if c.get("country") == "India"), None)
+                        if india_analysis:
+                            india_competitors = [comp.get("name", "").lower() for comp in india_analysis.get("competitors", [])]
+                            print(f"India competitors found: {india_competitors}")
+                            
+                            # Should have hotel competitors
+                            expected_hotel_competitors = ["taj hotels", "oyo rooms", "itc hotels", "lemon tree"]
+                            found_hotel_competitors = [comp for comp in expected_hotel_competitors if any(comp in ic for ic in india_competitors)]
+                            
+                            # Should NOT have beauty competitors
+                            beauty_competitors = ["nykaa", "glossier", "mamaearth", "sugar cosmetics"]
+                            found_beauty_competitors = [comp for comp in beauty_competitors if any(comp in ic for ic in india_competitors)]
+                            
+                            if len(found_hotel_competitors) < 2:
+                                issues.append(f"India should show hotel competitors (Taj Hotels, OYO, ITC, Lemon Tree), found: {india_competitors}")
+                            
+                            if len(found_beauty_competitors) > 0:
+                                issues.append(f"India shows beauty competitors instead of hotels: {found_beauty_competitors}")
+                        else:
+                            issues.append("India competitor analysis not found")
+                        
+                        # Check Thailand competitors
+                        thailand_analysis = next((c for c in competitor_analysis if c.get("country") == "Thailand"), None)
+                        if thailand_analysis:
+                            thailand_competitors = [comp.get("name", "").lower() for comp in thailand_analysis.get("competitors", [])]
+                            print(f"Thailand competitors found: {thailand_competitors}")
+                            
+                            # Should have Thai hotel competitors
+                            expected_thai_competitors = ["dusit international", "centara hotels", "minor hotels", "anantara", "onyx hospitality"]
+                            found_thai_competitors = [comp for comp in expected_thai_competitors if any(comp in tc for tc in thailand_competitors)]
+                            
+                            # Should NOT have beauty competitors
+                            found_beauty_in_thailand = [comp for comp in beauty_competitors if any(comp in tc for tc in thailand_competitors)]
+                            
+                            if len(found_thai_competitors) < 2:
+                                issues.append(f"Thailand should show hotel competitors (Dusit, Centara, Minor Hotels), found: {thailand_competitors}")
+                            
+                            if len(found_beauty_in_thailand) > 0:
+                                issues.append(f"Thailand shows beauty competitors instead of hotels: {found_beauty_in_thailand}")
+                        else:
+                            issues.append("Thailand competitor analysis not found")
+                
+                # Test 2: Check white_space_analysis mentions hotels/hospitality, NOT beauty/cosmetics
+                if "white_space_analysis" in brand:
+                    white_space = brand["white_space_analysis"].lower()
+                    print(f"White space analysis preview: {white_space[:200]}...")
+                    
+                    # Should mention hotel/hospitality terms
+                    hotel_terms = ["hotel", "hospitality", "accommodation", "resort", "boutique", "premium", "tourism"]
+                    found_hotel_terms = [term for term in hotel_terms if term in white_space]
+                    
+                    # Should NOT mention beauty/cosmetics terms
+                    beauty_terms = ["beauty", "cosmetics", "skincare", "makeup", "nykaa", "glossier"]
+                    found_beauty_terms = [term for term in beauty_terms if term in white_space]
+                    
+                    if len(found_hotel_terms) < 2:
+                        issues.append(f"white_space_analysis should mention hotel/hospitality terms, found: {found_hotel_terms}")
+                    
+                    if len(found_beauty_terms) > 0:
+                        issues.append(f"white_space_analysis mentions beauty terms instead of hotels: {found_beauty_terms}")
+                else:
+                    issues.append("white_space_analysis field missing")
+                
+                if issues:
+                    self.log_test("Category-Specific Market Data - Hotel Chain", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("Category-Specific Market Data - Hotel Chain", True, 
+                            "Hotel Chain category correctly shows hotel competitors, not beauty brands")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Category-Specific Market Data - Hotel Chain JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Category-Specific Market Data - Hotel Chain Timeout", False, "Request timed out after 240 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Category-Specific Market Data - Hotel Chain Exception", False, str(e))
+            return False
+
+    def test_sacred_royal_name_detection_ramaraya(self):
+        """Test FIX 2: Sacred/Royal Name Detection - RamaRaya should trigger warnings for Thailand and India"""
+        payload = {
+            "brand_names": ["RamaRaya"],
+            "category": "Hotel Chain",
+            "positioning": "Premium boutique hotel chain",
+            "market_scope": "Multi-Country",
+            "countries": [{"name": "India"}, {"name": "Thailand"}]
+        }
+        
+        try:
+            print(f"\n⚠️ Testing Sacred/Royal Name Detection Fix - RamaRaya Brand...")
+            print(f"Expected: Thailand warning (royal title, lèse-majesté), India warning (Hindu deity)")
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=240  # Extended timeout for comprehensive analysis
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("Sacred/Royal Name Detection - RamaRaya HTTP", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("Sacred/Royal Name Detection - RamaRaya Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check cultural_analysis for sacred/royal name warnings
+                if "cultural_analysis" not in brand:
+                    issues.append("cultural_analysis field missing")
+                else:
+                    cultural_analysis = brand["cultural_analysis"]
+                    if not isinstance(cultural_analysis, list) or len(cultural_analysis) == 0:
+                        issues.append("cultural_analysis is empty or not a list")
+                    else:
+                        # Check Thailand cultural analysis
+                        thailand_analysis = next((c for c in cultural_analysis if c.get("country") == "Thailand"), None)
+                        if thailand_analysis:
+                            thailand_notes = thailand_analysis.get("cultural_notes", "").lower()
+                            thailand_score = thailand_analysis.get("resonance_score", 10)
+                            print(f"Thailand cultural notes preview: {thailand_notes[:200]}...")
+                            print(f"Thailand resonance score: {thailand_score}")
+                            
+                            # Should mention royal/lèse-majesté warnings
+                            royal_terms = ["rama", "royal", "lèse-majesté", "lese-majeste", "king", "monarchy", "chakri", "thailand"]
+                            found_royal_terms = [term for term in royal_terms if term in thailand_notes]
+                            
+                            if len(found_royal_terms) < 3:
+                                issues.append(f"Thailand should warn about royal name 'Rama' and lèse-majesté laws, found terms: {found_royal_terms}")
+                            
+                            # Resonance score should be reduced (around 4.0 instead of 7.0)
+                            if thailand_score > 6.0:
+                                issues.append(f"Thailand resonance score should be reduced due to royal name risk, got: {thailand_score}")
+                        else:
+                            issues.append("Thailand cultural analysis not found")
+                        
+                        # Check India cultural analysis
+                        india_analysis = next((c for c in cultural_analysis if c.get("country") == "India"), None)
+                        if india_analysis:
+                            india_notes = india_analysis.get("cultural_notes", "").lower()
+                            india_score = india_analysis.get("resonance_score", 10)
+                            print(f"India cultural notes preview: {india_notes[:200]}...")
+                            print(f"India resonance score: {india_score}")
+                            
+                            # Should mention deity/Hindu warnings
+                            deity_terms = ["rama", "deity", "hindu", "god", "religious", "sacred", "commercial use", "india"]
+                            found_deity_terms = [term for term in deity_terms if term in india_notes]
+                            
+                            if len(found_deity_terms) < 3:
+                                issues.append(f"India should warn about deity name 'Rama' and commercial use concerns, found terms: {found_deity_terms}")
+                            
+                            # Resonance score should be reduced (around 5.0 instead of 8.0)
+                            if india_score > 7.0:
+                                issues.append(f"India resonance score should be reduced due to deity name concerns, got: {india_score}")
+                        else:
+                            issues.append("India cultural analysis not found")
+                
+                # Test 2: Check if overall NameScore is impacted by cultural issues
+                if "namescore" in brand:
+                    namescore = brand["namescore"]
+                    print(f"Overall NameScore: {namescore}")
+                    
+                    # With cultural issues in 2 major markets, NameScore should be moderate, not high
+                    if namescore > 85:
+                        issues.append(f"NameScore should be impacted by cultural issues in Thailand and India, got: {namescore}")
+                
+                # Test 3: Check verdict considers cultural risks
+                if "verdict" in brand:
+                    verdict = brand["verdict"]
+                    print(f"Verdict: {verdict}")
+                    
+                    # With serious cultural/legal risks, verdict should be CAUTION or REJECT, not APPROVE
+                    if verdict == "APPROVE":
+                        print(f"Warning: Verdict is APPROVE despite cultural risks - may need review")
+                
+                if issues:
+                    self.log_test("Sacred/Royal Name Detection - RamaRaya", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("Sacred/Royal Name Detection - RamaRaya", True, 
+                            "RamaRaya correctly triggers cultural warnings for Thailand (royal) and India (deity)")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Sacred/Royal Name Detection - RamaRaya JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Sacred/Royal Name Detection - RamaRaya Timeout", False, "Request timed out after 240 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Sacred/Royal Name Detection - RamaRaya Exception", False, str(e))
+            return False
+
+    def test_technology_category_comparison(self):
+        """Test Case 2: Technology Category for comparison - should show tech competitors, no sacred name warnings"""
+        payload = {
+            "brand_names": ["TechNova"],
+            "category": "Technology",
+            "positioning": "AI-powered SaaS platform",
+            "market_scope": "Multi-Country",
+            "countries": [{"name": "India"}, {"name": "USA"}]
+        }
+        
+        try:
+            print(f"\n💻 Testing Technology Category (Comparison) - TechNova Brand...")
+            print(f"Expected: Tech competitors (Zoho, Salesforce), no sacred name warnings")
+            
+            response = requests.post(
+                f"{self.api_url}/evaluate", 
+                json=payload, 
+                headers={'Content-Type': 'application/json'},
+                timeout=240  # Extended timeout for comprehensive analysis
+            )
+            
+            print(f"Response Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text[:300]}"
+                self.log_test("Technology Category Comparison - TechNova HTTP", False, error_msg)
+                return False
+            
+            try:
+                data = response.json()
+                
+                if not data.get("brand_scores") or len(data["brand_scores"]) == 0:
+                    self.log_test("Technology Category Comparison - TechNova Structure", False, "No brand scores returned")
+                    return False
+                
+                brand = data["brand_scores"][0]
+                issues = []
+                
+                # Test 1: Check country_competitor_analysis for correct technology competitors
+                if "country_competitor_analysis" not in brand:
+                    issues.append("country_competitor_analysis field missing")
+                else:
+                    competitor_analysis = brand["country_competitor_analysis"]
+                    if not isinstance(competitor_analysis, list) or len(competitor_analysis) == 0:
+                        issues.append("country_competitor_analysis is empty or not a list")
+                    else:
+                        # Check India tech competitors
+                        india_analysis = next((c for c in competitor_analysis if c.get("country") == "India"), None)
+                        if india_analysis:
+                            india_competitors = [comp.get("name", "").lower() for comp in india_analysis.get("competitors", [])]
+                            print(f"India tech competitors found: {india_competitors}")
+                            
+                            # Should have tech competitors
+                            expected_tech_competitors = ["zoho", "freshworks", "razorpay", "infosys"]
+                            found_tech_competitors = [comp for comp in expected_tech_competitors if any(comp in ic for ic in india_competitors)]
+                            
+                            # Should NOT have hotel or beauty competitors
+                            non_tech_competitors = ["taj hotels", "oyo", "nykaa", "glossier"]
+                            found_non_tech = [comp for comp in non_tech_competitors if any(comp in ic for ic in india_competitors)]
+                            
+                            if len(found_tech_competitors) < 2:
+                                issues.append(f"India should show tech competitors (Zoho, Freshworks, Razorpay), found: {india_competitors}")
+                            
+                            if len(found_non_tech) > 0:
+                                issues.append(f"India shows non-tech competitors: {found_non_tech}")
+                        else:
+                            issues.append("India tech competitor analysis not found")
+                        
+                        # Check USA tech competitors
+                        usa_analysis = next((c for c in competitor_analysis if c.get("country") == "USA"), None)
+                        if usa_analysis:
+                            usa_competitors = [comp.get("name", "").lower() for comp in usa_analysis.get("competitors", [])]
+                            print(f"USA tech competitors found: {usa_competitors}")
+                            
+                            # Should have US tech competitors
+                            expected_us_tech = ["salesforce", "hubspot", "stripe", "notion"]
+                            found_us_tech = [comp for comp in expected_us_tech if any(comp in uc for uc in usa_competitors)]
+                            
+                            if len(found_us_tech) < 2:
+                                issues.append(f"USA should show tech competitors (Salesforce, HubSpot, Stripe), found: {usa_competitors}")
+                        else:
+                            issues.append("USA tech competitor analysis not found")
+                
+                # Test 2: Check cultural_analysis should NOT have sacred name warnings
+                if "cultural_analysis" in brand:
+                    cultural_analysis = brand["cultural_analysis"]
+                    if isinstance(cultural_analysis, list):
+                        for country_analysis in cultural_analysis:
+                            cultural_notes = country_analysis.get("cultural_notes", "").lower()
+                            country = country_analysis.get("country", "")
+                            
+                            # Should NOT mention sacred/royal warnings for TechNova
+                            warning_terms = ["sacred", "royal", "deity", "lèse-majesté", "hindu god", "commercial use concerns"]
+                            found_warnings = [term for term in warning_terms if term in cultural_notes]
+                            
+                            if len(found_warnings) > 0:
+                                issues.append(f"{country} cultural analysis has unexpected sacred/royal warnings for TechNova: {found_warnings}")
+                            
+                            # Resonance scores should be normal (7.0+), not reduced
+                            resonance_score = country_analysis.get("resonance_score", 0)
+                            if resonance_score < 6.0:
+                                issues.append(f"{country} resonance score unexpectedly low for clean name TechNova: {resonance_score}")
+                
+                if issues:
+                    self.log_test("Technology Category Comparison - TechNova", False, "; ".join(issues))
+                    return False
+                
+                self.log_test("Technology Category Comparison - TechNova", True, 
+                            "Technology category correctly shows tech competitors, no sacred name warnings")
+                return True
+                
+            except json.JSONDecodeError as e:
+                self.log_test("Technology Category Comparison - TechNova JSON", False, f"Invalid JSON response: {str(e)}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Technology Category Comparison - TechNova Timeout", False, "Request timed out after 240 seconds")
+            return False
+        except Exception as e:
+            self.log_test("Technology Category Comparison - TechNova Exception", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Tests...")
