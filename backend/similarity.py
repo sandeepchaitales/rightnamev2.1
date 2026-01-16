@@ -89,7 +89,153 @@ INDUSTRY_SUFFIXES = {
     ]
 }
 
-# Major brands with common suffixes - for suffix-based conflict detection
+# ============ TWO-TIER SUFFIX CONFLICT SYSTEM ============
+
+# TIER 1: MEGA-BRAND SUFFIXES - ALWAYS REJECT (Any Industry)
+# These brands are so famous that ANY suffix match is a guaranteed lawsuit
+TIER1_MEGA_BRAND_SUFFIXES = {
+    # Social Media Giants
+    "book": {
+        "brand": "Facebook/Meta",
+        "reason": "3B+ users, universal recognition. Meta has unlimited legal budget and WILL sue.",
+        "examples": ["HeadBook", "StyleBook", "FoodBook", "TravelBook"]
+    },
+    "gram": {
+        "brand": "Instagram",
+        "reason": "'Do it for the gram' is cultural. Instagram is a verb now.",
+        "examples": ["PhotoGram", "FoodGram", "TravelGram", "FitGram"]
+    },
+    "tube": {
+        "brand": "YouTube",
+        "reason": "Synonym for online video. 2B+ monthly users.",
+        "examples": ["CookTube", "FitTube", "EduTube", "GameTube"]
+    },
+    "tok": {
+        "brand": "TikTok",
+        "reason": "1B+ users, cultural phenomenon. ByteDance aggressively protects IP.",
+        "examples": ["FunTok", "DanceTok", "LearnTok"]
+    },
+    "flix": {
+        "brand": "Netflix",
+        "reason": "Synonym for streaming. 'Netflix and chill' is cultural.",
+        "examples": ["SportFlix", "KidsFlix", "DocuFlix", "GameFlix"]
+    },
+    # Tech Giants
+    "soft": {
+        "brand": "Microsoft",
+        "reason": "$2T+ company with aggressive IP enforcement.",
+        "examples": ["DataSoft", "CloudSoft", "GameSoft"]
+    },
+    "ogle": {
+        "brand": "Google",
+        "reason": "'Google it' is a verb. Alphabet has unlimited legal resources.",
+        "examples": ["ShopOgle", "TravelOgle"]
+    },
+    "oogle": {
+        "brand": "Google",
+        "reason": "'Google it' is a verb. Alphabet has unlimited legal resources.",
+        "examples": ["Boogle", "Doogle", "Foogle"]
+    },
+    # E-commerce Giants
+    "zon": {
+        "brand": "Amazon",
+        "reason": "The everything store. Will expand into ANY industry.",
+        "examples": ["FashionZon", "FoodZon", "TechZon"]
+    },
+    "bay": {
+        "brand": "eBay",
+        "reason": "E-commerce pioneer with strong trademark portfolio.",
+        "examples": ["ShopBay", "DealBay", "TradeBay"]
+    },
+    "cart": {
+        "brand": "Instacart",
+        "reason": "Dominant grocery delivery. 'Cart' is their core identity.",
+        "examples": ["FreshCart", "QuickCart", "SmartCart"]
+    },
+    # Apple Ecosystem (VERY Aggressive)
+    "pod": {
+        "brand": "Apple (iPod)",
+        "reason": "Apple sued anyone with 'pod' - even podcast apps.",
+        "examples": ["MusicPod", "VideoPod", "FitPod"]
+    },
+    "phone": {
+        "brand": "Apple (iPhone)",
+        "reason": "Apple owns 'iPhone' trademark aggressively.",
+        "examples": ["SmartPhone brands", "MyPhone"]
+    },
+    "pad": {
+        "brand": "Apple (iPad)",
+        "reason": "Apple sued multiple companies over 'pad' suffix.",
+        "examples": ["NotePad apps", "DrawPad"]
+    },
+    # Streaming/Music
+    "fy": {
+        "brand": "Spotify",
+        "reason": "Dominant music streaming. '-ify' is their signature.",
+        "examples": ["Musicfy", "Podcastfy", "Listenfy"]
+    },
+    "ify": {
+        "brand": "Spotify",
+        "reason": "Dominant music streaming. '-ify' is their signature.",
+        "examples": ["Beautify", "Shopify (grandfathered)", "Testify"]
+    },
+    # Messaging
+    "app": {
+        "brand": "WhatsApp",
+        "reason": "2B+ users. Meta owns it and will protect aggressively.",
+        "examples": ["ChatApp", "CallApp", "BizApp"]
+    },
+    "chat": {
+        "brand": "Snapchat/WeChat",
+        "reason": "Major messaging platforms with strong IP protection.",
+        "examples": ["QuickChat", "BizChat", "VideoChat"]
+    },
+}
+
+# TIER 2: INDUSTRY-SPECIFIC SUFFIXES - Reject in SAME industry, WARNING in different
+TIER2_INDUSTRY_SUFFIXES = {
+    "Healthcare & Pharma": {
+        "kind": {"brand": "Mankind Pharma", "reason": "Major Indian pharma company"},
+        "plex": {"brand": "Various pharma", "reason": "Common pharma suffix"},
+        "zol": {"brand": "Various pharma", "reason": "Common drug suffix (omeprazole, etc.)"},
+        "mab": {"brand": "Biotech", "reason": "Monoclonal antibody drugs"},
+        "nib": {"brand": "Biotech", "reason": "Kinase inhibitor drugs"},
+    },
+    "Finance & Banking": {
+        "pay": {"brand": "PayPal/GPay/ApplePay", "reason": "Dominant payment brands"},
+        "cash": {"brand": "Cash App", "reason": "Square's payment app"},
+        "venmo": {"brand": "Venmo", "reason": "PayPal subsidiary"},
+        "wallet": {"brand": "Google Wallet/Apple Wallet", "reason": "Digital wallet leaders"},
+        "bank": {"brand": "Various", "reason": "Regulated term in many jurisdictions"},
+    },
+    "Food Delivery": {
+        "eats": {"brand": "UberEats", "reason": "Major food delivery platform"},
+        "dash": {"brand": "DoorDash", "reason": "US food delivery leader"},
+        "grub": {"brand": "GrubHub", "reason": "Major food delivery platform"},
+        "bite": {"brand": "Various food apps", "reason": "Common food delivery suffix"},
+    },
+    "E-commerce & Retail": {
+        "kart": {"brand": "Flipkart", "reason": "India's largest e-commerce"},
+        "mart": {"brand": "Walmart/JioMart", "reason": "Retail giants"},
+        "basket": {"brand": "BigBasket", "reason": "Indian grocery leader"},
+        "fresh": {"brand": "Amazon Fresh", "reason": "Amazon's grocery arm"},
+    },
+    "Travel & Hospitality": {
+        "bnb": {"brand": "Airbnb", "reason": "Dominant home-sharing platform"},
+        "trip": {"brand": "TripAdvisor/MakeMyTrip", "reason": "Major travel brands"},
+        "booking": {"brand": "Booking.com", "reason": "Global hotel booking leader"},
+        "stay": {"brand": "Various hotel chains", "reason": "Common hospitality suffix"},
+    },
+    "Social Media & Platforms": {
+        "pin": {"brand": "Pinterest", "reason": "Visual discovery platform"},
+        "snap": {"brand": "Snapchat", "reason": "Ephemeral messaging pioneer"},
+        "tweet": {"brand": "Twitter/X", "reason": "Trademarked term"},
+        "thread": {"brand": "Threads (Meta)", "reason": "Meta's Twitter competitor"},
+        "link": {"brand": "LinkedIn", "reason": "Professional networking giant"},
+    },
+}
+
+# Legacy map for backward compatibility
 SUFFIX_BRAND_MAP = {
     "kind": ["Mankind"],
     "book": ["Facebook"],
