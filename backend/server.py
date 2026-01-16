@@ -3412,16 +3412,17 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
         # Get the first brand for research (primary brand being evaluated)
         primary_brand = request.brand_names[0] if request.brand_names else "Brand"
         
-        # Execute LLM-first research
+        # Execute LLM-first research WITH POSITIONING
         country_competitor_analysis, cultural_analysis = await llm_first_country_analysis(
             countries=request.countries,
             category=request.category or "Business",
             brand_name=primary_brand,
-            use_llm_research=True  # Enable LLM research
+            use_llm_research=True,  # Enable LLM research
+            positioning=request.positioning  # NEW: Pass user's positioning for segment-specific competitors
         )
         
         llm_research_time = time_module.time() - llm_research_start
-        logging.info(f"✅ LLM-FIRST COUNTRY RESEARCH completed in {llm_research_time:.2f}s")
+        logging.info(f"✅ LLM-FIRST {request.positioning} COUNTRY RESEARCH completed in {llm_research_time:.2f}s")
         
         # Store for later use
         llm_research_data = {
