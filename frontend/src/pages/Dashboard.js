@@ -1374,7 +1374,7 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                 </>
             )}
             
-            {/* Country-Specific Positioning Matrices (up to 4) */}
+            {/* Country-Specific Positioning Matrices - Show ALL countries */}
             {countryCompetitorAnalysis && countryCompetitorAnalysis.length > 0 && (
                 <>
                     <PrintCard>
@@ -1388,7 +1388,7 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                     </PrintCard>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {countryCompetitorAnalysis.slice(0, 4).map((countryAnalysis, idx) => {
+                        {countryCompetitorAnalysis.map((countryAnalysis, idx) => {
                             const countryName = typeof countryAnalysis.country === 'object' ? countryAnalysis.country?.name : countryAnalysis.country;
                             return renderMatrix(
                                 countryAnalysis, 
