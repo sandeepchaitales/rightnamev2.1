@@ -8,6 +8,7 @@ import AuthCallback from "./pages/AuthCallback";
 import BlogPage from "./pages/BlogPage";
 import BrandAuditLanding from "./pages/BrandAuditLanding";
 import BrandAuditDashboard from "./pages/BrandAuditDashboard";
+import AdminPanel from "./pages/AdminPanel";
 import { AuthProvider } from "./contexts/AuthContext";
 import AuthModal from "./components/AuthModal";
 import { Toaster } from "@/components/ui/sonner";
