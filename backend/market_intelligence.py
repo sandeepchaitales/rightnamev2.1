@@ -403,9 +403,10 @@ async def llm_analyze_competitors(
     category: str, 
     country: str, 
     brand_name: str,
-    search_results: str
+    search_results: str,
+    positioning: str = "Mid-Range"
 ) -> Dict[str, Any]:
-    """Use LLM to analyze search results and extract competitor data"""
+    """Use LLM to analyze search results and extract competitor data for specific positioning"""
     if not LlmChat or not EMERGENT_KEY:
         logger.warning("LLM not available for competitor analysis")
         return None
@@ -415,7 +416,8 @@ async def llm_analyze_competitors(
             category=category,
             country=country,
             brand_name=brand_name,
-            search_results=search_results
+            search_results=search_results,
+            positioning=positioning
         )
         
         chat = LlmChat(
@@ -435,7 +437,7 @@ async def llm_analyze_competitors(
             response_text = re.sub(r'\s*```$', '', response_text)
         
         data = json.loads(response_text)
-        logger.info(f"✅ LLM extracted {len(data.get('competitors', []))} competitors for {country}")
+        logger.info(f"✅ LLM extracted {len(data.get('competitors', []))} {positioning} competitors for {country}")
         return data
         
     except asyncio.TimeoutError:
@@ -454,9 +456,10 @@ async def llm_analyze_white_space(
     country: str,
     brand_name: str,
     competitor_data: str,
-    market_research: str
+    market_research: str,
+    positioning: str = "Mid-Range"
 ) -> Dict[str, Any]:
-    """Use LLM to generate strategic white space analysis"""
+    """Use LLM to generate strategic white space analysis for specific positioning"""
     if not LlmChat or not EMERGENT_KEY:
         return None
     
