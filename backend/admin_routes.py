@@ -160,23 +160,25 @@ async def get_prompt(prompt_type: str, admin: dict = Depends(get_current_admin))
     prompt = await db.prompts.find_one({"type": prompt_type, "is_active": True})
     
     if not prompt:
-        # Return default prompt from file
+        # Return default prompt from file - use V2 optimized prompt
         if prompt_type == "system":
-            from prompts import SYSTEM_PROMPT
-            content = SYSTEM_PROMPT
+            from prompts_v2 import SYSTEM_PROMPT_V2
+            content = SYSTEM_PROMPT_V2
         else:
-            # Get early stopping prompt from server.py (we'll extract it)
+            # Get early stopping prompt
             content = await get_early_stopping_prompt_default()
         
         return {
             "type": prompt_type,
             "content": content,
-            "name": "Default",
+            "name": "Default (V2 Optimized)",
             "is_default": True,
-            "last_modified": None
+            "last_modified": None,
+            "character_count": len(content)
         }
     
     prompt.pop('_id', None)
+    prompt["character_count"] = len(prompt.get("content", ""))
     return prompt
 
 @admin_router.put("/prompts/{prompt_type}")
