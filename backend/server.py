@@ -169,6 +169,46 @@ async def update_job_progress(job_id: str, step_id: str, eta_seconds: int = None
             }}
         )
 
+
+# ============ DYNAMIC PROMPT LOADING ============
+async def get_active_system_prompt() -> str:
+    """Get active system prompt from database, fallback to V2 optimized prompt"""
+    try:
+        prompt_doc = await db.prompts.find_one({"type": "system", "is_active": True})
+        if prompt_doc and prompt_doc.get("content"):
+            logging.info(f"Using custom system prompt: {prompt_doc.get('name', 'Custom')}")
+            return prompt_doc["content"]
+    except Exception as e:
+        logging.warning(f"Error fetching custom prompt: {e}")
+    
+    # Fallback to V2 optimized prompt (default)
+    logging.info("Using default V2 optimized system prompt")
+    return SYSTEM_PROMPT_V2
+
+async def get_active_model_settings() -> dict:
+    """Get active model settings from database, fallback to defaults"""
+    defaults = {
+        "primary_model": "gpt-4o-mini",
+        "fallback_models": ["claude-sonnet-4-20250514", "gpt-4o"],
+        "timeout_seconds": 35,
+        "temperature": 0.7,
+        "max_tokens": 8000,
+        "retry_count": 2
+    }
+    try:
+        settings = await db.settings.find_one({"type": "model_settings"})
+        if settings:
+            # Merge with defaults (in case some fields missing)
+            for key in defaults:
+                if key not in settings:
+                    settings[key] = defaults[key]
+            return settings
+    except Exception as e:
+        logging.warning(f"Error fetching model settings: {e}")
+    
+    return defaults
+
+
 # Country-specific ACTUAL trademark costs (not just currency conversion)
 # These are real trademark office costs for each country
 COUNTRY_TRADEMARK_COSTS = {
