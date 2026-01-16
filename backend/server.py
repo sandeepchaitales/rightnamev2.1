@@ -4804,7 +4804,7 @@ async def evaluate_brands_internal(request: BrandEvaluationRequest, job_id: str 
                         {"Market Perception": 7.0}
                     ],
                     "recommendations": [
-                        {"title": "🏢 Domain Strategy", "content": f"{'Secure {brand_name.lower()}.com immediately' if domain_available else 'Acquire alternative TLDs (.co, .io) and consider {brand_name.lower()}.beauty for sector relevance'}"},
+                        {"title": "🏢 Domain Strategy", "content": f"Secure {brand_name.lower()}.com immediately" if domain_available else f"Acquire alternative TLDs (.co, .io) and consider {brand_name.lower()}.beauty for sector relevance"},
                         {"title": "📋 Trademark Filing", "content": f"File trademark application in NICE Class {nice_class.get('class_number', 3)} ({nice_class.get('class_description', category)}). Consider Madrid Protocol for international protection."},
                         {"title": "📱 Social Presence", "content": f"Reserve @{brand_name.lower()} on Instagram, Twitter, LinkedIn, Facebook, TikTok, and YouTube before public announcement."},
                         {"title": "🎯 Brand Launch", "content": f"Develop comprehensive brand guidelines before market entry. Invest in initial awareness campaigns for the {category} sector."}
