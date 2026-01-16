@@ -1362,53 +1362,66 @@ const CompetitiveLandscapeSection = ({ competitorAnalysis, countryCompetitorAnal
                                         <p className="text-slate-400 text-sm">Competitor data not available</p>
                                     </div>
                                 )}
+                                {/* Competitors - Grey dots */}
                                 {competitors.slice(0, 6).map((comp, i) => {
                                     const x = (comp.x_coordinate || 50) / 100 * 80 + 10;
                                     const y = 100 - ((comp.y_coordinate || 50) / 100 * 80 + 10);
                                     return (
                                         <div
                                             key={i}
-                                            className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
+                                            className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10"
                                             style={{ left: `${x}%`, top: `${y}%` }}
                                         >
-                                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                                            <div className="w-8 h-8 bg-slate-500 hover:bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md transition-all cursor-pointer">
                                                 {i + 1}
                                             </div>
-                                            <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-10">
-                                                {comp.name}
+                                            <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-20 shadow-lg">
+                                                <span className="font-semibold">{comp.name}</span>
+                                                {comp.quadrant && <span className="text-slate-300 ml-1">• {comp.quadrant}</span>}
                                             </div>
                                         </div>
                                     );
                                 })}
                                 
-                                {/* User brand position */}
+                                {/* User brand position - GOLD/HIGHLIGHTED */}
                                 {competitorAnalysis.user_brand_position && (
                                     <div
-                                        className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                                        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 group"
                                         style={{
                                             left: `${(competitorAnalysis.user_brand_position.x || competitorAnalysis.user_brand_position.x_coordinate || 70) / 100 * 80 + 10}%`,
                                             top: `${100 - ((competitorAnalysis.user_brand_position.y || competitorAnalysis.user_brand_position.y_coordinate || 70) / 100 * 80 + 10)}%`
                                         }}
                                     >
-                                        <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white">
+                                        <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-amber-900 text-[10px] font-bold shadow-lg border-2 border-white animate-pulse">
                                             YOU
                                         </div>
+                                        {competitorAnalysis.user_brand_position.quadrant && (
+                                            <div className="hidden group-hover:block absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-amber-600 text-white text-xs rounded whitespace-nowrap z-20 shadow-lg">
+                                                <span className="font-semibold">{competitorAnalysis.user_brand_position.quadrant}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
                             
-                            {/* Legend */}
-                            {competitors.length > 0 && (
-                                <div className="mt-4 flex flex-wrap gap-3">
+                            {/* Legend with improved styling */}
+                            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {/* User Brand Legend */}
+                                    <div className="flex items-center gap-2 text-xs border-r border-slate-300 pr-3">
+                                        <div className="w-5 h-5 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-amber-900 text-[8px] font-bold">Y</div>
+                                        <span className="text-slate-700 font-semibold">Your Brand</span>
+                                    </div>
+                                    {/* Competitors Legend */}
                                     {competitors.slice(0, 6).map((comp, i) => (
                                         <div key={i} className="flex items-center gap-2 text-xs">
-                                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">{i + 1}</div>
+                                            <div className="w-5 h-5 bg-slate-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold">{i + 1}</div>
                                             <span className="text-slate-600">{comp.name}</span>
-                                            <Badge variant="outline" className="text-xs">{comp.quadrant || comp.price_position}</Badge>
+                                            {comp.quadrant && <Badge variant="outline" className="text-xs">{comp.quadrant}</Badge>}
                                         </div>
                                     ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </PrintCard>
                     
