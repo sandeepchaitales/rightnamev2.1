@@ -554,18 +554,26 @@ async def research_country_market(
     Example: "Mid-Range Hotel Chain India" returns Lemon Tree, Ginger, Keys
     Instead of: "Hotel Chain India" which returns mixed segments (OYO to Taj)
     """
-    country_flags = {
+    # CASE-INSENSITIVE country flag lookup
+    country_flags_raw = {
         "India": "🇮🇳", "USA": "🇺🇸", "United States": "🇺🇸", "UK": "🇬🇧", 
         "Thailand": "🇹🇭", "Singapore": "🇸🇬", "UAE": "🇦🇪", "Japan": "🇯🇵",
         "Germany": "🇩🇪", "France": "🇫🇷", "China": "🇨🇳", "Australia": "🇦🇺",
         "Canada": "🇨🇦", "Brazil": "🇧🇷"
     }
+    # Create case-insensitive lookup
+    country_flags = {k.lower(): v for k, v in country_flags_raw.items()}
+    country_lower = country.lower().strip() if country else ""
+    country_flag = country_flags.get(country_lower, "🌍")
     
-    logger.info(f"🔬 Starting {positioning} market research for {category} in {country}...")
+    # Normalize country name for display (capitalize properly)
+    display_country = country.title() if country else "Unknown"
+    
+    logger.info(f"🔬 Starting {positioning} market research for {category} in {display_country} {country_flag}...")
     
     intelligence = MarketIntelligence(
-        country=country,
-        country_flag=country_flags.get(country, "🌍"),
+        country=display_country,
+        country_flag=country_flag,
         category=category
     )
     
