@@ -250,7 +250,204 @@ async def search_cultural_sensitivity(brand_name: str, country: str) -> str:
     return formatted
 
 
-# ============ LLM ANALYSIS FUNCTIONS ============
+# ============ LLM-FIRST COMPETITOR DETECTION ============
+# This is the PRIMARY method - queries LLM's knowledge directly
+# Hardcoded data is ONLY used as fallback if LLM fails
+
+LLM_FIRST_COMPETITOR_PROMPT = """You are an expert market research analyst with comprehensive knowledge of global markets.
+
+**TASK**: Identify the TOP 5-6 REAL competitors for this category in this specific country.
+
+**INPUT:**
+- CATEGORY: {category}
+- COUNTRY: {country}
+- POSITIONING: {positioning}
+
+**CRITICAL RULES:**
+1. Return ONLY REAL companies that ACTUALLY EXIST and operate in {country}
+2. These must be DIRECT COMPETITORS in the EXACT same category: {category}
+3. PRIORITIZE LOCAL/DOMESTIC brands from {country} over international chains
+4. Match the {positioning} price tier (Budget/Mid-Range/Premium/Luxury)
+5. DO NOT return generic tech companies (Zoho, Infosys, TCS) unless the category IS enterprise software
+6. DO NOT hallucinate - if you don't know competitors, say so
+
+**CATEGORY-SPECIFIC GUIDANCE:**
+- "Doctor Appointment App" → Practo, 1mg, Lybrate, Apollo 24/7 (NOT Zoho, Infosys)
+- "Chai Franchise" → Chai Point, Chaayos, Chai Sutta Bar (NOT Starbucks)
+- "Hotel Chain" → Taj, OYO, Lemon Tree (NOT generic tech companies)
+- "Streetwear Brand" → H&M, Zara, local D2C brands (NOT software companies)
+
+**COORDINATE SYSTEM (0-100 scale):**
+- X-axis: Price positioning (0=Budget, 50=Mid-Range, 100=Luxury)
+- Y-axis: Experience/Quality (0=Basic, 50=Standard, 100=Premium)
+
+**{positioning} SEGMENT COORDINATES:**
+- Budget: x=15-35, y=20-40
+- Mid-Range: x=40-60, y=45-65
+- Premium: x=65-85, y=70-85
+- Luxury: x=85-100, y=85-100
+
+**RETURN THIS EXACT JSON:**
+{{
+    "category_understood": "{category}",
+    "country": "{country}",
+    "competitors": [
+        {{
+            "name": "Real Company Name",
+            "x_coordinate": 65,
+            "y_coordinate": 70,
+            "quadrant": "Market Position Description",
+            "market_share": "Estimated % or 'Leader'/'Challenger'",
+            "key_strength": "One unique differentiator",
+            "origin": "LOCAL" or "INTERNATIONAL",
+            "founded_year": "Year if known",
+            "description": "One-line description of what they do"
+        }}
+    ],
+    "market_size": "Estimated market size in local currency",
+    "growth_rate": "Annual growth % if known",
+    "x_axis_label": "Price: Budget → Premium in local currency",
+    "y_axis_label": "Experience: Basic → Premium",
+    "confidence": "HIGH" or "MEDIUM" or "LOW",
+    "data_source": "LLM Knowledge"
+}}
+
+**EXAMPLES OF CORRECT RESPONSES:**
+
+For "Doctor Appointment App" in "India":
+{{
+    "category_understood": "Doctor Appointment App / Telemedicine",
+    "country": "India",
+    "competitors": [
+        {{"name": "Practo", "x_coordinate": 60, "y_coordinate": 75, "quadrant": "Premium Digital Health", "market_share": "Leading", "key_strength": "Largest doctor network in India", "origin": "LOCAL", "description": "Doctor discovery, appointment booking, telemedicine"}},
+        {{"name": "1mg", "x_coordinate": 55, "y_coordinate": 65, "quadrant": "Integrated Health Platform", "market_share": "Major Player", "key_strength": "Pharmacy + Teleconsult combo", "origin": "LOCAL", "description": "Medicine delivery + doctor consultation"}},
+        {{"name": "Lybrate", "x_coordinate": 50, "y_coordinate": 60, "quadrant": "Doctor Consultation Focus", "market_share": "Challenger", "key_strength": "Free doctor Q&A", "origin": "LOCAL", "description": "Ask doctors free, book consultations"}},
+        {{"name": "Apollo 24/7", "x_coordinate": 70, "y_coordinate": 80, "quadrant": "Hospital-Backed Premium", "market_share": "Growing", "key_strength": "Apollo Hospitals trust", "origin": "LOCAL", "description": "Digital arm of Apollo Hospitals"}}
+    ],
+    "market_size": "₹5,000+ Crore",
+    "growth_rate": "25-30% annually",
+    "x_axis_label": "Price: ₹Free Consultation → ₹1000+ Premium",
+    "y_axis_label": "Experience: Basic Booking → Full Health Platform",
+    "confidence": "HIGH",
+    "data_source": "LLM Knowledge"
+}}
+
+For "Chai Franchise" in "India":
+{{
+    "category_understood": "Chai Cafe / Tea Franchise",
+    "country": "India",
+    "competitors": [
+        {{"name": "Chai Point", "x_coordinate": 55, "y_coordinate": 65, "quadrant": "Premium Chai Chain", "market_share": "Leader", "key_strength": "Corporate chai delivery pioneer", "origin": "LOCAL", "description": "Premium chai with tech-enabled delivery"}},
+        {{"name": "Chaayos", "x_coordinate": 60, "y_coordinate": 70, "quadrant": "Experience-Led Chai", "market_share": "Major Player", "key_strength": "Customizable chai", "origin": "LOCAL", "description": "Meri wali chai - personalized blends"}},
+        {{"name": "Chai Sutta Bar", "x_coordinate": 35, "y_coordinate": 45, "quadrant": "Youth Budget Segment", "market_share": "Growing", "key_strength": "Kulhad chai + vibe", "origin": "LOCAL", "description": "Trendy chai + snacks for youth"}},
+        {{"name": "MBA Chai Wala", "x_coordinate": 30, "y_coordinate": 40, "quadrant": "Budget Street Style", "market_share": "Challenger", "key_strength": "Viral marketing story", "origin": "LOCAL", "description": "Affordable roadside chai experience"}}
+    ],
+    "market_size": "₹2,500+ Crore",
+    "growth_rate": "15-20% annually",
+    "x_axis_label": "Price: ₹10 Tapri → ₹100+ Premium",
+    "y_axis_label": "Experience: Street Style → Cafe Experience",
+    "confidence": "HIGH",
+    "data_source": "LLM Knowledge"
+}}
+
+Now respond for: {category} in {country} ({positioning} segment)
+
+Return ONLY valid JSON, no explanations."""
+
+
+async def llm_first_get_competitors(
+    category: str,
+    country: str,
+    positioning: str = "Mid-Range"
+) -> Dict[str, Any]:
+    """
+    LLM-FIRST COMPETITOR DETECTION
+    
+    This is the PRIMARY method for getting competitors.
+    Queries the LLM's knowledge directly instead of relying on hardcoded data.
+    
+    Benefits:
+    - No manual maintenance of competitor lists
+    - Works for ANY category (not just hotels, beauty, tech, food, finance)
+    - Returns RELEVANT competitors (not Zoho for Doctor App)
+    - Fresh knowledge (up to LLM's training cutoff)
+    """
+    if not LlmChat or not EMERGENT_KEY:
+        logger.warning("LLM not available for competitor detection")
+        return None
+    
+    try:
+        prompt = LLM_FIRST_COMPETITOR_PROMPT.format(
+            category=category,
+            country=country,
+            positioning=positioning
+        )
+        
+        chat = LlmChat(EMERGENT_KEY, "openai", "gpt-4o-mini")
+        user_msg = UserMessage(prompt)
+        
+        response = await asyncio.wait_for(
+            chat.send_message(user_msg),
+            timeout=30
+        )
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            response_text = re.sub(r'^```json?\s*', '', response_text)
+            response_text = re.sub(r'\s*```$', '', response_text)
+        
+        result = json.loads(response_text)
+        
+        # Validate we got real competitors
+        competitors = result.get("competitors", [])
+        if competitors and len(competitors) >= 2:
+            competitor_names = [c.get("name") for c in competitors]
+            logger.info(f"🤖 LLM-FIRST: Found {len(competitors)} competitors for '{category}' in {country}: {competitor_names}")
+            return result
+        else:
+            logger.warning(f"LLM returned insufficient competitors for '{category}' in {country}")
+            return None
+            
+    except asyncio.TimeoutError:
+        logger.warning(f"LLM competitor detection timed out for '{category}' in {country}")
+        return None
+    except json.JSONDecodeError as e:
+        logger.warning(f"Failed to parse LLM competitor response: {e}")
+        return None
+    except Exception as e:
+        logger.warning(f"LLM competitor detection failed: {e}")
+        return None
+
+
+def llm_first_get_competitors_sync(
+    category: str,
+    country: str,
+    positioning: str = "Mid-Range"
+) -> Dict[str, Any]:
+    """Synchronous wrapper for LLM-first competitor detection"""
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    asyncio.run,
+                    llm_first_get_competitors(category, country, positioning)
+                )
+                return future.result(timeout=35)
+        else:
+            return asyncio.run(llm_first_get_competitors(category, country, positioning))
+    except Exception as e:
+        logger.warning(f"Sync LLM competitor detection failed: {e}")
+        return None
+
+
+# ============ LLM ANALYSIS FUNCTIONS (ENHANCED) ============
 
 COMPETITOR_ANALYSIS_PROMPT = """You are a market research analyst specializing in LOCAL market intelligence.
 
